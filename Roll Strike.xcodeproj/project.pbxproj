@@ -1,0 +1,559 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		CEF0B0142D7789BF0028064F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CEF0AFF22D7789BD0028064F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEF0AFF92D7789BE0028064F;
+			remoteInfo = "Roll Strike";
+		};
+		CEF0B01E2D7789BF0028064F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CEF0AFF22D7789BD0028064F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEF0AFF92D7789BE0028064F;
+			remoteInfo = "Roll Strike";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		CEF0AFFA2D7789BE0028064F /* Roll Strike.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Roll Strike.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEF0B0132D7789BF0028064F /* Roll StrikeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Roll StrikeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEF0B01D2D7789BF0028064F /* Roll StrikeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Roll StrikeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CEF0AFFC2D7789BE0028064F /* Roll Strike */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Roll Strike";
+			sourceTree = "<group>";
+		};
+		CEF0B0162D7789BF0028064F /* Roll StrikeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Roll StrikeTests";
+			sourceTree = "<group>";
+		};
+		CEF0B0202D7789BF0028064F /* Roll StrikeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Roll StrikeUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CEF0AFF72D7789BE0028064F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B0102D7789BF0028064F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B01A2D7789BF0028064F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CEF0AFF12D7789BD0028064F = {
+			isa = PBXGroup;
+			children = (
+				CEF0AFFC2D7789BE0028064F /* Roll Strike */,
+				CEF0B0162D7789BF0028064F /* Roll StrikeTests */,
+				CEF0B0202D7789BF0028064F /* Roll StrikeUITests */,
+				CEF0AFFB2D7789BE0028064F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CEF0AFFB2D7789BE0028064F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CEF0AFFA2D7789BE0028064F /* Roll Strike.app */,
+				CEF0B0132D7789BF0028064F /* Roll StrikeTests.xctest */,
+				CEF0B01D2D7789BF0028064F /* Roll StrikeUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CEF0AFF92D7789BE0028064F /* Roll Strike */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll Strike" */;
+			buildPhases = (
+				CEF0AFF62D7789BE0028064F /* Sources */,
+				CEF0AFF72D7789BE0028064F /* Frameworks */,
+				CEF0AFF82D7789BE0028064F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CEF0AFFC2D7789BE0028064F /* Roll Strike */,
+			);
+			name = "Roll Strike";
+			packageProductDependencies = (
+			);
+			productName = "Roll Strike";
+			productReference = CEF0AFFA2D7789BE0028064F /* Roll Strike.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CEF0B0122D7789BF0028064F /* Roll StrikeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEF0B02A2D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll StrikeTests" */;
+			buildPhases = (
+				CEF0B00F2D7789BF0028064F /* Sources */,
+				CEF0B0102D7789BF0028064F /* Frameworks */,
+				CEF0B0112D7789BF0028064F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CEF0B0152D7789BF0028064F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CEF0B0162D7789BF0028064F /* Roll StrikeTests */,
+			);
+			name = "Roll StrikeTests";
+			packageProductDependencies = (
+			);
+			productName = "Roll StrikeTests";
+			productReference = CEF0B0132D7789BF0028064F /* Roll StrikeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CEF0B01C2D7789BF0028064F /* Roll StrikeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CEF0B02D2D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll StrikeUITests" */;
+			buildPhases = (
+				CEF0B0192D7789BF0028064F /* Sources */,
+				CEF0B01A2D7789BF0028064F /* Frameworks */,
+				CEF0B01B2D7789BF0028064F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CEF0B01F2D7789BF0028064F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CEF0B0202D7789BF0028064F /* Roll StrikeUITests */,
+			);
+			name = "Roll StrikeUITests";
+			packageProductDependencies = (
+			);
+			productName = "Roll StrikeUITests";
+			productReference = CEF0B01D2D7789BF0028064F /* Roll StrikeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CEF0AFF22D7789BD0028064F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					CEF0AFF92D7789BE0028064F = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					CEF0B0122D7789BF0028064F = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = CEF0AFF92D7789BE0028064F;
+					};
+					CEF0B01C2D7789BF0028064F = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = CEF0AFF92D7789BE0028064F;
+					};
+				};
+			};
+			buildConfigurationList = CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Roll Strike" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CEF0AFF12D7789BD0028064F;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CEF0AFFB2D7789BE0028064F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CEF0AFF92D7789BE0028064F /* Roll Strike */,
+				CEF0B0122D7789BF0028064F /* Roll StrikeTests */,
+				CEF0B01C2D7789BF0028064F /* Roll StrikeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CEF0AFF82D7789BE0028064F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B0112D7789BF0028064F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B01B2D7789BF0028064F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CEF0AFF62D7789BE0028064F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B00F2D7789BF0028064F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0B0192D7789BF0028064F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CEF0B0152D7789BF0028064F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEF0AFF92D7789BE0028064F /* Roll Strike */;
+			targetProxy = CEF0B0142D7789BF0028064F /* PBXContainerItemProxy */;
+		};
+		CEF0B01F2D7789BF0028064F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEF0AFF92D7789BE0028064F /* Roll Strike */;
+			targetProxy = CEF0B01E2D7789BF0028064F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CEF0B0252D7789BF0028064F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CEF0B0262D7789BF0028064F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CEF0B0282D7789BF0028064F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-Strike";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CEF0B0292D7789BF0028064F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-Strike";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CEF0B02B2D7789BF0028064F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-StrikeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Roll Strike.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Roll Strike";
+			};
+			name = Debug;
+		};
+		CEF0B02C2D7789BF0028064F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-StrikeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Roll Strike.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Roll Strike";
+			};
+			name = Release;
+		};
+		CEF0B02E2D7789BF0028064F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-StrikeUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Roll Strike";
+			};
+			name = Debug;
+		};
+		CEF0B02F2D7789BF0028064F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "EhabSaifan.Roll-StrikeUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Roll Strike";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Roll Strike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEF0B0252D7789BF0028064F /* Debug */,
+				CEF0B0262D7789BF0028064F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll Strike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEF0B0282D7789BF0028064F /* Debug */,
+				CEF0B0292D7789BF0028064F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEF0B02A2D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll StrikeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEF0B02B2D7789BF0028064F /* Debug */,
+				CEF0B02C2D7789BF0028064F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CEF0B02D2D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll StrikeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEF0B02E2D7789BF0028064F /* Debug */,
+				CEF0B02F2D7789BF0028064F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CEF0AFF22D7789BD0028064F /* Project object */;
+}
