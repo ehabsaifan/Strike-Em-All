@@ -52,9 +52,10 @@ class GameScene: SKScene {
     
     // Roll the ball to a random position between minY and maxY
     func rollBallToRandomPosition(maxY: CGFloat) {
-        let minY = ballStartPosition.y // ensure ball moves upward
+        let minY = ballStartPosition.y + 50 // a little bit above the original postion at min
         //print("@@ maxY: \(maxY),  ballStartPosition: \(ballStartPosition)")
-        let targetY = CGFloat.random(in: minY...maxY)
+        let maxMovement = maxY - ballStartPosition.y
+        let targetY = CGFloat.random(in: minY...maxMovement)
         let targetPosition = CGPoint(x: ball.position.x, y: targetY)
         let duration: TimeInterval = 1.0
         let moveAction = SKAction.move(to: targetPosition, duration: duration)

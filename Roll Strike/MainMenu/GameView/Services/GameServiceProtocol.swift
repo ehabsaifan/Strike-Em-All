@@ -14,6 +14,7 @@ protocol GameServiceProtocol {
     
     func startGame(with targets: [GameContent], cellEffect: CellEffect)
     func rollBall() -> Int?
-    func markCell(at rowIndex: Int, forPlayer player: GameService.Player)
+    func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType)
+    func checkForWinner() -> GameService.PlayerType?
     func reset()
 }

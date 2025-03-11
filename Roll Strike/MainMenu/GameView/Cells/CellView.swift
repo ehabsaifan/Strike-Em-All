@@ -15,10 +15,11 @@ struct GameCellView: View {
         GeometryReader { geometry in
             let w = geometry.size.width
             let h = geometry.size.height
-            
+
             ZStack {
                 Color.clear
-                
+
+                // Display content (image or text)
                 if let imageName = content.imageName, let uiImage = UIImage(named: imageName) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -32,15 +33,17 @@ struct GameCellView: View {
                         .frame(width: w * 0.8, height: h * 0.8, alignment: .center)
                         .foregroundColor(.black)
                 }
-                
+
+                // Diagonal lines for markings
                 if marking == .half || marking == .complete {
                     Path { path in
                         path.move(to: CGPoint(x: w, y: 0))
                         path.addLine(to: CGPoint(x: 0, y: h))
                     }
                     .stroke(Color.red, lineWidth: 2)
+                    .opacity(marking == .half ? 0.5 : 1)
                 }
-                
+
                 if marking == .complete {
                     Path { path in
                         path.move(to: CGPoint(x: 0, y: 0))

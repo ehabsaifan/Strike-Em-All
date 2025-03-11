@@ -12,53 +12,64 @@ struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
-
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Top bar with close button
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.largeTitle)
-                            .foregroundColor(.red)
-                            .padding()
+                // Top bar with close button and centered title
+                VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.red)
+                                .padding()
+                        }
                     }
+                    .overlay(
+                        Text("Roll Strike")
+                            .font(.largeTitle)
+                            .bold()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    )
                 }
                 
-                // Title and turn indicator
-                VStack(spacing: 4) {
-                    Text("Roll Strike")
-                        .font(.largeTitle)
-                    Text("\(viewModel.currentPlayer.name)'s Turn")
-                        .font(.title2)
-                        .foregroundColor(.blue)
+                HStack {
+                    PlayerNameView(name: viewModel.player2.name, isActive: viewModel.currentPlayer == viewModel.player2)
+                    
+                    Spacer()
+                    
+                    PlayerNameView(name: viewModel.player1.name, isActive: viewModel.currentPlayer == viewModel.player1)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding([.top, .bottom], 8)
                 
-                // Game board: Each row captures its global frame via a PreferenceKey
+                // Game board
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
+                        let row = viewModel.rows[index]
                         ZStack {
                             (index % 2 == 0 ? Color.white : Color(white: 0.95))
                             HStack(spacing: 0) {
-                                GameCellView(marking: viewModel.rows[index].leftMarking,
-                                             content: viewModel.getContent(for: index))
-                                    .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                    .padding(.leading, 5)
+                                GameCellView(marking: row.leftMarking,
+                                             content: row.displayContent)
+                                .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
+                                .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                .padding(.leading, 5)
                                 
                                 Rectangle()
                                     .fill(Color.gray.opacity(0.2))
                                     .frame(height: viewModel.rowHeight)
                                     .frame(maxWidth: .infinity)
                                 
-                                GameCellView(marking: viewModel.rows[index].rightMarking,
-                                             content: viewModel.getContent(for: index))
-                                    .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                    .padding(.trailing, 5)
+                                GameCellView(marking: row.rightMarking,
+                                             content: row.displayContent)
+                                .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
+                                .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                .padding(.trailing, 5)
                             }
                         }
                         .frame(height: viewModel.rowHeight)
@@ -143,4 +154,29 @@ private func createGameViewModel() -> GameViewModel {
                                   player2: .computer,
                                   cellEffect: RegularCell())
     return viewModel
+}
+
+// MARK: - Subviews
+struct PlayerNameView: View {
+    let name: String
+    let isActive: Bool
+    
+    var body: some View {
+        Text(name)
+            .font(.system(size: 16, weight: .medium))
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .foregroundColor(isActive ? .primary : .secondary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(isActive ? Color(.systemGray5) : Color(.systemGray6))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isActive ? Color.blue : Color.clear, lineWidth: 1.5)
+            )
+            .animation(nil, value: isActive)
+    }
 }

@@ -56,7 +56,6 @@ class GameViewModel: ObservableObject {
     // Robust, screen-based collision detection approach:
     // Here, we assume that the board's row frames have been captured via a PreferenceKey in the view.
     private func getRowAtBallPosition(finalPosition: CGPoint) -> Int? {
-        let maxIndex = rows.count - 1
         let sortedRowFrames = rowFrames.sorted(by: { $0.key > $1.key }) // Ensure rows are in order
         
         let ballCenterY = UIScreen.main.bounds.maxY - finalPosition.y
@@ -84,11 +83,18 @@ class GameViewModel: ObservableObject {
             // Option 1: Use robust collision detection via row frames if available:
             if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
                 print("@@ Ball hit row: \(rowIndex)")
-                let player: GameService.Player = self.currentPlayer == self.player1 ? .player1 : .player2
+                let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
                 self.gameService.markCell(at: rowIndex, forPlayer: player)
                 self.rows = self.gameService.rows
                 physicsService.resetBall()
-                checkForWinner()
+                switch self.gameService.checkForWinner() {
+                case .player1:
+                    self.winner = player1
+                case .player2:
+                    self.winner = player2
+                case .none:
+                    break
+                }
             }
             
             if self.winner == nil {
