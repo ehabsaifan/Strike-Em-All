@@ -8,12 +8,12 @@
 import Foundation
 
 struct GameRow: GameRowProtocol {
-    let target: GameContent
     let cellEffect: CellEffect
     let displayContent: GameContent
     
     var leftMarking: MarkingState = .none
     var rightMarking: MarkingState = .none
+    var animationTrigger = false
     
     mutating func updateLeftMarking() {
         switch leftMarking {

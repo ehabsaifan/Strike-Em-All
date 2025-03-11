@@ -18,16 +18,15 @@ class GameService: GameServiceProtocol {
             self.contentProvider = contentProvider
         }
     
-    enum Player {
+    enum PlayerType {
         case player1, player2
     }
     
     func startGame(with targets: [GameContent], cellEffect: CellEffect) {
             rows = targets.enumerated().map { index, target in
                 GameRow(
-                    target: target,
                     cellEffect: cellEffect,
-                    displayContent: contentProvider.getContent(for: index)
+                    displayContent: target
                 )
             }
             print("@@ GameService started with rows: \(targets)")
@@ -41,7 +40,7 @@ class GameService: GameServiceProtocol {
         return rollingObject.roll(maxRows: rows.count)
     }
     
-    func markCell(at rowIndex: Int, forPlayer player: Player) {
+    func markCell(at rowIndex: Int, forPlayer player: PlayerType) {
         print("@@ GameService markCell at index: \(rowIndex)")
         guard rows.indices.contains(rowIndex) else {
             assertionFailure("cell index out of range")
@@ -56,14 +55,28 @@ class GameService: GameServiceProtocol {
             row.updateLeftMarking()
         }
         rollingObject = row.cellEffect.affect(rollingObject: rollingObject)
-        rows[rowIndex] = row
+        var new = rows
+        new[rowIndex] = row
+        rows = new
+    }
+    
+    func checkForWinner() -> PlayerType? {
+        let playerOneScore = rows.filter { $0.rightMarking == .complete }.count
+        let playerTwoScore = rows.filter { $0.leftMarking == .complete }.count
+        
+        if playerOneScore == rows.count {
+            return .player1
+        } else if playerTwoScore == rows.count {
+            return .player2
+        }
+        return nil
     }
     
     func reset() {
-        for index in 0..<rows.count {
-            var row = rows[index]
-            row.reset()
-            rows[index] = row
+        rows = rows.map { row in
+            var updatedRow = row
+            updatedRow.reset()
+            return updatedRow
         }
     }
 }

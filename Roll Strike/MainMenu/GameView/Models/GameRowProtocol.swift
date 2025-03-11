@@ -8,11 +8,11 @@
 import Foundation
 
 protocol GameRowProtocol {
-    var target: GameContent { get }
     var leftMarking: MarkingState { get set }
     var rightMarking: MarkingState { get set }
     var displayContent: GameContent { get }
     var cellEffect: CellEffect { get }
+    var animationTrigger: Bool { get set }
     
     mutating func updateLeftMarking()
     mutating func updateRightMarking()
