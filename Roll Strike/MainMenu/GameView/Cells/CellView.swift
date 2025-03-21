@@ -17,9 +17,7 @@ struct GameCellView: View {
             let h = geometry.size.height
 
             ZStack {
-                Color.clear
-
-                // Display content (image or text)
+                // Display the cell content: an image or text.
                 if let imageName = content.imageName, let uiImage = UIImage(named: imageName) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -33,18 +31,42 @@ struct GameCellView: View {
                         .frame(width: w * 0.8, height: h * 0.8, alignment: .center)
                         .foregroundColor(.black)
                 }
+                
+                // Animate the marking overlay when marking state changes
+                if marking != .none {
+                    MarkingOverlay(marking: marking)
+                        .frame(width: w, height: h)
+                        .transition(.scale.combined(with: .opacity))
+                        .animation(.easeInOut(duration: 0.3), value: marking)
+                }
+            }
+        }
+    }
+}
 
-                // Diagonal lines for markings
-                if marking == .half || marking == .complete {
+struct MarkingOverlay: View {
+    let marking: MarkingState
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let w = geometry.size.width, h = geometry.size.height
+            if marking == .half {
+                // Single diagonal for half marking
+                Path { path in
+                    path.move(to: CGPoint(x: w, y: 0))
+                    path.addLine(to: CGPoint(x: 0, y: h))
+                }
+                .stroke(Color.red, lineWidth: 2)
+                .opacity(0.5)
+            } else if marking == .complete {
+                // Two diagonals for complete marking
+                ZStack {
                     Path { path in
                         path.move(to: CGPoint(x: w, y: 0))
                         path.addLine(to: CGPoint(x: 0, y: h))
                     }
                     .stroke(Color.red, lineWidth: 2)
-                    .opacity(marking == .half ? 0.5 : 1)
-                }
-
-                if marking == .complete {
+                    
                     Path { path in
                         path.move(to: CGPoint(x: 0, y: 0))
                         path.addLine(to: CGPoint(x: w, y: h))
