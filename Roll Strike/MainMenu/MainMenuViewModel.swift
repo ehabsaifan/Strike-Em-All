@@ -46,6 +46,8 @@ class MainMenuViewModel: ObservableObject {
             return FireBall()
         case .crumpledPaper:
             return CrumpledPaper()
+        case .ironBall:
+            return IronBall()
         }
     }
 

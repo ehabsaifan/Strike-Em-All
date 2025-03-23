@@ -7,6 +7,12 @@
 
 import Foundation
 
+protocol PhysicsServiceProtocol {
+    func rollBallWithRandomPosition(maxY: CGFloat, completion: @escaping (CGPoint) -> Void)
+    func moveBall(with impulse: CGVector, completion: @escaping (CGPoint) -> Void)
+    func resetBall()
+}
+
 class SpriteKitPhysicsService: PhysicsServiceProtocol {
     private weak var scene: GameScene?
     
@@ -15,15 +21,19 @@ class SpriteKitPhysicsService: PhysicsServiceProtocol {
     }
     
     func rollBallWithRandomPosition(maxY: CGFloat, completion: @escaping (CGPoint) -> Void) {
-            scene?.onBallStopped = completion
-            scene?.rollBallToRandomPosition(maxY: maxY)
-        }
+        print("@@ PhysicsService rollBallWithRandomPosition")
+        scene?.onBallStopped = completion
+        scene?.rollBallToRandomPosition(maxY: maxY)
+    }
     
-    func moveBall(to position: CGPoint) {
-        scene?.rollBall(to: position)
+    func moveBall(with impulse: CGVector, completion: @escaping (CGPoint) -> Void) {
+        print("@@ PhysicsService moveBall")
+        scene?.onBallStopped = completion
+        scene?.applyImpulse(impulse)
     }
     
     func resetBall() {
+        print("@@ PhysicsService resetBall")
         scene?.resetBall()
     }
 }

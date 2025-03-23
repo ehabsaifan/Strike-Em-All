@@ -12,6 +12,7 @@ struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
+    @State private var dragStart: CGPoint?
     
     var body: some View {
         ZStack {
@@ -128,6 +129,36 @@ struct GameView: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
         }
+        // Add swipe gesture to capture ball movement
+        .gesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { value in
+                    // Record the drag start position, if not set
+                    if dragStart == nil {
+                        dragStart = value.startLocation
+                    }
+                }
+                .onEnded { value in
+                    // Only record the drag start if the ball is not already moving.
+                    if !viewModel.isBallMoving && dragStart == nil {
+                        dragStart = value.startLocation
+                    }
+                }
+                .onEnded { value in
+                    // Only process if a valid start exists and the ball isn't moving.
+                    if let start = dragStart, !viewModel.isBallMoving {
+                        let end = value.location
+                        let dx = end.x - start.x
+                        let dy = end.y - start.y
+                        
+                        // Depending on coordinate systems, you might invert the y.
+                        // For example, if you need upward motion when swiping up:
+                        let impulse = CGVector(dx: -dx, dy: dy)
+                        viewModel.rollBall(with: impulse)
+                    }
+                    dragStart = nil
+                }
+        )
     }
 }
 

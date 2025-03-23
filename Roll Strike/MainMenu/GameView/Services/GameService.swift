@@ -7,6 +7,18 @@
 
 import Foundation
 
+protocol GameServiceProtocol {
+    var rows: [GameRow] { get }
+    var rollingObject: RollingObject { get }
+    var contentProvider: GameContentProvider { get }
+    
+    func startGame(with targets: [GameContent], cellEffect: CellEffect)
+    func rollBall() -> Int?
+    func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType)
+    func checkForWinner() -> GameService.PlayerType?
+    func reset()
+}
+
 class GameService: GameServiceProtocol {
     private(set) var rows: [GameRow] = []
     private(set) var rollingObject: RollingObject
@@ -14,23 +26,23 @@ class GameService: GameServiceProtocol {
     
     // Use dependency injection for the rolling object.
     init(rollingObject: RollingObject, contentProvider: GameContentProvider) {
-            self.rollingObject = rollingObject
-            self.contentProvider = contentProvider
-        }
+        self.rollingObject = rollingObject
+        self.contentProvider = contentProvider
+    }
     
     enum PlayerType {
         case player1, player2
     }
     
     func startGame(with targets: [GameContent], cellEffect: CellEffect) {
-            rows = targets.enumerated().map { index, target in
-                GameRow(
-                    cellEffect: cellEffect,
-                    displayContent: target
-                )
-            }
-            print("@@ GameService started with rows: \(targets)")
+        rows = targets.enumerated().map { index, target in
+            GameRow(
+                cellEffect: cellEffect,
+                displayContent: target
+            )
         }
+        //print("@@ GameService started with rows: \(targets)")
+    }
     
     func rollBall() -> Int? {
         print("@@ GameService rollBall()")
@@ -61,6 +73,7 @@ class GameService: GameServiceProtocol {
     }
     
     func checkForWinner() -> PlayerType? {
+        print("@@ GameService checkForWinner")
         let playerOneScore = rows.filter { $0.rightMarking == .complete }.count
         let playerTwoScore = rows.filter { $0.leftMarking == .complete }.count
         
@@ -73,6 +86,7 @@ class GameService: GameServiceProtocol {
     }
     
     func reset() {
+        print("@@ GameService reset")
         rows = rows.map { row in
             var updatedRow = row
             updatedRow.reset()

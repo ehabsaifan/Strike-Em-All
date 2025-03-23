@@ -10,6 +10,7 @@ import Foundation
 enum RollingObjectType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     case ball = "Ball"
-    case fireBall = "FireBall"
+    case fireBall = "Fire Ball"
+    case ironBall = "Iron Ball"
     case crumpledPaper = "Crumpled Paper"
 }

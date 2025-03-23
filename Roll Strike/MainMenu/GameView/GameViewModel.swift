@@ -19,6 +19,8 @@ class GameViewModel: ObservableObject {
     @Published var player1: Player
     @Published var player2: Player
     @Published var gameMode: GameMode
+    @Published var isBallMoving = false
+    
     // For example, we add a property to track ball position (if needed)
     @Published var ballPosition: CGPoint = .zero
     // For robust collision detection using screen coordinates (if desired)
@@ -27,7 +29,7 @@ class GameViewModel: ObservableObject {
     let gameScene: GameScene
     let rowHeight: CGFloat = 70  // Used to calculate landing row
     let ballSize: CGFloat = 40  // must match GameScene.ballSize
-    
+        
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
          contentProvider: GameContentProvider,
@@ -76,33 +78,50 @@ class GameViewModel: ObservableObject {
     
     func rollBall() {
         print("@@ Now \(currentPlayer) is rolling the ball...")
+        guard !isBallMoving else { return }
+        isBallMoving = true
         let maxY = UIScreen.main.bounds.maxY
         physicsService.rollBallWithRandomPosition(maxY: maxY) { [weak self] finalPosition in
             guard let self = self else { return }
-            
-            // Option 1: Use robust collision detection via row frames if available:
-            if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
-                print("@@ Ball hit row: \(rowIndex)")
-                let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
-                self.gameService.markCell(at: rowIndex, forPlayer: player)
-                self.rows = self.gameService.rows
-                physicsService.resetBall()
-                switch self.gameService.checkForWinner() {
-                case .player1:
-                    self.winner = player1
-                case .player2:
-                    self.winner = player2
-                case .none:
-                    break
-                }
-            }
-            
-            if self.winner == nil {
-                self.toggleTurn()
-            }
+            gotFinalPostion(finalPosition)
         }
     }
     
+    func rollBall(with impulse: CGVector) {
+        print("@@ Now \(currentPlayer) is pushing the ball...")
+        print("actual impulse: \(impulse)")
+        guard !isBallMoving else { return }
+        isBallMoving = true
+        let adjustedImpulse = gameService.rollingObject.adjustImpulse(impulse)
+        physicsService.moveBall(with: adjustedImpulse) { [weak self] finalPosition in
+            guard let self = self else { return }
+            gotFinalPostion(finalPosition)
+        }
+    }
+    
+    private func gotFinalPostion(_ finalPosition: CGPoint) {
+        if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
+            print("@@ Ball hit row: \(rowIndex)")
+            let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
+            self.gameService.markCell(at: rowIndex, forPlayer: player)
+            self.rows = self.gameService.rows
+            physicsService.resetBall()
+            switch self.gameService.checkForWinner() {
+            case .player1:
+                self.winner = player1
+            case .player2:
+                self.winner = player2
+            case .none:
+                break
+            }
+        }
+        
+        if self.winner == nil {
+            self.toggleTurn()
+        }
+        self.isBallMoving = false
+    }
+
     private func toggleTurn() {
         physicsService.resetBall()
         if gameMode == .singlePlayer && currentPlayer != .computer {
@@ -117,6 +136,9 @@ class GameViewModel: ObservableObject {
     }
     
     private func computerMove() {
+        guard currentPlayer == .computer else {
+            return
+        }
         rollBall()
     }
     
@@ -139,10 +161,10 @@ class GameViewModel: ObservableObject {
     func reset() {
         print("@@ reset")
         gameService.reset()
+        physicsService.resetBall()
         rows = gameService.rows
         currentPlayer = player1
-        print("@@ Current Player now: \(currentPlayer.name)")
         winner = nil
-        physicsService.resetBall()
+        isBallMoving = false
     }
 }
