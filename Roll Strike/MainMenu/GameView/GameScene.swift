@@ -9,7 +9,6 @@ import SpriteKit
 import GameplayKit
 
 class GameScene: SKScene {
-    
     private var ball: SKSpriteNode!
     private let ballSize: CGFloat = 40
     private let bottomMargin: CGFloat = 100
@@ -21,7 +20,7 @@ class GameScene: SKScene {
 
     var onBallStopped: ((CGPoint) -> Void)?
     
-    private var ballStartPosition: CGPoint {
+    var ballStartPosition: CGPoint {
         CGPoint(x: frame.midX, y: frame.minY + bottomMargin - ball.size.height/2)
     }
     
@@ -47,11 +46,7 @@ class GameScene: SKScene {
         
         // Set up physics for the ball
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ballSize / 2)
-        ball.physicsBody?.restitution = 0.2
-        ball.physicsBody?.friction = 0.5
-        ball.physicsBody?.linearDamping = 0.3
-        ball.physicsBody?.allowsRotation = true
-        
+        setDefaultBallphysicsBody()
         addChild(ball)
     }
     
@@ -83,25 +78,54 @@ class GameScene: SKScene {
         }
     }
     
-    func applyImpulse(_ impulse: CGVector) {
+    func applyImpulse(_ impulse: CGVector, on object: RollingObject) {
         print("@@ Scene applyImpulse: \(impulse)")
-        // Depends on object if iron should be around one
-        ball.physicsBody?.linearDamping = 1
+        configureBall(for: object)
         ball.physicsBody?.applyImpulse(impulse)
         ballHasStopped = false
+    }
+    
+    func runMovementAction(_ action: SKAction) {
+        ball.run(action) { [weak self] in
+            guard let self = self else { return }
+            onBallStopped?(ball.position)
+            onBallStopped = nil
+            ballHasStopped = true
+        }
     }
     
     func resetBall() {
         print("@@ Scene resetBall")
         ball.position = ballStartPosition
+        setDefaultBallphysicsBody()
+        ball.removeAllActions()
+        onBallStopped = nil
+        ballHasStopped = true
+    }
+    
+    private func configureBall(for rollingObject: RollingObject) {
+        switch rollingObject.type {
+        case .ironBall:
+            ball.physicsBody?.mass = 1.5
+            ball.physicsBody?.linearDamping = 0.8
+            ball.physicsBody?.angularDamping = 0.7
+        case .crumpledPaper:
+            ball.physicsBody?.mass = 0.1
+            ball.physicsBody?.linearDamping = 0.3
+            ball.physicsBody?.angularDamping = 0.1
+        default:
+            setDefaultBallphysicsBody()
+        }
+    }
+    
+    private func setDefaultBallphysicsBody() {
         ball.physicsBody?.velocity = .zero
         ball.physicsBody?.angularVelocity = .zero
         ball.physicsBody?.restitution = 0.2
         ball.physicsBody?.friction = 0.5
-        ball.physicsBody?.linearDamping = 0.3
+        ball.physicsBody?.mass = 1
+        ball.physicsBody?.linearDamping = 0.4
+        ball.physicsBody?.angularDamping = 0.3
         ball.physicsBody?.allowsRotation = true
-        ball.removeAllActions()
-        onBallStopped = nil
-        ballHasStopped = true
     }
 }

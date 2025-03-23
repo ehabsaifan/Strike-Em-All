@@ -12,7 +12,9 @@ struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
+    
     @State private var dragStart: CGPoint?
+    @State private var dragStartTime: Date?
     
     var body: some View {
         ZStack {
@@ -136,20 +138,24 @@ struct GameView: View {
                     // Record the drag start position, if not set
                     if dragStart == nil {
                         dragStart = value.startLocation
+                        dragStartTime = Date()
+                        print("Dragging started at \(dragStart)")
                     }
                 }
                 .onEnded { value in
-                    // Only record the drag start if the ball is not already moving.
-                    if !viewModel.isBallMoving && dragStart == nil {
-                        dragStart = value.startLocation
-                    }
-                }
-                .onEnded { value in
+                    print("Dragging ended at \(value.location)")
                     // Only process if a valid start exists and the ball isn't moving.
-                    if let start = dragStart, !viewModel.isBallMoving {
+                    if let start = dragStart,
+                        let startTime = dragStartTime,
+                        !viewModel.isBallMoving {
                         let end = value.location
                         let dx = end.x - start.x
-                        let dy = end.y - start.y
+                        let dy = end.y + start.y
+                        
+                        let distance = sqrt(dx * dx + dy * dy)
+                        let timeInterval = Date().timeIntervalSince(startTime)
+                        let velocity = timeInterval > 0 ? distance / CGFloat(timeInterval) : 0
+                        print("Swipe velocity: \(velocity) points/second")
                         
                         // Depending on coordinate systems, you might invert the y.
                         // For example, if you need upward motion when swiping up:
@@ -157,6 +163,7 @@ struct GameView: View {
                         viewModel.rollBall(with: impulse)
                     }
                     dragStart = nil
+                    dragStartTime = nil
                 }
         )
     }

@@ -42,8 +42,6 @@ class MainMenuViewModel: ObservableObject {
         switch selectedRollingObjectType {
         case .ball:
             return Ball()
-        case .fireBall:
-            return FireBall()
         case .crumpledPaper:
             return CrumpledPaper()
         case .ironBall:

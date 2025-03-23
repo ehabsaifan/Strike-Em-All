@@ -49,7 +49,7 @@ class GameService: GameServiceProtocol {
         guard !rows.isEmpty else {
             return nil
         }
-        return rollingObject.roll(maxRows: rows.count)
+        return Int.random(in: 0..<rows.count)
     }
     
     func markCell(at rowIndex: Int, forPlayer player: PlayerType) {

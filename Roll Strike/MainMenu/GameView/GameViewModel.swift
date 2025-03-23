@@ -20,9 +20,6 @@ class GameViewModel: ObservableObject {
     @Published var player2: Player
     @Published var gameMode: GameMode
     @Published var isBallMoving = false
-    
-    // For example, we add a property to track ball position (if needed)
-    @Published var ballPosition: CGPoint = .zero
     // For robust collision detection using screen coordinates (if desired)
     @Published var rowFrames: [Int: CGRect] = [:]
     
@@ -61,18 +58,13 @@ class GameViewModel: ObservableObject {
         let sortedRowFrames = rowFrames.sorted(by: { $0.key > $1.key }) // Ensure rows are in order
         
         let ballCenterY = UIScreen.main.bounds.maxY - finalPosition.y
-        let ballLowerEdge = ballCenterY + ballSize/2
-        let ballUpperEdge = ballCenterY - ballSize/2
-        print("@@ ballUpperEdge: \(ballUpperEdge) | ballCenterY: \(ballCenterY) | ballLowerEdge: \(ballLowerEdge)")
         
         for (index, rowFrame) in sortedRowFrames {
-            print("@@ index: \(index) -> \(rowFrame.minY) - \(rowFrame.maxY)")
             if (ballCenterY >= rowFrame.minY) && (ballCenterY <= rowFrame.maxY) {
                 return index
             }
         }
         
-        print("@@ No valid row detected for y: \(finalPosition.y)")
         return nil
     }
     
@@ -92,8 +84,7 @@ class GameViewModel: ObservableObject {
         print("actual impulse: \(impulse)")
         guard !isBallMoving else { return }
         isBallMoving = true
-        let adjustedImpulse = gameService.rollingObject.adjustImpulse(impulse)
-        physicsService.moveBall(with: adjustedImpulse) { [weak self] finalPosition in
+        physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
             guard let self = self else { return }
             gotFinalPostion(finalPosition)
         }
