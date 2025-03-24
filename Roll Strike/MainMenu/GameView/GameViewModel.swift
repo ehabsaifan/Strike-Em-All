@@ -20,12 +20,16 @@ class GameViewModel: ObservableObject {
     @Published var player2: Player
     @Published var gameMode: GameMode
     @Published var isBallMoving = false
+    @Published var launchImpulse: CGVector? = nil
     // For robust collision detection using screen coordinates (if desired)
     @Published var rowFrames: [Int: CGRect] = [:]
     
     let gameScene: GameScene
     let rowHeight: CGFloat = 70  // Used to calculate landing row
-    let ballSize: CGFloat = 40  // must match GameScene.ballSize
+    
+    static let ballDiameter: CGFloat = 40  // must match GameScene.ballSize
+    static let ballStartYSpacing:CGFloat = 100 // Must match gameScene.ballStartYSpacing
+    static let launchAreaHeight: CGFloat = 120
         
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
@@ -68,6 +72,10 @@ class GameViewModel: ObservableObject {
         return nil
     }
     
+    func updateBallPosition(with offset: CGSize) {
+            physicsService.updateBallPosition(with: offset)
+        }
+    
     func rollBall() {
         print("@@ Now \(currentPlayer) is rolling the ball...")
         guard !isBallMoving else { return }
@@ -79,10 +87,10 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    func rollBall(with impulse: CGVector) {
+    func launchBall() {
         print("@@ Now \(currentPlayer) is pushing the ball...")
-        print("actual impulse: \(impulse)")
         guard !isBallMoving else { return }
+        guard let impulse = launchImpulse else { return }
         isBallMoving = true
         physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
             guard let self = self else { return }

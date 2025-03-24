@@ -9,6 +9,7 @@ import SpriteKit
 import UIKit
 
 protocol PhysicsServiceProtocol {
+    func updateBallPosition(with offset: CGSize)
     func rollBallWithRandomPosition(maxY: CGFloat, completion: @escaping (CGPoint) -> Void)
     func moveBall(with impulse: CGVector, ball: RollingObject, completion: @escaping (CGPoint) -> Void)
     func resetBall()
@@ -23,6 +24,10 @@ class SpriteKitPhysicsService: PhysicsServiceProtocol {
     
     init(scene: GameScene) {
         self.scene = scene
+    }
+    
+    func updateBallPosition(with offset: CGSize) {
+        scene?.updateBallPosition(with: offset)
     }
     
     func rollBallWithRandomPosition(maxY: CGFloat, completion: @escaping (CGPoint) -> Void) {
@@ -58,7 +63,7 @@ extension SpriteKitPhysicsService {
             return impulse
         case .crumpledPaper:
             let randomOffset = CGFloat.random(in: -4...4)
-            return CGVector(dx: (impulse.dx + randomOffset) * 1.5, dy: (impulse.dy + randomOffset) * 1.5)
+            return impulse //CGVector(dx: (impulse.dx + randomOffset) * 1.5, dy: (impulse.dy + randomOffset) * 1.5)
         }
     }
     
@@ -69,21 +74,41 @@ extension SpriteKitPhysicsService {
             return nil
             
         case .crumpledPaper:
-            let object = rollingObject as! CrumpledPaper
-            let target = CGPoint(x: start.x + impulse.dx, y: start.y + impulse.dy)
-            let path = CGMutablePath()
-            path.move(to: start)
-            let midX = (start.x + target.x) / 2
-            let midY = (start.y + target.y) / 2
-            let controlOffset: CGFloat = 30
-            let controlPoint1 = CGPoint(x: midX - controlOffset, y: midY + controlOffset)
-            let controlPoint2 = CGPoint(x: midX + controlOffset, y: midY - controlOffset)
-            path.addCurve(to: target, control1: controlPoint1, control2: controlPoint2)
-            let distance = hypot(target.x - start.x, target.y - start.y)
-            let duration = 1.0/TimeInterval(distance / (object.speed * 100))
-            let action = SKAction.follow(path, asOffset: false, orientToPath: false, duration: duration)
-            action.timingMode = .easeInEaseOut
-            return action
+            return nil
+//            let object = rollingObject as! CrumpledPaper
+//            let target = CGPoint(x: start.x + impulse.dx, y: start.y + impulse.dy)
+//            
+//            // Create a wavy zigzag path
+//            let path = CGMutablePath()
+//            path.move(to: start)
+//            
+//            let segmentCount = Int.random(in: 5...8) // Random number of zigzags
+//            let segmentLength = hypot(target.x - start.x, target.y - start.y) / CGFloat(segmentCount)
+//            
+//            var currentPoint = start
+//            var leaningDirection: CGFloat = Bool.random() ? -1 : 1  // Start leaning left or right
+//            
+//            for _ in 0..<segmentCount {
+//                let xOffset = CGFloat.random(in: 10...30) * leaningDirection
+//                let yOffset = segmentLength
+//                
+//                let nextPoint = CGPoint(x: currentPoint.x + xOffset, y: currentPoint.y + yOffset)
+//                path.addLine(to: nextPoint)
+//                
+//                // Randomly decide if it should change direction
+//                if Bool.random() {
+//                    leaningDirection *= -1  // Switch left/right
+//                }
+//                
+//                currentPoint = nextPoint
+//            }
+//            
+//            path.addLine(to: target) // Final destination
+//            
+//            let duration = 5.0  // Time to reach target
+//            let action = SKAction.follow(path, asOffset: false, orientToPath: false, duration: duration)
+//            action.timingMode = .easeInEaseOut
+//            return action
         }
     }
 }

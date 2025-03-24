@@ -15,6 +15,7 @@ struct GameView: View {
     
     @State private var dragStart: CGPoint?
     @State private var dragStartTime: Date?
+    @State private var launchDragOffset: CGSize = .zero
     
     var body: some View {
         ZStack {
@@ -90,28 +91,20 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Control Buttons
-                HStack {
-                    Button(action: { viewModel.reset() }) {
-                        Text("Reset")
-                            .font(.headline)
-                            .padding()
-                            .background(Color.red.opacity(0.7))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    Spacer()
-                    Button(action: { viewModel.rollBall() }) {
-                        Text("Roll Ball")
-                            .font(.headline)
-                            .padding()
-                            .background(viewModel.currentPlayer == .computer ? Color.gray : Color.green.opacity(0.8))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    .disabled(viewModel.currentPlayer == .computer)
+                LaunchAreaView(
+                    launchImpulse: $viewModel.launchImpulse,
+                    dragOffset: $launchDragOffset,
+                    launchAreaHeight: GameViewModel.launchAreaHeight,
+                    ballDiameter: GameViewModel.ballDiameter
+                )
+                .frame(height: GameViewModel.launchAreaHeight)
+                .onChange(of: launchDragOffset) { newOffset in
+                    viewModel.updateBallPosition(with: newOffset)
                 }
-                .padding()
+                .onChange(of: viewModel.launchImpulse) { _ in
+                    viewModel.launchBall()
+                }
+                
             }
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
@@ -131,41 +124,6 @@ struct GameView: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
         }
-        // Add swipe gesture to capture ball movement
-        .gesture(
-            DragGesture(minimumDistance: 10)
-                .onChanged { value in
-                    // Record the drag start position, if not set
-                    if dragStart == nil {
-                        dragStart = value.startLocation
-                        dragStartTime = Date()
-                        print("Dragging started at \(dragStart)")
-                    }
-                }
-                .onEnded { value in
-                    print("Dragging ended at \(value.location)")
-                    // Only process if a valid start exists and the ball isn't moving.
-                    if let start = dragStart,
-                        let startTime = dragStartTime,
-                        !viewModel.isBallMoving {
-                        let end = value.location
-                        let dx = end.x - start.x
-                        let dy = end.y + start.y
-                        
-                        let distance = sqrt(dx * dx + dy * dy)
-                        let timeInterval = Date().timeIntervalSince(startTime)
-                        let velocity = timeInterval > 0 ? distance / CGFloat(timeInterval) : 0
-                        print("Swipe velocity: \(velocity) points/second")
-                        
-                        // Depending on coordinate systems, you might invert the y.
-                        // For example, if you need upward motion when swiping up:
-                        let impulse = CGVector(dx: -dx, dy: dy)
-                        viewModel.rollBall(with: impulse)
-                    }
-                    dragStart = nil
-                    dragStartTime = nil
-                }
-        )
     }
 }
 
