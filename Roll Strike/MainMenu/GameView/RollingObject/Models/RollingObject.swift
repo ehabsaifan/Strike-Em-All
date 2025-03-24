@@ -13,13 +13,6 @@ protocol RollingObject {
     var speed: Double { get }
 }
 
-extension RollingObject {
-    // Default implementation: no custom action, use physics impulse.
-    func movementAction(from start: CGPoint, with impulse: CGVector) -> SKAction? {
-        return nil
-    }
-}
-
 class Ball: RollingObject {
     var name = "Ball"
     var speed = 1.0

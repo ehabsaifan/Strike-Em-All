@@ -28,8 +28,13 @@ class GameViewModel: ObservableObject {
     let rowHeight: CGFloat = 70  // Used to calculate landing row
     
     static let ballDiameter: CGFloat = 40  // must match GameScene.ballSize
-    static let ballStartYSpacing:CGFloat = 100 // Must match gameScene.ballStartYSpacing
-    static let launchAreaHeight: CGFloat = 120
+    static var ballStartYSpacing:CGFloat {
+        launchAreaHeight + GameViewModel.bottomSafeAreaInset
+    } // Must match gameScene.ballStartYSpacing
+    static let launchAreaHeight: CGFloat = 100
+    static var bottomSafeAreaInset: CGFloat {
+        UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0
+    }
         
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
@@ -53,6 +58,7 @@ class GameViewModel: ObservableObject {
     
     func startGame(with targets: [GameContent]) {
         gameService.startGame(with: targets, cellEffect: cellEffect)
+        physicsService.setRollingObject(gameService.rollingObject)
         rows = gameService.rows
     }
     
@@ -73,8 +79,9 @@ class GameViewModel: ObservableObject {
     }
     
     func updateBallPosition(with offset: CGSize) {
-            physicsService.updateBallPosition(with: offset)
-        }
+        guard !isBallMoving else { return }
+        physicsService.updateBallPosition(with: offset)
+    }
     
     func rollBall() {
         print("@@ Now \(currentPlayer) is rolling the ball...")
@@ -165,5 +172,6 @@ class GameViewModel: ObservableObject {
         currentPlayer = player1
         winner = nil
         isBallMoving = false
+        physicsService.setRollingObject(gameService.rollingObject)
     }
 }

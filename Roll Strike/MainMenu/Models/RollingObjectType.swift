@@ -12,4 +12,15 @@ enum RollingObjectType: String, CaseIterable, Identifiable {
     case ball = "Ball"
     case ironBall = "Iron Ball"
     case crumpledPaper = "Crumpled Paper"
+    
+    var imageName: String {
+        switch self {
+        case .ball:
+            "beach_ball"
+        case .ironBall:
+            "iron_ball"
+        case .crumpledPaper:
+            "crupmpled_paper_ball"
+        }
+    }
 }

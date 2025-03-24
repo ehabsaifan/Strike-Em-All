@@ -16,7 +16,7 @@ struct LaunchAreaView: View {
     let ballDiameter: CGFloat
 
     var restingBallCenterY: CGFloat {
-        launchAreaHeight - ballDiameter / 2
+        -GameViewModel.bottomSafeAreaInset + launchAreaHeight - ballDiameter / 2
     }
     
     var body: some View {
@@ -54,7 +54,7 @@ struct LaunchAreaView: View {
                     dragOffset = CGSize(width: value.translation.width, height: -value.translation.height)
                 }
                 .onEnded { value in
-                    let pullStrength: CGFloat = 20
+                    let pullStrength: CGFloat = 10
                     let force = CGVector(
                         dx: -value.translation.width * pullStrength,
                         dy: value.translation.height * pullStrength

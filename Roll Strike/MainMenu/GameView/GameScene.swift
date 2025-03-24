@@ -27,6 +27,14 @@ class GameScene: SKScene {
         CGPoint(x: frame.midX, y: frame.minY + ballStartY - ball.size.height / 2)
     }
     
+    var ballType: RollingObjectType = .ball {
+        didSet {
+            if ball != nil {
+                ball.texture = SKTexture(imageNamed:  ballType.imageName)
+            }
+        }
+    }
+    
     override func didMove(to view: SKView) {
         backgroundColor = .clear
         
@@ -35,7 +43,7 @@ class GameScene: SKScene {
         physicsWorld.gravity = .zero
         
         // Create the ball node.
-        ball = SKSpriteNode(imageNamed: "ball")
+        ball = SKSpriteNode(texture: SKTexture(imageNamed: ballType.imageName))
         if ball.texture == nil {
             ball = SKSpriteNode(color: .blue, size: CGSize(width: ballDiameter, height: ballDiameter))
             ball.name = "ball"
