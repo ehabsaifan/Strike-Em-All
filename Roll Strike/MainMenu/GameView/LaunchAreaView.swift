@@ -54,7 +54,7 @@ struct LaunchAreaView: View {
                     dragOffset = CGSize(width: value.translation.width, height: -value.translation.height)
                 }
                 .onEnded { value in
-                    let pullStrength: CGFloat = 10
+                    let pullStrength: CGFloat = 7
                     let force = CGVector(
                         dx: -value.translation.width * pullStrength,
                         dy: value.translation.height * pullStrength

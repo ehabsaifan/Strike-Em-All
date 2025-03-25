@@ -12,7 +12,7 @@ protocol GameServiceProtocol {
     var rollingObject: RollingObject { get }
     var contentProvider: GameContentProvider { get }
     
-    func startGame(with targets: [GameContent], cellEffect: CellEffect)
+    func startGame(with targets: [GameContent])
     func rollBall() -> Int?
     func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType)
     func checkForWinner() -> GameService.PlayerType?
@@ -34,10 +34,9 @@ class GameService: GameServiceProtocol {
         case player1, player2
     }
     
-    func startGame(with targets: [GameContent], cellEffect: CellEffect) {
+    func startGame(with targets: [GameContent]) {
         rows = targets.enumerated().map { index, target in
             GameRow(
-                cellEffect: cellEffect,
                 displayContent: target
             )
         }
@@ -62,11 +61,10 @@ class GameService: GameServiceProtocol {
         var row = rows[rowIndex]
         switch player {
         case .player1:
-            row.updateRightMarking()
-        case .player2:
             row.updateLeftMarking()
+        case .player2:
+            row.updateRightMarking()
         }
-        rollingObject = row.cellEffect.affect(rollingObject: rollingObject)
         var new = rows
         new[rowIndex] = row
         rows = new
@@ -74,8 +72,8 @@ class GameService: GameServiceProtocol {
     
     func checkForWinner() -> PlayerType? {
         print("@@ GameService checkForWinner")
-        let playerOneScore = rows.filter { $0.rightMarking == .complete }.count
-        let playerTwoScore = rows.filter { $0.leftMarking == .complete }.count
+        let playerOneScore = rows.filter { $0.leftMarking == .complete }.count
+        let playerTwoScore = rows.filter { $0.rightMarking == .complete }.count
         
         if playerOneScore == rows.count {
             return .player1

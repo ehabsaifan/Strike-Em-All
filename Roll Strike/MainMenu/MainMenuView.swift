@@ -8,12 +8,7 @@
 import SwiftUI
 
 struct MainMenuView: View {
-    @StateObject private var viewModel: MainMenuViewModel
-
-    init() {
-        let contentProvider = GameContentProvider()
-        _viewModel = StateObject(wrappedValue: MainMenuViewModel(contentProvider: contentProvider))
-    }
+    @StateObject private var viewModel = MainMenuViewModel(contentProvider: GameContentProvider())
 
     var body: some View {
         VStack {
@@ -26,6 +21,7 @@ struct MainMenuView: View {
             Picker("Game Mode", selection: $viewModel.gameMode) {
                 Text("Single Player").tag(GameMode.singlePlayer)
                 Text("Two Players").tag(GameMode.twoPlayers)
+                Text("Against Players").tag(GameMode.againstComputer)
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding()
@@ -41,23 +37,26 @@ struct MainMenuView: View {
                     .padding()
             }
             
-            // Picker to choose the rolling object
-            Picker("Select Rolling Object", selection: $viewModel.selectedRollingObjectType) {
-                ForEach(RollingObjectType.allCases, id: \.self) { type in
-                    Text(type.rawValue).tag(type)
+            VStack {
+                Picker("Select Rolling Object", selection: $viewModel.selectedRollingObjectType) {
+                    ForEach(RollingObjectType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                
+                HStack {
+                    ForEach(RollingObjectType.allCases, id: \.self) { type in
+                        Image(type.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
             }
-            .pickerStyle(SegmentedPickerStyle())
             .padding()
             
-            // Picker to choose the cell effect type
-            Picker("Select Cell Effect", selection: $viewModel.selectedCellEffectType) {
-                ForEach(CellEffectType.allCases, id: \.self) { type in
-                    Text(type.rawValue).tag(type)
-                }
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding()
             
             Button(action: { viewModel.showGameView = true }) {
                 Text("Start Game")
@@ -70,6 +69,9 @@ struct MainMenuView: View {
                     .padding()
             }
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
         .fullScreenCover(isPresented: $viewModel.showGameView) {
             GameView(viewModel: createGameViewModel())
         }
@@ -77,7 +79,6 @@ struct MainMenuView: View {
     
     func createGameViewModel() -> GameViewModel {
         let rollingObject = viewModel.createRollingObject()
-        let cellEffect = viewModel.createCellEffect()
         let contentProvider = GameContentProvider()
         let gameService = GameService(rollingObject: rollingObject,
                                       contentProvider: contentProvider)
@@ -94,8 +95,7 @@ struct MainMenuView: View {
             gameScene: gameScene,
             gameMode: viewModel.gameMode,
             player1: viewModel.getPlayer1(),
-            player2: viewModel.getPlayer2(),
-            cellEffect: cellEffect
+            player2: viewModel.getPlayer2()
         )
         
         gameViewModel.startGame(with: viewModel.getTargets())

@@ -11,7 +11,6 @@ class GameViewModel: ObservableObject {
     private var gameService: GameServiceProtocol
     private var contentProvider: GameContentProvider
     private var physicsService: PhysicsServiceProtocol
-    private var cellEffect: CellEffect
         
     @Published var rows: [GameRowProtocol] = []
     @Published var currentPlayer: Player
@@ -42,8 +41,7 @@ class GameViewModel: ObservableObject {
          gameScene: GameScene,
          gameMode: GameMode,
          player1: Player,
-         player2: Player,
-         cellEffect: CellEffect) {
+         player2: Player) {
         self.gameService = gameService
         self.physicsService = physicsService
         self.contentProvider = contentProvider
@@ -52,12 +50,11 @@ class GameViewModel: ObservableObject {
         self.player1 = player1
         currentPlayer = player1
         self.player2 = player2
-        self.cellEffect = cellEffect
         rows = []
     }
     
     func startGame(with targets: [GameContent]) {
-        gameService.startGame(with: targets, cellEffect: cellEffect)
+        gameService.startGame(with: targets)
         physicsService.setRollingObject(gameService.rollingObject)
         rows = gameService.rows
     }
@@ -130,7 +127,12 @@ class GameViewModel: ObservableObject {
 
     private func toggleTurn() {
         physicsService.resetBall()
-        if gameMode == .singlePlayer && currentPlayer != .computer {
+        guard gameMode != .singlePlayer else {
+            return
+        }
+        
+        print("@@ Current Player now: \(currentPlayer.name)")
+        if gameMode == .againstComputer && currentPlayer != .computer {
             currentPlayer = .computer
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.computerMove()
@@ -149,8 +151,8 @@ class GameViewModel: ObservableObject {
     }
     
     func checkForWinner() {
-        let playerOneScore = rows.filter { $0.rightMarking == .complete }.count
-        let playerTwoScore = rows.filter { $0.leftMarking == .complete }.count
+        let playerOneScore = rows.filter { $0.leftMarking == .complete }.count
+        let playerTwoScore = rows.filter { $0.rightMarking == .complete }.count
         
         if playerOneScore == rows.count {
             winner = player1

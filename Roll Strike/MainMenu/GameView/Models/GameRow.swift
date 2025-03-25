@@ -8,7 +8,6 @@
 import Foundation
 
 struct GameRow: GameRowProtocol {
-    let cellEffect: CellEffect
     let displayContent: GameContent
     
     var leftMarking: MarkingState = .none

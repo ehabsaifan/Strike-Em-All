@@ -27,7 +27,7 @@ class MainMenuViewModel: ObservableObject {
     }
 
     func getPlayer2() -> Player {
-        guard gameMode != .singlePlayer else {
+        guard gameMode != .againstComputer else {
             return .computer
         }
         let name = player2Name.isEmpty ? "Player 2" : player2Name
@@ -46,17 +46,6 @@ class MainMenuViewModel: ObservableObject {
             return CrumpledPaper()
         case .ironBall:
             return IronBall()
-        }
-    }
-
-    func createCellEffect() -> CellEffect {
-        switch selectedCellEffectType {
-        case .regular:
-            return RegularCell()
-        case .fire:
-            return FireCell()
-        case .wormhole:
-            return WormholeCell()
         }
     }
 }

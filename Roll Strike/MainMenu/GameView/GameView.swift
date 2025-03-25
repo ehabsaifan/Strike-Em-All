@@ -42,11 +42,13 @@ struct GameView: View {
                 }
                 
                 HStack {
-                    PlayerNameView(name: viewModel.player2.name, isActive: viewModel.currentPlayer == viewModel.player2)
-                    
-                    Spacer()
-                    
                     PlayerNameView(name: viewModel.player1.name, isActive: viewModel.currentPlayer == viewModel.player1)
+                    
+                    if viewModel.gameMode != .singlePlayer {
+                        Spacer()
+                    
+                        PlayerNameView(name: viewModel.player2.name, isActive: viewModel.currentPlayer == viewModel.player2)
+                    }
                 }
                 .padding(.horizontal)
                 .padding([.top, .bottom], 8)
@@ -69,11 +71,13 @@ struct GameView: View {
                                     .frame(height: viewModel.rowHeight)
                                     .frame(maxWidth: .infinity)
                                 
-                                GameCellView(marking: row.rightMarking,
-                                             content: row.displayContent)
-                                .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
-                                .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                .padding(.trailing, 5)
+                                if viewModel.gameMode != .singlePlayer {
+                                    GameCellView(marking: row.rightMarking,
+                                                 content: row.displayContent)
+                                    .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
+                                    .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                    .padding(.trailing, 5)
+                                }
                             }
                         }
                         .frame(height: viewModel.rowHeight)
@@ -147,8 +151,7 @@ private func createGameViewModel() -> GameViewModel {
                                   gameScene: gameScene,
                                   gameMode: .twoPlayers,
                                   player1: .player(name: "Ehab"),
-                                  player2: .computer,
-                                  cellEffect: RegularCell())
+                                  player2: .computer)
     return viewModel
 }
 
