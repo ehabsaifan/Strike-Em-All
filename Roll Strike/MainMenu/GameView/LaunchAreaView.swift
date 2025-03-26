@@ -11,7 +11,6 @@ struct LaunchAreaView: View {
     @Binding var launchImpulse: CGVector?
     @Binding var dragOffset: CGSize
     
-    // These come from the view model.
     let launchAreaHeight: CGFloat
     let ballDiameter: CGFloat
 
@@ -21,37 +20,58 @@ struct LaunchAreaView: View {
     
     var body: some View {
         ZStack {
-            // Background for the launch area.
+            // Brown background for the slingshot area
             Rectangle()
-                .fill(Color.brown)
+                .fill(Color.clear)
                 .ignoresSafeArea(edges: .bottom)
             
             GeometryReader { geo in
                 let width = geo.size.width
-                
-                // Define fixed positions for the left and right pins.
+                // Pins at 30% and 70% of width, aligned at restingBallCenterY
                 let leftPin = CGPoint(x: width * 0.3, y: restingBallCenterY)
                 let rightPin = CGPoint(x: width * 0.7, y: restingBallCenterY)
                 
-                // Compute the ball's current center based on the drag offset.
+                // The ball's center is offset by dragOffset
                 let currentBallCenter = CGPoint(
                     x: width / 2 + dragOffset.width,
                     y: restingBallCenterY - dragOffset.height
                 )
                 
-                // Draw the elastic string.
-                Path { path in
-                    path.move(to: leftPin)
-                    path.addLine(to: currentBallCenter)
-                    path.addLine(to: rightPin)
+                ZStack {
+                    // 1) Draw rope path with texture
+                    Path { path in
+                        path.move(to: leftPin)
+                        path.addLine(to: currentBallCenter)
+                        path.addLine(to: rightPin)
+                    }
+                    .stroke(
+                        ImagePaint(
+                            image: Image("rope"), // Your rope texture
+                            scale: 0.5
+                        ),
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
+                    )
+                    
+                    // 2) Place nail images at each pin
+                    Image("screw_head")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .position(leftPin)
+                    
+                    Image("screw_head")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .position(rightPin)
                 }
-                .stroke(Color.black, lineWidth: 3)
             }
         }
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    dragOffset = CGSize(width: value.translation.width, height: -value.translation.height)
+                    dragOffset = CGSize(
+                        width: value.translation.width,
+                        height: -value.translation.height
+                    )
                 }
                 .onEnded { value in
                     let pullStrength: CGFloat = 7

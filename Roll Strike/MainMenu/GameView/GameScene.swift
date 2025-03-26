@@ -21,13 +21,13 @@ class GameScene: SKScene {
     
     // Callback to notify when the ball stops.
     var onBallStopped: ((CGPoint) -> Void)?
-    
+        
     // The starting position for the ball in the scene.
     var ballStartPosition: CGPoint {
         CGPoint(x: frame.midX, y: frame.minY + ballStartY - ball.size.height / 2)
     }
     
-    var ballType: RollingObjectType = .ball {
+    var ballType: RollingObjectType = .beachBall {
         didSet {
             if ball != nil {
                 ball.texture = SKTexture(imageNamed:  ballType.imageName)
@@ -62,6 +62,7 @@ class GameScene: SKScene {
     /// Called every frame. Detects when the ball’s velocity is low enough to consider it "stopped."
     override func update(_ currentTime: TimeInterval) {
         guard let velocity = ball.physicsBody?.velocity else { return }
+        
         if !ballHasStopped,
            abs(velocity.dx) < velocityThreshold,
            abs(velocity.dy) < velocityThreshold {
@@ -101,8 +102,6 @@ class GameScene: SKScene {
         if object.type == .crumpledPaper {
             // Apply the base impulse first.
             ball.physicsBody?.applyImpulse(impulse)
-            // Apply the rotational impulse first.
-            ball.physicsBody?.applyAngularImpulse(CGFloat.random(in: 0.02...0.10))
             
             // Schedule periodic small perturbations to the current velocity.
             let perturbationAction = SKAction.repeatForever(
@@ -139,6 +138,8 @@ class GameScene: SKScene {
         } else {
             ball.physicsBody?.applyImpulse(impulse)
         }
+        // Apply some rotational
+        ball.physicsBody?.applyAngularImpulse(CGFloat.random(in: 0.02...0.10))
         ballHasStopped = false
     }
     

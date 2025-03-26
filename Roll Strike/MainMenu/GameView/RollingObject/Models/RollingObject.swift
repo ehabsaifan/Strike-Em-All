@@ -16,7 +16,7 @@ protocol RollingObject {
 class Ball: RollingObject {
     var name = "Ball"
     var speed = 1.0
-    let type = RollingObjectType.ball
+    let type = RollingObjectType.beachBall
 }
 
 class CrumpledPaper: RollingObject {

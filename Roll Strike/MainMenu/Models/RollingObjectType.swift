@@ -9,13 +9,13 @@ import Foundation
 
 enum RollingObjectType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
-    case ball = "Ball"
+    case beachBall = "Beach Ball"
     case ironBall = "Iron Ball"
     case crumpledPaper = "Crumpled Paper"
     
     var imageName: String {
         switch self {
-        case .ball:
+        case .beachBall:
             "beach_ball"
         case .ironBall:
             "iron_ball"

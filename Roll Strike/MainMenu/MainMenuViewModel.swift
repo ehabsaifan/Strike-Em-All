@@ -12,7 +12,7 @@ class MainMenuViewModel: ObservableObject {
     @Published var player1Name: String = ""
     @Published var player2Name: String = ""
     @Published var showGameView: Bool = false
-    @Published var selectedRollingObjectType: RollingObjectType = .ball
+    @Published var selectedRollingObjectType: RollingObjectType = .beachBall
     @Published var selectedCellEffectType: CellEffectType = .regular
 
     private let contentProvider: GameContentProvider
@@ -40,7 +40,7 @@ class MainMenuViewModel: ObservableObject {
 
     func createRollingObject() -> RollingObject {
         switch selectedRollingObjectType {
-        case .ball:
+        case .beachBall:
             return Ball()
         case .crumpledPaper:
             return CrumpledPaper()
