@@ -21,7 +21,7 @@ struct MainMenuView: View {
             Picker("Game Mode", selection: $viewModel.gameMode) {
                 Text("Single Player").tag(GameMode.singlePlayer)
                 Text("Two Players").tag(GameMode.twoPlayers)
-                Text("Against Players").tag(GameMode.againstComputer)
+                Text("Against Computer").tag(GameMode.againstComputer)
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding()
