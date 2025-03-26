@@ -101,20 +101,41 @@ class GameScene: SKScene {
         if object.type == .crumpledPaper {
             // Apply the base impulse first.
             ball.physicsBody?.applyImpulse(impulse)
+            // Apply the rotational impulse first.
+            ball.physicsBody?.applyAngularImpulse(CGFloat.random(in: 0.02...0.10))
             
-            // Run a repeating action that applies small random impulses.
-            let randomMotion = SKAction.repeatForever(
+            // Schedule periodic small perturbations to the current velocity.
+            let perturbationAction = SKAction.repeatForever(
                 SKAction.sequence([
-                    SKAction.run {
-                        let randomX = CGFloat.random(in: -3...3)
-                        let randomY = CGFloat.random(in: -1...1)
-                        let randomImpulse = CGVector(dx: randomX, dy: randomY)
-                        self.ball.physicsBody?.applyImpulse(randomImpulse)
-                    },
-                    SKAction.wait(forDuration: 0.01)
+                    SKAction.wait(forDuration: 0.1),  // Adjust frequency as needed.
+                    SKAction.run { [weak self] in
+                        guard let self = self,
+                              let currentVelocity = self.ball.physicsBody?.velocity else { return }
+                        
+                        // Compute the current velocity angle.
+                        let currentAngle = atan2(currentVelocity.dy, currentVelocity.dx)
+                        
+                        // Choose a small random delta (in radians) - about ±4° (0.035 radians).
+                        let deltaAngle = CGFloat.random(in: -0.07...0.07)
+                        let newAngle = currentAngle + deltaAngle
+                        
+                        // Compute the magnitude (speed) of the current velocity.
+                        let speed = hypot(currentVelocity.dx, currentVelocity.dy)
+                        
+                        // Determine the target velocity vector after the small change.
+                        let targetVelocity = CGVector(dx: speed * cos(newAngle), dy: speed * sin(newAngle))
+                        
+                        // Compute the change required.
+                        let deltaVx = targetVelocity.dx - currentVelocity.dx
+                        let deltaVy = targetVelocity.dy - currentVelocity.dy
+                        let lateralImpulse = CGVector(dx: deltaVx, dy: deltaVy)
+                        
+                        // Apply the small lateral impulse.
+                        self.ball.physicsBody?.applyImpulse(lateralImpulse)
+                    }
                 ])
             )
-            ball.run(randomMotion, withKey: "zigzagMotion")
+            ball.run(perturbationAction, withKey: "zigzagMotion")
         } else {
             ball.physicsBody?.applyImpulse(impulse)
         }

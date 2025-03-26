@@ -52,6 +52,9 @@ struct MainMenuView: View {
                             .scaledToFit()
                             .frame(width: 40, height: 40)
                             .frame(maxWidth: .infinity)
+                            .onTapGesture {
+                                viewModel.selectedRollingObjectType = type
+                            }
                     }
                 }
             }
