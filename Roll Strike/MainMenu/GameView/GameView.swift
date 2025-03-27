@@ -139,6 +139,7 @@ private func createGameViewModel() -> GameViewModel {
     let contentProvider = GameContentProvider()
     let gameService = GameService(rollingObject: Ball(),
                                   contentProvider: contentProvider)
+    let soundService = SoundService(category: .street)
     
     // Create a SpriteKit scene for physics
     let gameScene = GameScene(size: UIScreen.main.bounds.size)
@@ -147,6 +148,7 @@ private func createGameViewModel() -> GameViewModel {
     
     let viewModel = GameViewModel(gameService: gameService,
                                   physicsService: physicsService,
+                                  soundService: soundService,
                                   contentProvider: contentProvider,
                                   gameScene: gameScene,
                                   gameMode: .twoPlayers,

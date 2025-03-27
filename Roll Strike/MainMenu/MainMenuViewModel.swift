@@ -12,8 +12,8 @@ class MainMenuViewModel: ObservableObject {
     @Published var player1Name: String = ""
     @Published var player2Name: String = ""
     @Published var showGameView: Bool = false
-    @Published var selectedRollingObjectType: RollingObjectType = .beachBall
-    @Published var selectedCellEffectType: CellEffectType = .regular
+    @Published var rollingObjectType: RollingObjectType = .beachBall
+    @Published var soundCategory: SoundCategory = .street
 
     private let contentProvider: GameContentProvider
     
@@ -37,9 +37,13 @@ class MainMenuViewModel: ObservableObject {
     func getTargets() -> [GameContent] {
         return contentProvider.getSelectedContents()
     }
+    
+    func getSoundCategory() -> SoundCategory {
+        return soundCategory
+    }
 
     func createRollingObject() -> RollingObject {
-        switch selectedRollingObjectType {
+        switch rollingObjectType {
         case .beachBall:
             return Ball()
         case .crumpledPaper:

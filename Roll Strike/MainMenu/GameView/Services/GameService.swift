@@ -13,8 +13,7 @@ protocol GameServiceProtocol {
     var contentProvider: GameContentProvider { get }
     
     func startGame(with targets: [GameContent])
-    func rollBall() -> Int?
-    func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType)
+    func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType) -> Bool
     func checkForWinner() -> GameService.PlayerType?
     func reset()
 }
@@ -43,31 +42,30 @@ class GameService: GameServiceProtocol {
         //print("@@ GameService started with rows: \(targets)")
     }
     
-    func rollBall() -> Int? {
-        print("@@ GameService rollBall()")
-        guard !rows.isEmpty else {
-            return nil
-        }
-        return Int.random(in: 0..<rows.count)
-    }
-    
-    func markCell(at rowIndex: Int, forPlayer player: PlayerType) {
+    func markCell(at rowIndex: Int, forPlayer player: PlayerType) -> Bool {
         print("@@ GameService markCell at index: \(rowIndex)")
         guard rows.indices.contains(rowIndex) else {
             assertionFailure("cell index out of range")
-            return
+            return false
         }
         //print("@@ Markin cell at index: \(rowIndex)")
         var row = rows[rowIndex]
+        let prevMarking: MarkingState
+        let newMarking: MarkingState
         switch player {
         case .player1:
+            prevMarking = row.leftMarking
             row.updateLeftMarking()
+            newMarking = row.leftMarking
         case .player2:
+            prevMarking = row.rightMarking
             row.updateRightMarking()
+            newMarking = row.rightMarking
         }
         var new = rows
         new[rowIndex] = row
         rows = new
+        return newMarking != prevMarking
     }
     
     func checkForWinner() -> PlayerType? {

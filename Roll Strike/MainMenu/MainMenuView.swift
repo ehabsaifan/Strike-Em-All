@@ -37,8 +37,16 @@ struct MainMenuView: View {
                     .padding()
             }
             
+            Picker("Sound Category", selection: $viewModel.soundCategory) {
+                ForEach(SoundCategory.allCases, id: \.self) { category in
+                    Text(category.rawValue).tag(category)
+                }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding()
+            
             VStack {
-                Picker("Select Rolling Object", selection: $viewModel.selectedRollingObjectType) {
+                Picker("Select Rolling Object", selection: $viewModel.rollingObjectType) {
                     ForEach(RollingObjectType.allCases, id: \.self) { type in
                         Text(type.rawValue).tag(type)
                     }
@@ -53,7 +61,7 @@ struct MainMenuView: View {
                             .frame(width: 40, height: 40)
                             .frame(maxWidth: .infinity)
                             .onTapGesture {
-                                viewModel.selectedRollingObjectType = type
+                                viewModel.rollingObjectType = type
                             }
                     }
                 }
@@ -85,6 +93,7 @@ struct MainMenuView: View {
         let contentProvider = GameContentProvider()
         let gameService = GameService(rollingObject: rollingObject,
                                       contentProvider: contentProvider)
+        let soundService = SoundService(category: viewModel.getSoundCategory())
         
         // Create a SpriteKit scene for physics
         let gameScene = GameScene(size: UIScreen.main.bounds.size)
@@ -94,6 +103,7 @@ struct MainMenuView: View {
         let gameViewModel = GameViewModel(
             gameService: gameService,
             physicsService: physicsService,
+            soundService: soundService,
             contentProvider: contentProvider,
             gameScene: gameScene,
             gameMode: viewModel.gameMode,

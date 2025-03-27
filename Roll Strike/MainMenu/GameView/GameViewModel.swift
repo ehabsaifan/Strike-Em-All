@@ -11,6 +11,7 @@ class GameViewModel: ObservableObject {
     private var gameService: GameServiceProtocol
     private var contentProvider: GameContentProvider
     private var physicsService: PhysicsServiceProtocol
+    private var soundService: SoundServiceProtocol
         
     @Published var rows: [GameRowProtocol] = []
     @Published var currentPlayer: Player
@@ -37,6 +38,7 @@ class GameViewModel: ObservableObject {
         
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
+         soundService: SoundServiceProtocol,
          contentProvider: GameContentProvider,
          gameScene: GameScene,
          gameMode: GameMode,
@@ -44,6 +46,7 @@ class GameViewModel: ObservableObject {
          player2: Player) {
         self.gameService = gameService
         self.physicsService = physicsService
+        self.soundService = soundService
         self.contentProvider = contentProvider
         self.gameScene = gameScene
         self.gameMode = gameMode
@@ -77,13 +80,19 @@ class GameViewModel: ObservableObject {
     
     func updateBallPosition(with offset: CGSize) {
         guard !isBallMoving else { return }
+        //playSound(.ropePull)
         physicsService.updateBallPosition(with: offset)
     }
     
-    func rollBall() {
+    // Temporarly for computer untill we simulate pulling in the launch view for computer
+    private func rollBall() {
         print("@@ Now \(currentPlayer) is rolling the ball...")
         guard !isBallMoving else { return }
         isBallMoving = true
+        //playSound(.ropeRelease)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.playSound(.rolling)
+        }
         let maxY = UIScreen.main.bounds.maxY
         physicsService.rollBallWithRandomPosition(maxY: maxY) { [weak self] finalPosition in
             guard let self = self else { return }
@@ -95,6 +104,11 @@ class GameViewModel: ObservableObject {
         print("@@ Now \(currentPlayer) is pushing the ball...")
         guard !isBallMoving else { return }
         guard let impulse = launchImpulse else { return }
+        //playSound(.ropeRelease)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.playSound(.rolling)
+        }
+        
         isBallMoving = true
         physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
             guard let self = self else { return }
@@ -103,12 +117,14 @@ class GameViewModel: ObservableObject {
     }
     
     private func gotFinalPostion(_ finalPosition: CGPoint) {
+        var success = false
         if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
             print("@@ Ball hit row: \(rowIndex)")
             let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
-            self.gameService.markCell(at: rowIndex, forPlayer: player)
+            success = self.gameService.markCell(at: rowIndex, forPlayer: player)
             self.rows = self.gameService.rows
             physicsService.resetBall()
+            
             switch self.gameService.checkForWinner() {
             case .player1:
                 self.winner = player1
@@ -120,7 +136,10 @@ class GameViewModel: ObservableObject {
         }
         
         if self.winner == nil {
+            playSound(success ? .hitStrike : .missStrike)
             self.toggleTurn()
+        } else {
+            playSound(.winner)
         }
         self.isBallMoving = false
     }
@@ -149,18 +168,7 @@ class GameViewModel: ObservableObject {
         }
         rollBall()
     }
-    
-    func checkForWinner() {
-        let playerOneScore = rows.filter { $0.leftMarking == .complete }.count
-        let playerTwoScore = rows.filter { $0.rightMarking == .complete }.count
-        
-        if playerOneScore == rows.count {
-            winner = player1
-        } else if playerTwoScore == rows.count {
-            winner = player2
-        }
-    }
-    
+
     func getContent(for index: Int) -> GameContent {
        // print("@@ returning \(contentProvider.getContent(for: index))")
         return contentProvider.getContent(for: index)
@@ -175,5 +183,12 @@ class GameViewModel: ObservableObject {
         winner = nil
         isBallMoving = false
         physicsService.setRollingObject(gameService.rollingObject)
+    }
+}
+
+// MARK: - Sound Service
+extension GameViewModel {
+    func playSound(_ event: SoundEvent) {
+        soundService.playSound(for: event)
     }
 }
