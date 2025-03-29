@@ -17,7 +17,7 @@ class GameScene: SKScene {
     // Flag to ensure callback is only called once per movement cycle.
     private var ballHasStopped = false
     // Use a magnitude threshold to detect when the ball has essentially stopped.
-    private let velocityThreshold: CGFloat = 3.0
+    private let velocityThreshold: CGFloat = 4.0
     
     // Callback to notify when the ball stops.
     var onBallStopped: ((CGPoint) -> Void)?
@@ -56,6 +56,7 @@ class GameScene: SKScene {
         // Set up the physics body for the ball.
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ballDiameter / 2)
         setDefaultBallPhysicsBody()
+        ball.color = .yellow
         addChild(ball)
     }
     
@@ -73,30 +74,13 @@ class GameScene: SKScene {
     
     /// Updates the ball’s position directly during dragging.
     func updateBallPosition(with offset: CGSize) {
+        guard ball != nil else { return }
         ball.position = CGPoint(x: ballStartPosition.x + offset.width,
-                                y: ballStartPosition.y + offset.height)
-    }
-    
-    /// Rolls the ball to a random position (used for a random roll mode).
-    func rollBallToRandomPosition(maxY: CGFloat) {
-        print("@@ Scene rollBallToRandomPosition: \(maxY)")
-        let minY = ballStartPosition.y + 50
-        let maxMovement = maxY - ballStartPosition.y
-        let targetY = CGFloat.random(in: minY...maxMovement)
-        let targetPosition = CGPoint(x: ball.position.x, y: targetY)
-        let duration: TimeInterval = 1.0
-        let moveAction = SKAction.move(to: targetPosition, duration: duration)
-        moveAction.timingMode = .easeOut
-        ball.run(moveAction) { [weak self] in
-            self?.onBallStopped?(targetPosition)
-            self?.onBallStopped = nil
-            self?.ballHasStopped = true
-        }
+                                y: ballStartPosition.y - offset.height)
     }
     
     /// Applies an impulse to the ball. For crumpled paper, it adds a repeating "zigzag" random impulse to simulate erratic movement.
     func applyImpulse(_ impulse: CGVector, on object: RollingObject) {
-        print("@@ Scene applyImpulse: \(impulse)")
         configureBall(for: object)
         
         if object.type == .crumpledPaper {
@@ -155,7 +139,6 @@ class GameScene: SKScene {
     
     /// Resets the ball to its starting position and restores default physics properties.
     func resetBall() {
-        print("@@ Scene resetBall")
         ball.position = ballStartPosition
         setDefaultBallPhysicsBody()
         ball.removeAllActions()

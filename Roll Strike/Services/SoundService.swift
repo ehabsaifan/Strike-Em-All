@@ -30,7 +30,7 @@ class SoundService: SoundServiceProtocol {
             let fileName = "\(category.getSoundFolderName())_\(soundName)"
             if let url = Bundle.main.url(forResource: fileName, withExtension: "mp3") {
                 do {
-                    print("Found sound for \(fileName)")
+                   // print("Found sound for \(fileName)")
                     let player = try AVAudioPlayer(contentsOf: url)
                     player.prepareToPlay()
                     if var list = audioPlayers[event] {

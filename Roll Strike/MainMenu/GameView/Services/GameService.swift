@@ -39,16 +39,13 @@ class GameService: GameServiceProtocol {
                 displayContent: target
             )
         }
-        //print("@@ GameService started with rows: \(targets)")
     }
     
     func markCell(at rowIndex: Int, forPlayer player: PlayerType) -> Bool {
-        print("@@ GameService markCell at index: \(rowIndex)")
         guard rows.indices.contains(rowIndex) else {
             assertionFailure("cell index out of range")
             return false
         }
-        //print("@@ Markin cell at index: \(rowIndex)")
         var row = rows[rowIndex]
         let prevMarking: MarkingState
         let newMarking: MarkingState
@@ -69,7 +66,6 @@ class GameService: GameServiceProtocol {
     }
     
     func checkForWinner() -> PlayerType? {
-        print("@@ GameService checkForWinner")
         let playerOneScore = rows.filter { $0.leftMarking == .complete }.count
         let playerTwoScore = rows.filter { $0.rightMarking == .complete }.count
         
@@ -82,7 +78,6 @@ class GameService: GameServiceProtocol {
     }
     
     func reset() {
-        print("@@ GameService reset")
         rows = rows.map { row in
             var updatedRow = row
             updatedRow.reset()

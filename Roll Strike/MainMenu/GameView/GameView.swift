@@ -13,10 +13,6 @@ struct GameView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
     
-    @State private var dragStart: CGPoint?
-    @State private var dragStartTime: Date?
-    @State private var launchDragOffset: CGSize = .zero
-    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -46,7 +42,7 @@ struct GameView: View {
                     
                     if viewModel.gameMode != .singlePlayer {
                         Spacer()
-                    
+                        
                         PlayerNameView(name: viewModel.player2.name, isActive: viewModel.currentPlayer == viewModel.player2)
                     }
                 }
@@ -94,21 +90,8 @@ struct GameView: View {
                 }
                 
                 Spacer()
-                
-                LaunchAreaView(
-                    launchImpulse: $viewModel.launchImpulse,
-                    dragOffset: $launchDragOffset,
-                    launchAreaHeight: GameViewModel.launchAreaHeight,
-                    ballDiameter: GameViewModel.ballDiameter
-                )
+                LaunchAreaView(viewModel: viewModel.launchAreaVM)
                 .frame(height: GameViewModel.launchAreaHeight)
-                .onChange(of: launchDragOffset) { newOffset in
-                    viewModel.updateBallPosition(with: newOffset)
-                }
-                .onChange(of: viewModel.launchImpulse) { _ in
-                    viewModel.launchBall()
-                }
-                
             }
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
@@ -117,7 +100,7 @@ struct GameView: View {
                     dismissButton: .default(Text("OK")) { viewModel.reset() }
                 )
             }
-            .onChange(of: viewModel.winner) { _ in
+            .onChange(of: viewModel.winner, initial: false) { oldValue, newValue in
                 showWinnerAlert = viewModel.winner != nil
             }
             .zIndex(0)

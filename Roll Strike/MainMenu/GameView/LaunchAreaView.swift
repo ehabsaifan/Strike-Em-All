@@ -8,51 +8,39 @@
 import SwiftUI
 
 struct LaunchAreaView: View {
-    @Binding var launchImpulse: CGVector?
-    @Binding var dragOffset: CGSize
-    
-    let launchAreaHeight: CGFloat
-    let ballDiameter: CGFloat
-
-    var restingBallCenterY: CGFloat {
-        -GameViewModel.bottomSafeAreaInset + launchAreaHeight - ballDiameter / 2
-    }
+    @ObservedObject var viewModel: LaunchAreaViewModel
     
     var body: some View {
         ZStack {
-            // Brown background for the slingshot area
+            // Background for the launch area.
             Rectangle()
                 .fill(Color.clear)
                 .ignoresSafeArea(edges: .bottom)
             
             GeometryReader { geo in
-                let width = geo.size.width
-                // Pins at 30% and 70% of width, aligned at restingBallCenterY
-                let leftPin = CGPoint(x: width * 0.3, y: restingBallCenterY)
-                let rightPin = CGPoint(x: width * 0.7, y: restingBallCenterY)
+                let width = viewModel.ballCenterPoint.x * 2
                 
-                // The ball's center is offset by dragOffset
+                let leftPin = CGPoint(x: width * 0.3, y: viewModel.restingBallCenterY)
+                let rightPin = CGPoint(x: width * 0.7, y: viewModel.restingBallCenterY)
+                
+                // Compute the current ball center based on the drag offset.
                 let currentBallCenter = CGPoint(
-                    x: width / 2 + dragOffset.width,
-                    y: restingBallCenterY - dragOffset.height
+                    x: width / 2 + viewModel.dragOffset.width,
+                    y: viewModel.restingBallCenterY + viewModel.dragOffset.height
                 )
                 
                 ZStack {
-                    // 1) Draw rope path with texture
+                    // Draw the elastic string with a rope-like texture.
                     Path { path in
                         path.move(to: leftPin)
                         path.addLine(to: currentBallCenter)
                         path.addLine(to: rightPin)
                     }
                     .stroke(
-                        ImagePaint(
-                            image: Image("rope"), // Your rope texture
-                            scale: 0.5
-                        ),
+                        ImagePaint(image: Image("rope"), scale: 0.5),
                         style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
                     )
                     
-                    // 2) Place nail images at each pin
                     Image("screw_head")
                         .resizable()
                         .frame(width: 24, height: 24)
@@ -62,26 +50,25 @@ struct LaunchAreaView: View {
                         .resizable()
                         .frame(width: 24, height: 24)
                         .position(rightPin)
-                }
+                }.background(.blue)
             }
         }
+        .background(.red)
         .gesture(
             DragGesture()
                 .onChanged { value in
-                    dragOffset = CGSize(
-                        width: value.translation.width,
-                        height: -value.translation.height
-                    )
+                    let dragOffset = CGSize(width: value.translation.width,
+                                            height: value.translation.height)
+                    viewModel.dragOffset = dragOffset
                 }
                 .onEnded { value in
-                    let pullStrength: CGFloat = 7
                     let force = CGVector(
-                        dx: -value.translation.width * pullStrength,
-                        dy: value.translation.height * pullStrength
+                        dx: -value.translation.width * viewModel.pullStrength,
+                        dy: value.translation.height * viewModel.pullStrength
                     )
-                    launchImpulse = force
+                    viewModel.launchImpulse = force
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                        dragOffset = .zero
+                        viewModel.dragOffset = .zero
                     }
                 }
         )
