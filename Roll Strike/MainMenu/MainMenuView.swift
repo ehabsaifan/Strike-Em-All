@@ -89,7 +89,7 @@ struct MainMenuView: View {
     }
     
     func createGameViewModel() -> GameViewModel {
-        let rollingObject = viewModel.createRollingObject()
+        let rollingObject = viewModel.rollingObjectType.rollingObject
         let contentProvider = GameContentProvider()
         let gameService = GameService(rollingObject: rollingObject,
                                       contentProvider: contentProvider)

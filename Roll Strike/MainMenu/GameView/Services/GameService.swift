@@ -15,6 +15,7 @@ protocol GameServiceProtocol {
     func startGame(with targets: [GameContent])
     func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType) -> Bool
     func checkForWinner() -> GameService.PlayerType?
+    func setRollingObject(_ newObject: RollingObject)
     func reset()
 }
 
@@ -75,6 +76,10 @@ class GameService: GameServiceProtocol {
             return .player2
         }
         return nil
+    }
+    
+    func setRollingObject(_ newObject: RollingObject) {
+        rollingObject = newObject
     }
     
     func reset() {

@@ -41,15 +41,4 @@ class MainMenuViewModel: ObservableObject {
     func getSoundCategory() -> SoundCategory {
         return soundCategory
     }
-
-    func createRollingObject() -> RollingObject {
-        switch rollingObjectType {
-        case .beachBall:
-            return Ball()
-        case .crumpledPaper:
-            return CrumpledPaper()
-        case .ironBall:
-            return IronBall()
-        }
-    }
 }

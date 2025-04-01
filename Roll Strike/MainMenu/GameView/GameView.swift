@@ -12,20 +12,25 @@ struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
+    @State private var showBallCarousel = false
     
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Top bar with close button and centered title
                 VStack(spacing: 0) {
                     HStack {
                         Spacer()
-                        Button(action: {
-                            presentationMode.wrappedValue.dismiss()
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
+                        Menu {
+                            Button("Change ball") {
+                                showBallCarousel = true
+                            }.disabled(viewModel.isBallMoving)
+                            Button("Close Game") {
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                            // Add other options as needed.
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
                                 .font(.largeTitle)
-                                .foregroundColor(.red)
                                 .padding()
                         }
                     }
@@ -91,7 +96,7 @@ struct GameView: View {
                 
                 Spacer()
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
-                .frame(height: GameViewModel.launchAreaHeight)
+                    .frame(height: GameViewModel.launchAreaHeight)
             }
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
@@ -110,6 +115,17 @@ struct GameView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
                 .zIndex(1)
+            // Overlay horizontal carousel for ball selection.
+            if showBallCarousel {
+                RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType) {
+                    // When a ball is selected, hide the carousel.
+                    withAnimation {
+                        showBallCarousel = false
+                    }
+                }
+                .frame(height: 50)
+                .zIndex(2)
+            }
         }
     }
 }
@@ -138,29 +154,4 @@ private func createGameViewModel() -> GameViewModel {
                                   player1: .player(name: "Ehab"),
                                   player2: .computer)
     return viewModel
-}
-
-// MARK: - Subviews
-struct PlayerNameView: View {
-    let name: String
-    let isActive: Bool
-    
-    var body: some View {
-        Text(name)
-            .font(.system(size: 16, weight: .medium))
-            .lineLimit(1)
-            .truncationMode(.tail)
-            .foregroundColor(isActive ? .primary : .secondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(isActive ? Color(.systemGray5) : Color(.systemGray6))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(isActive ? Color.blue : Color.clear, lineWidth: 1.5)
-            )
-            .animation(nil, value: isActive)
-    }
 }

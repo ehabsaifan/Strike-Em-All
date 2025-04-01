@@ -24,3 +24,16 @@ enum RollingObjectType: String, CaseIterable, Identifiable {
         }
     }
 }
+
+extension RollingObjectType {
+    var rollingObject: RollingObject {
+        switch self {
+        case .beachBall:
+            return Ball()
+        case .crumpledPaper:
+            return CrumpledPaper()
+        case .ironBall:
+            return IronBall()
+        }
+    }
+}
