@@ -7,13 +7,31 @@
 
 import SwiftUI
 
+struct RollingObjectCarouselSettings {
+    let segmentSettings: CustomSegmentedControlSettings
+    let backGroundColor: Color
+    
+    init(segmentSettings: CustomSegmentedControlSettings = CustomSegmentedControlSettings(),
+         backGroundColor: Color = .white) {
+        self.segmentSettings = segmentSettings
+        self.backGroundColor = backGroundColor
+    }
+}
+
 struct RollingObjectCarouselView: View {
-    @Binding var selectedBallType: RollingObjectType
-    // Closure to notify when selection is done.
-    var onSelectionDone: () -> Void
+    @Binding var selectedBallType: RollingObjectType {
+        didSet {
+            selectedIndex = ballTypes.firstIndex(of: selectedBallType) ?? 0
+        }
+    }
     
     // Use a state variable to drive the custom segmented control.
     @State private var selectedIndex: Int = 0
+    
+    let settings: RollingObjectCarouselSettings
+    
+    // Closure to notify when selection is done.
+    var onSelectionDone: () -> Void
     
     // A helper array mapping indices to ball types.
     private var ballTypes: [RollingObjectType] {
@@ -23,7 +41,7 @@ struct RollingObjectCarouselView: View {
     var body: some View {
         VStack(spacing: 2) {
             // Custom segmented control replacing the Picker.
-            CustomSegmentedControl(selectedSegment: $selectedIndex, items: ballTypes.map { $0.rawValue }, selectedTintColor: .yellow, normalTextColor: .white, selectedTextColor: .black)
+            CustomSegmentedControl(selectedSegment: $selectedIndex, items: ballTypes.map { $0.rawValue }, settings: settings.segmentSettings)
                 .onChange(of: selectedIndex) { newIndex in
                     selectedBallType = ballTypes[newIndex]
                     onSelectionDone()
@@ -44,10 +62,6 @@ struct RollingObjectCarouselView: View {
                                 .stroke(selectedBallType == type ? Color.yellow : Color.clear, lineWidth: 2)
                         )
                         .onTapGesture {
-                            // Update both the index and the selected ball type.
-                            if let index = ballTypes.firstIndex(of: type) {
-                                selectedIndex = index
-                            }
                             selectedBallType = type
                             withAnimation {
                                 onSelectionDone()
@@ -57,6 +71,7 @@ struct RollingObjectCarouselView: View {
             }
             .padding(.all)
         }
-        .background(Color.orange.opacity(0.8))
+        .cornerRadius(8)
+        .background(settings.backGroundColor.opacity(0.8))
     }
 }

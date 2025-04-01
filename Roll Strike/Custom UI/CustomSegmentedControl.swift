@@ -7,12 +7,24 @@
 
 import SwiftUI
 
+struct CustomSegmentedControlSettings {
+    let selectedTintColor: UIColor
+    let normalTextColor: UIColor
+    let selectedTextColor: UIColor
+    
+    init(selectedTintColor: UIColor = .white,
+         normalTextColor: UIColor = .black,
+         selectedTextColor: UIColor = .black) {
+        self.selectedTintColor = selectedTintColor
+        self.normalTextColor = normalTextColor
+        self.selectedTextColor = selectedTextColor
+    }
+}
+
 struct CustomSegmentedControl: UIViewRepresentable {
     @Binding var selectedSegment: Int
     var items: [String]
-    var selectedTintColor: UIColor = .yellow
-    var normalTextColor: UIColor = .white
-    var selectedTextColor: UIColor = .black
+    var settings: CustomSegmentedControlSettings = CustomSegmentedControlSettings()
 
     func makeCoordinator() -> Coordinator {
         Coordinator(selectedSegment: $selectedSegment)
@@ -21,9 +33,9 @@ struct CustomSegmentedControl: UIViewRepresentable {
     func makeUIView(context: Context) -> UISegmentedControl {
         let control = UISegmentedControl(items: items)
         control.selectedSegmentIndex = selectedSegment
-        control.selectedSegmentTintColor = selectedTintColor
-        control.setTitleTextAttributes([.foregroundColor: normalTextColor], for: .normal)
-        control.setTitleTextAttributes([.foregroundColor: selectedTextColor], for: .selected)
+        control.selectedSegmentTintColor = settings.selectedTintColor
+        control.setTitleTextAttributes([.foregroundColor: settings.normalTextColor], for: .normal)
+        control.setTitleTextAttributes([.foregroundColor: settings.selectedTextColor], for: .selected)
         control.addTarget(context.coordinator, action: #selector(Coordinator.valueChanged(_:)), for: .valueChanged)
         return control
     }

@@ -117,16 +117,23 @@ struct GameView: View {
                 .zIndex(1)
             // Overlay horizontal carousel for ball selection.
             if showBallCarousel {
-                RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType) {
+                RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType,
+                                          settings: getCarouselSettings()) {
                     // When a ball is selected, hide the carousel.
                     withAnimation {
                         showBallCarousel = false
                     }
                 }
-                .frame(height: 50)
-                .zIndex(2)
+                                          .frame(height: 50)
+                                          .zIndex(2)
             }
         }
+    }
+    
+    private func getCarouselSettings() -> RollingObjectCarouselSettings {
+        RollingObjectCarouselSettings(
+          segmentSettings: CustomSegmentedControlSettings(selectedTintColor: .yellow),
+          backGroundColor: .orange)
     }
 }
 

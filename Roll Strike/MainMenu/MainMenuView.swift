@@ -45,28 +45,31 @@ struct MainMenuView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding()
             
-            VStack {
-                Picker("Select Rolling Object", selection: $viewModel.rollingObjectType) {
-                    ForEach(RollingObjectType.allCases, id: \.self) { type in
-                        Text(type.rawValue).tag(type)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                
-                HStack {
-                    ForEach(RollingObjectType.allCases, id: \.self) { type in
-                        Image(type.imageName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 40, height: 40)
-                            .frame(maxWidth: .infinity)
-                            .onTapGesture {
-                                viewModel.rollingObjectType = type
-                            }
-                    }
-                }
-            }
-            .padding()
+            RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
+                .padding()
+            
+//            VStack {
+//                Picker("Select Rolling Object", selection: $viewModel.rollingObjectType) {
+//                    ForEach(RollingObjectType.allCases, id: \.self) { type in
+//                        Text(type.rawValue).tag(type)
+//                    }
+//                }
+//                .pickerStyle(SegmentedPickerStyle())
+//                
+//                HStack {
+//                    ForEach(RollingObjectType.allCases, id: \.self) { type in
+//                        Image(type.imageName)
+//                            .resizable()
+//                            .scaledToFit()
+//                            .frame(width: 40, height: 40)
+//                            .frame(maxWidth: .infinity)
+//                            .onTapGesture {
+//                                viewModel.rollingObjectType = type
+//                            }
+//                    }
+//                }
+//            }
+//            .padding()
             
             
             Button(action: { viewModel.showGameView = true }) {
