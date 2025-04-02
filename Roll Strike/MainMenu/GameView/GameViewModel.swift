@@ -69,7 +69,9 @@ class GameViewModel: ObservableObject {
             launchAreaHeight: GameViewModel.launchAreaHeight,
             ballDiameter: GameViewModel.ballDiameter
         )
+        
         rows = []
+        selectedBallType = gameService.rollingObject.type
         
         launchAreaVM.$dragOffset
             .sink { [weak self] newOffset in
@@ -92,6 +94,9 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateRollingObject() {
+        guard !isBallMoving else {
+            return
+        }
         physicsService.setRollingObject(gameService.rollingObject)
     }
     
@@ -156,6 +161,7 @@ class GameViewModel: ObservableObject {
 
     private func toggleTurn() {
         physicsService.resetBall()
+        physicsService.setRollingObject(gameService.rollingObject)
         guard gameMode != .singlePlayer else {
             return
         }

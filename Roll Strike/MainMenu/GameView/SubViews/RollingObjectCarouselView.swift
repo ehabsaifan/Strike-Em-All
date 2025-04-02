@@ -38,6 +38,16 @@ struct RollingObjectCarouselView: View {
         RollingObjectType.allCases
     }
     
+    init(selectedBallType: Binding<RollingObjectType>,
+         settings: RollingObjectCarouselSettings,
+         onSelectionDone: @escaping () -> Void) {
+        self._selectedBallType = selectedBallType
+        self.settings = settings
+        self.onSelectionDone = onSelectionDone
+        // Initialize selectedIndex with the index of the current selectedBallType.
+        self._selectedIndex = State(initialValue: ballTypes.firstIndex(of: selectedBallType.wrappedValue) ?? 0)
+    }
+    
     var body: some View {
         VStack(spacing: 2) {
             // Custom segmented control replacing the Picker.

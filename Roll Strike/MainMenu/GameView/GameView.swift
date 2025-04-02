@@ -132,8 +132,8 @@ struct GameView: View {
     
     private func getCarouselSettings() -> RollingObjectCarouselSettings {
         RollingObjectCarouselSettings(
-          segmentSettings: CustomSegmentedControlSettings(selectedTintColor: .yellow),
-          backGroundColor: .orange)
+            segmentSettings: CustomSegmentedControlSettings(selectedTintColor: .yellow),
+            backGroundColor: .orange)
     }
 }
 
