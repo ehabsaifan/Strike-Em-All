@@ -221,6 +221,6 @@ extension GameViewModel {
 // MARK: - Sound Service
 extension GameViewModel {
     func playSound(_ event: SoundEvent) {
-        //soundService.playSound(for: event)
+        soundService.playSound(for: event)
     }
 }

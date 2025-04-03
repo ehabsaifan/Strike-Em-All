@@ -49,7 +49,7 @@ struct MainMenuView: View {
             RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
                 .padding()
             
-            Toggle("Reflecting edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
+            Toggle("Pass through edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
             .padding()
             
             Button(action: { viewModel.showGameView = true }) {

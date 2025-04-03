@@ -9,27 +9,35 @@ import Foundation
 
 enum SoundEvent: String, CaseIterable, Identifiable {
     var id: String { rawValue }
-    case ropePull
-    case ropeRelease
+    case ropePull = "rope_pull"
+    case ropeRelease = "rope_release"
     case rolling
-    case missStrike
-    case hitStrike
+    case missStrike = "miss_strike"
+    case hitStrike = "hit_strike"
     case winner
     
     func getSoundFileNames() -> [String] {
+        var soundNames: [String]
         switch self {
         case .ropePull:
-            return ["rope_pull"]
+            soundNames = []
         case .ropeRelease:
-            return ["rope_release"]
+            soundNames = []
         case .rolling:
-            return ["rolling"]
+            soundNames = []
         case .missStrike:
-            return ["miss_strike_oops", "miss_strike_fart"]
+            soundNames = ["fart", "fart2", "fart3", "nooo", "ooh_snap", "ooh_snap_whoo", "oops", "oops_clumsy_me", "practice", "not_good", "this-sucks"]
         case .hitStrike:
-            return ["hit_strike_waaw", "hit_strike_shaikh"]
+            soundNames = ["brilliant", "magnificent", "outstanding_sir", "waw_cool", "waw_haha", "waw_no_way", "good_shot", "excellent", "excellent2", "excellent_hahaha", "bravo", "bravo2"]
         case .winner:
-            return ["winner_enta_mallem"]
+            soundNames = ["hahahaaa", "yaaay", "yaaay2", "great_job_buddy", "the_winner", "flawless_vectory"]
+        }
+        
+        if soundNames.isEmpty {
+            return [rawValue]
+        } else {
+            let mapped = soundNames.map {"\(rawValue)_\($0)"}
+            return mapped
         }
     }
 }
