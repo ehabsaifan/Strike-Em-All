@@ -7,12 +7,15 @@
 
 import SwiftUI
 import SpriteKit
+import ConfettiSwiftUI
 
 struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
+    
     @State private var showWinnerAlert = false
     @State private var showBallCarousel = false
+    @State private var confettiCounter = 0
     
     var body: some View {
         ZStack {
@@ -98,15 +101,27 @@ struct GameView: View {
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
                     .frame(height: GameViewModel.launchAreaHeight)
             }
+            .confettiCannon(trigger: $confettiCounter,
+                            num: 100,
+                            openingAngle: Angle(degrees: 0),
+                            closingAngle: Angle(degrees: 360),
+                            radius: 250)
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
                     title: Text("Game Over"),
                     message: Text("\(viewModel.winner?.name ?? "") Wins"),
-                    dismissButton: .default(Text("OK")) { viewModel.reset() }
+                    dismissButton: .default(Text("OK")) {
+                        viewModel.reset()
+                    }
                 )
             }
             .onChange(of: viewModel.winner, initial: false) { oldValue, newValue in
-                showWinnerAlert = viewModel.winner != nil
+                if viewModel.winner != nil {
+                    showWinnerAlert = true
+                    confettiCounter += 1
+                } else {
+                    showWinnerAlert = false
+                }
             }
             .zIndex(0)
             
