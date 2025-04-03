@@ -12,6 +12,7 @@ protocol PhysicsServiceProtocol {
     func updateBallPosition(with offset: CGSize)
     func moveBall(with impulse: CGVector, ball: RollingObject, completion: @escaping (CGPoint) -> Void)
     func setRollingObject(_ object: RollingObject)
+    func setWrapAroundEnabled(_ enabled: Bool)
     func resetBall()
 }
 
@@ -38,6 +39,10 @@ class SpriteKitPhysicsService: PhysicsServiceProtocol {
     
     func setRollingObject(_ object: RollingObject) {
         scene?.ballType = object.type
+    }
+    
+    func setWrapAroundEnabled(_ enabled: Bool) {
+        scene?.wrapAroundEnabled = enabled
     }
     
     func resetBall() {

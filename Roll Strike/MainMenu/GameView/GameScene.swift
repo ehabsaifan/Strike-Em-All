@@ -18,13 +18,18 @@ class GameScene: SKScene {
     private var ballHasStopped = false
     // Use a magnitude threshold to detect when the ball has essentially stopped.
     private let velocityThreshold: CGFloat = 4.0
+        
+    private var ballRadius: CGFloat {
+        ball.size.height / 2
+    }
     
     // Callback to notify when the ball stops.
     var onBallStopped: ((CGPoint) -> Void)?
+    var wrapAroundEnabled: Bool = false
         
     // The starting position for the ball in the scene.
     var ballStartPosition: CGPoint {
-        CGPoint(x: frame.midX, y: frame.minY + ballStartY - ball.size.height / 2)
+        CGPoint(x: frame.midX, y: frame.minY + ballStartY - ballRadius)
     }
     
     var ballType: RollingObjectType = .beachBall {
@@ -39,7 +44,11 @@ class GameScene: SKScene {
         backgroundColor = .clear
         
         // Set up the physics world boundaries.
-        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        if wrapAroundEnabled {
+            physicsBody = nil
+        } else {
+            physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        }
         physicsWorld.gravity = .zero
         
         // Create the ball node.
@@ -69,6 +78,39 @@ class GameScene: SKScene {
            abs(velocity.dy) < velocityThreshold {
             onBallStopped?(ball.position)
             ballHasStopped = true
+        }
+        
+        if wrapAroundEnabled {
+            let minX = frame.minX
+            let maxX = frame.maxX
+            let minY = frame.minY
+            let maxY = frame.maxY
+            let ballXPos = floor(ball.position.x)
+            let ballYPos = floor(ball.position.y)
+            var newPosition = ball.position
+            var didWrap = false
+            
+            if ballXPos - ballRadius <= minX, velocity.dx < 0 {
+                newPosition.x = maxX - ballRadius
+                newPosition.y = abs(maxY - ballYPos)
+                didWrap = true
+            } else if ballXPos + ballRadius >= maxX, velocity.dx > 0 {
+                newPosition.x = minX + ballRadius
+                newPosition.y = abs(maxY - ballYPos)
+                didWrap = true
+            } else if ballYPos - ballRadius <= minY, velocity.dy < 0 {
+                newPosition.y = maxY - ballRadius
+                newPosition.x = abs(maxX - ballXPos)
+                didWrap = true
+            } else if ballYPos + ballRadius >= maxY, velocity.dy > 0 {
+                newPosition.y = minY + ballRadius
+                newPosition.x = abs(maxX - ballXPos)
+                didWrap = true
+            }
+            
+            if didWrap {
+                ball.position = newPosition
+            }
         }
     }
     

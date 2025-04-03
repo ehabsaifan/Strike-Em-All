@@ -45,32 +45,12 @@ struct MainMenuView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding()
             
+            
             RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
                 .padding()
             
-//            VStack {
-//                Picker("Select Rolling Object", selection: $viewModel.rollingObjectType) {
-//                    ForEach(RollingObjectType.allCases, id: \.self) { type in
-//                        Text(type.rawValue).tag(type)
-//                    }
-//                }
-//                .pickerStyle(SegmentedPickerStyle())
-//                
-//                HStack {
-//                    ForEach(RollingObjectType.allCases, id: \.self) { type in
-//                        Image(type.imageName)
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: 40, height: 40)
-//                            .frame(maxWidth: .infinity)
-//                            .onTapGesture {
-//                                viewModel.rollingObjectType = type
-//                            }
-//                    }
-//                }
-//            }
-//            .padding()
-            
+            Toggle("Reflecting edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
+            .padding()
             
             Button(action: { viewModel.showGameView = true }) {
                 Text("Start Game")
@@ -101,6 +81,7 @@ struct MainMenuView: View {
         // Create a SpriteKit scene for physics
         let gameScene = GameScene(size: UIScreen.main.bounds.size)
         gameScene.scaleMode = .resizeFill
+        gameScene.wrapAroundEnabled = viewModel.isWrapAroundEdgesEnabled
         let physicsService = SpriteKitPhysicsService(scene: gameScene)
         
         let gameViewModel = GameViewModel(

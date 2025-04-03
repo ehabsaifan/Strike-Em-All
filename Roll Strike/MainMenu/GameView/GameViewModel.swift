@@ -24,6 +24,13 @@ class GameViewModel: ObservableObject {
     @Published var isBallMoving = false
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
+    
+    @Published var isWrapAroundEdgesEnabled = false {
+        didSet {
+            physicsService.setWrapAroundEnabled(isWrapAroundEdgesEnabled)
+        }
+    }
+    
     @Published var selectedBallType: RollingObjectType = .beachBall {
         didSet {
             gameService.setRollingObject(selectedBallType.rollingObject)
@@ -98,6 +105,13 @@ class GameViewModel: ObservableObject {
             return
         }
         physicsService.setRollingObject(gameService.rollingObject)
+    }
+    
+    private func enableWrapAroundEdges( _ enabled: Bool) {
+        guard !isBallMoving else {
+            return
+        }
+        isWrapAroundEdgesEnabled = enabled
     }
     
     // Robust, screen-based collision detection approach:
