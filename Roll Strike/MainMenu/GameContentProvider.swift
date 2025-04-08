@@ -34,7 +34,7 @@ struct GameContentProvider {
     private let selectedContents: [GameContent] // ✅ Immutable list of selected items
 
     // ✅ Initialize with a valid number of items
-    init(maxItems: Int = 5) {
+    init(maxItems: Int = 1) {
         let validCount = max(1, min(maxItems, allContents.count)) // Ensure within range
         self.selectedContents = Array(allContents.prefix(validCount))
     }

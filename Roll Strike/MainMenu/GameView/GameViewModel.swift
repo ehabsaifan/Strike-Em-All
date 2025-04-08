@@ -25,6 +25,8 @@ class GameViewModel: ObservableObject {
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
     
+    @Published var scoreManager: ScoreManagerProtocol = ScoreManager.shared
+    
     @Published var isWrapAroundEdgesEnabled = false {
         didSet {
             physicsService.setWrapAroundEnabled(isWrapAroundEdgesEnabled)
@@ -49,10 +51,10 @@ class GameViewModel: ObservableObject {
     static let launchAreaHeight: CGFloat = 100
     
     static var bottomSafeAreaInset: CGFloat {
-        UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0
+        UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
     }
     static var screenWidth: CGFloat {
-        UIApplication.shared.windows.first?.frame.width ?? 0
+        UIApplication.shared.keyWindow?.frame.width ?? 0
     }
         
     init(gameService: GameServiceProtocol,
@@ -169,6 +171,7 @@ class GameViewModel: ObservableObject {
             self.toggleTurn()
         } else {
             playSound(.winner)
+            endGameAndSubmitScore()
         }
         self.isBallMoving = false
     }
@@ -221,6 +224,35 @@ extension GameViewModel {
 // MARK: - Sound Service
 extension GameViewModel {
     func playSound(_ event: SoundEvent) {
-        soundService.playSound(for: event)
+        //soundService.playSound(for: event)
+    }
+}
+
+extension GameViewModel {
+    func endGameAndSubmitScore() {
+        if currentPlayer == player1 {
+            if scoreManager.player1Score != 0 {
+                GameCenterManager.shared.reportAchievement(achievment: .firstWin,
+                                                           percentComplete: 100)
+            }
+            scoreManager.updateScore(for: currentPlayer, by: 10)
+            GameCenterManager.shared.reportScore(scoreManager.player1Score)
+        }
+    }
+    
+    func checkAchievements(for player: Player) {
+//        let wins = player.totalWins
+//
+//        if wins >= 1 {
+//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.firstwin")
+//        }
+//        
+//        if wins >= 5 {
+//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.fivewins")
+//        }
+//
+//        if player.currentStreak >= 3 {
+//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.threestrikes")
+//        }
     }
 }

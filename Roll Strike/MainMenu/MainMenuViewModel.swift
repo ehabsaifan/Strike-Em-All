@@ -14,6 +14,7 @@ class MainMenuViewModel: ObservableObject {
     @Published var showGameView: Bool = false
     @Published var rollingObjectType: RollingObjectType = .beachBall
     @Published var soundCategory: SoundCategory = .street
+    @Published var selectedRowCount: Int = 5
     @Published var isWrapAroundEdgesEnabled = false
 
     private let contentProvider: GameContentProvider

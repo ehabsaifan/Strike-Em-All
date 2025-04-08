@@ -49,6 +49,17 @@ struct MainMenuView: View {
             RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
                 .padding()
             
+            VStack(alignment: .leading) {
+                Text("Number of rows:")
+                Picker("Number of Rows", selection: $viewModel.selectedRowCount) {
+                    ForEach(1...6, id: \.self) { number in
+                        Text("\(number)")
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            .padding()
+            
             Toggle("Pass through edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
             .padding()
             
@@ -62,6 +73,16 @@ struct MainMenuView: View {
                     .cornerRadius(10)
                     .padding()
             }
+            
+            Button("View Leaderboard") {
+                GameCenterManager.shared.showLeaderboard()
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button("View Achievements") {
+                GameCenterManager.shared.showAchievements()
+            }
+            .buttonStyle(.bordered)
         }
         .onTapGesture {
             hideKeyboard()
@@ -69,11 +90,14 @@ struct MainMenuView: View {
         .fullScreenCover(isPresented: $viewModel.showGameView) {
             GameView(viewModel: createGameViewModel())
         }
+        .onAppear() {
+            GameCenterManager.shared.authenticateLocalPlayer()
+        }
     }
     
     func createGameViewModel() -> GameViewModel {
         let rollingObject = viewModel.rollingObjectType.rollingObject
-        let contentProvider = GameContentProvider()
+        let contentProvider = GameContentProvider(maxItems: viewModel.selectedRowCount)
         let gameService = GameService(rollingObject: rollingObject,
                                       contentProvider: contentProvider)
         let soundService = SoundService(category: viewModel.getSoundCategory())

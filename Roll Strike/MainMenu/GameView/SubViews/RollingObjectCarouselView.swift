@@ -52,7 +52,7 @@ struct RollingObjectCarouselView: View {
         VStack(spacing: 2) {
             // Custom segmented control replacing the Picker.
             CustomSegmentedControl(selectedSegment: $selectedIndex, items: ballTypes.map { $0.rawValue }, settings: settings.segmentSettings)
-                .onChange(of: selectedIndex) { newIndex in
+                .onChange(of: selectedIndex, initial: false) { _, newIndex in
                     selectedBallType = ballTypes[newIndex]
                     onSelectionDone()
                 }
