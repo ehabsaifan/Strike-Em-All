@@ -10,7 +10,6 @@ import Combine
 
 class GameViewModel: ObservableObject {
     private var gameService: GameServiceProtocol
-    private var contentProvider: GameContentProvider
     private var physicsService: PhysicsServiceProtocol
     private var soundService: SoundServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -60,7 +59,6 @@ class GameViewModel: ObservableObject {
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
          soundService: SoundServiceProtocol,
-         contentProvider: GameContentProvider,
          gameScene: GameScene,
          gameMode: GameMode,
          player1: Player,
@@ -68,7 +66,6 @@ class GameViewModel: ObservableObject {
         self.gameService = gameService
         self.physicsService = physicsService
         self.soundService = soundService
-        self.contentProvider = contentProvider
         self.gameScene = gameScene
         self.gameMode = gameMode
         self.player1 = player1
@@ -96,10 +93,11 @@ class GameViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func startGame(with targets: [GameContent]) {
-        gameService.startGame(with: targets)
+    func startGame() {
+        gameService.startGame(with: gameService.contentProvider.getSelectedContents())
         physicsService.setRollingObject(gameService.rollingObject)
         rows = gameService.rows
+        scoreManager.gameStarted(player: player1.name)
     }
     
     private func updateRollingObject() {
@@ -153,6 +151,14 @@ class GameViewModel: ObservableObject {
         if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
             let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
             success = self.gameService.markCell(at: rowIndex, forPlayer: player)
+            if player == .player1 {
+                if success {
+                    scoreManager.recordScore(atRow: rowIndex, player: player1.name)
+                } else {
+                    scoreManager.missedShot(player: player1.name)
+                }
+            }
+            
             self.rows = self.gameService.rows
             physicsService.resetBall()
             
@@ -171,7 +177,7 @@ class GameViewModel: ObservableObject {
             self.toggleTurn()
         } else {
             playSound(.winner)
-            endGameAndSubmitScore()
+            scoreManager.gameEnded(player: player1.name, isAWinner: player1 == winner)
         }
         self.isBallMoving = false
     }
@@ -196,7 +202,7 @@ class GameViewModel: ObservableObject {
     }
     
     func getContent(for index: Int) -> GameContent {
-        return contentProvider.getContent(for: index)
+        return gameService.contentProvider.getContent(for: index)
     }
     
     func reset() {
@@ -207,6 +213,7 @@ class GameViewModel: ObservableObject {
         winner = nil
         isBallMoving = false
         physicsService.setRollingObject(gameService.rollingObject)
+        scoreManager.gameStarted(player: player1.name)
     }
 }
 
@@ -225,34 +232,5 @@ extension GameViewModel {
 extension GameViewModel {
     func playSound(_ event: SoundEvent) {
         //soundService.playSound(for: event)
-    }
-}
-
-extension GameViewModel {
-    func endGameAndSubmitScore() {
-        if currentPlayer == player1 {
-            if scoreManager.player1Score != 0 {
-                GameCenterManager.shared.reportAchievement(achievment: .firstWin,
-                                                           percentComplete: 100)
-            }
-            scoreManager.updateScore(for: currentPlayer, by: 10)
-            GameCenterManager.shared.reportScore(scoreManager.player1Score)
-        }
-    }
-    
-    func checkAchievements(for player: Player) {
-//        let wins = player.totalWins
-//
-//        if wins >= 1 {
-//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.firstwin")
-//        }
-//        
-//        if wins >= 5 {
-//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.fivewins")
-//        }
-//
-//        if player.currentStreak >= 3 {
-//            GameCenterManager.shared.unlockAchievement(identifier: "rollstrike.threestrikes")
-//        }
     }
 }

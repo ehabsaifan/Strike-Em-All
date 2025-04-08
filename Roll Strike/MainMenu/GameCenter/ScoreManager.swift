@@ -6,48 +6,99 @@
 //
 
 import Foundation
+import Combine
 
 protocol ScoreManagerProtocol {
-    var player1Score: Int { get set }
-    var player2Score: Int { get set }
-    func updateScore(for player: Player, by points: Int)
-    func resetScores()
+    var currentScore: AnyPublisher<Int, Never> { get }
+       
+    func gameStarted(player: String)
+    func recordScore(atRow row: Int, player: String)
+    func missedShot(player: String)
+    func gameEnded(player: String, isAWinner: Bool)
 }
 
-class ScoreManager: ObservableObject, ScoreManagerProtocol {
+class ScoreManager: ScoreManagerProtocol, ObservableObject {
+    // MARK: - Publisher Setup
+    @Published private var _currentScore: Int = 0
+    var currentScore: AnyPublisher<Int, Never> {
+        $_currentScore.eraseToAnyPublisher()
+    }
+    
     static let shared = ScoreManager()
     
-    @Published var player1Score: Int {
-        didSet {
-            UserDefaults.standard.set(player1Score, forKey: "player1Score")
-        }
-    }
-    
-    @Published var player2Score: Int {
-        didSet {
-            UserDefaults.standard.set(player2Score, forKey: "player2Score")
-        }
-    }
+    // MARK: - Game State Management
+    private var scoreTracker: CurrentGameScoreServiceProtocol
+    private var winningCount = 0
+    private var winningStreak = 0
+    private var cancellables = Set<AnyCancellable>()
     
     private init() {
-        // Load saved scores; if none found, default to 0.
-        self.player1Score = UserDefaults.standard.integer(forKey: "player1Score")
-        self.player2Score = UserDefaults.standard.integer(forKey: "player2Score")
+        self.scoreTracker = CurrentGameScoreTrackingService()
+    }
+
+    func gameStarted(player: String) {
+        _currentScore = 0
+        scoreTracker.startGame()
+        
+        // Proper Combine pipeline setup
+        scoreTracker.currentScore
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newScore in
+                print("New score: \(newScore)")
+                self?._currentScore = newScore
+            }
+            .store(in: &cancellables)
+    }
+
+    func recordScore(atRow row: Int, player: String) {
+        scoreTracker.recordScore(atRow: row)
     }
     
-    func updateScore(for player: Player, by points: Int) {
-        switch player {
-        case .player(let name) where name == "Player 1":
-            player1Score += points
-        case .player(let name) where name == "Player 2":
-            player2Score += points
+    func missedShot(player: String) {
+        scoreTracker.missedShot()
+    }
+    
+    func gameEnded(player: String, isAWinner: Bool) {
+        scoreTracker.gameEnded { [weak self] finalScore in
+            guard let self = self else { return }
+            print("Final Score: \(finalScore)")
+            if isAWinner {
+                self.winningCount += 1
+                self.winningStreak += 1
+                print("\(player) won with score: \(finalScore)")
+            } else {
+                self.winningStreak = 0
+                print("\(player) lost with score: \(finalScore)")
+            }
+            
+            GameCenterManager.shared.reportScore(finalScore)
+            self.reportAchievement()
+            self.cancellables.removeAll()
+        }
+    }
+    
+    private func reportAchievement() {
+        // Implementation for achievement reporting
+        switch winningStreak {
+        case 5:
+            GameCenterManager.shared.reportAchievement(achievment: .fiveWinsStreak,
+                                                       percentComplete: 100)
+        case 10:
+            GameCenterManager.shared.reportAchievement(achievment: .tenWinsStreak,
+                                                       percentComplete: 100)
         default:
             break
         }
-    }
-    
-    func resetScores() {
-        player1Score = 0
-        player2Score = 0
+        
+        switch winningCount {
+        case 5:
+            GameCenterManager.shared.reportAchievement(achievment: .fiveWins,
+                                                       percentComplete: 100)
+        case 25:
+            GameCenterManager.shared.reportAchievement(achievment: .twintyFiveWins,
+                                                       percentComplete: 100)
+        default:
+            break
+        }
     }
 }

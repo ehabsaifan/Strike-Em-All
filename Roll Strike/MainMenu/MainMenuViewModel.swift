@@ -14,7 +14,11 @@ class MainMenuViewModel: ObservableObject {
     @Published var showGameView: Bool = false
     @Published var rollingObjectType: RollingObjectType = .beachBall
     @Published var soundCategory: SoundCategory = .street
-    @Published var selectedRowCount: Int = 5
+    @Published var selectedRowCount: Int = 5 {
+        didSet {
+            print("ViewModel updated row count: \(selectedRowCount)")
+        }
+    }
     @Published var isWrapAroundEdgesEnabled = false
 
     private let contentProvider: GameContentProvider
@@ -34,10 +38,6 @@ class MainMenuViewModel: ObservableObject {
         }
         let name = player2Name.isEmpty ? "Player 2" : player2Name
         return .player(name: name)
-    }
-
-    func getTargets() -> [GameContent] {
-        return contentProvider.getSelectedContents()
     }
     
     func getSoundCategory() -> SoundCategory {

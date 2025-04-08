@@ -36,14 +36,14 @@ struct MainMenuView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding()
             }
-            
-            Picker("Sound Category", selection: $viewModel.soundCategory) {
-                ForEach(SoundCategory.allCases, id: \.self) { category in
-                    Text(category.rawValue).tag(category)
-                }
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding()
+//            TODO: For now lets ignore this! Will be added in a later stage
+//            Picker("Sound Category", selection: $viewModel.soundCategory) {
+//                ForEach(SoundCategory.allCases, id: \.self) { category in
+//                    Text(category.rawValue).tag(category)
+//                }
+//            }
+//            .pickerStyle(SegmentedPickerStyle())
+//            .padding()
             
             
             RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
@@ -54,9 +54,13 @@ struct MainMenuView: View {
                 Picker("Number of Rows", selection: $viewModel.selectedRowCount) {
                     ForEach(1...6, id: \.self) { number in
                         Text("\(number)")
+                            .tag(number)
                     }
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: viewModel.selectedRowCount) { newValue in
+                    print("Row count changed to: \(newValue)")
+                }
             }
             .padding()
             
@@ -74,15 +78,18 @@ struct MainMenuView: View {
                     .padding()
             }
             
-            Button("View Leaderboard") {
-                GameCenterManager.shared.showLeaderboard()
+            HStack() {
+                Button("View Leaderboard") {
+                    GameCenterManager.shared.showLeaderboard()
+                }
+                .buttonStyle(.borderedProminent)
+                Spacer()
+                Button("View Achievements") {
+                    GameCenterManager.shared.showAchievements()
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
-            
-            Button("View Achievements") {
-                GameCenterManager.shared.showAchievements()
-            }
-            .buttonStyle(.bordered)
+            .padding()
         }
         .onTapGesture {
             hideKeyboard()
@@ -112,14 +119,13 @@ struct MainMenuView: View {
             gameService: gameService,
             physicsService: physicsService,
             soundService: soundService,
-            contentProvider: contentProvider,
             gameScene: gameScene,
             gameMode: viewModel.gameMode,
             player1: viewModel.getPlayer1(),
             player2: viewModel.getPlayer2()
         )
         
-        gameViewModel.startGame(with: viewModel.getTargets())
+        gameViewModel.startGame()
         return gameViewModel
     }
 }

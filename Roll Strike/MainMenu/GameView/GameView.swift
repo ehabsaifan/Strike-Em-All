@@ -170,7 +170,6 @@ private func createGameViewModel() -> GameViewModel {
     let viewModel = GameViewModel(gameService: gameService,
                                   physicsService: physicsService,
                                   soundService: soundService,
-                                  contentProvider: contentProvider,
                                   gameScene: gameScene,
                                   gameMode: .twoPlayers,
                                   player1: .player(name: "Ehab"),
