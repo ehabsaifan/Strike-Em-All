@@ -23,6 +23,7 @@ class GameViewModel: ObservableObject {
     @Published var isBallMoving = false
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
+    @Published var score: Score = Score()
     
     @Published var scoreManager: ScoreManagerProtocol = ScoreManager.shared
     
@@ -91,6 +92,11 @@ class GameViewModel: ObservableObject {
                 self?.launchBall(impulse: newImpulse)
             }
             .store(in: &cancellables)
+        
+        ScoreManager.shared.scorePublisher
+            .sink { [weak self] newValue in
+                self?.score = newValue
+            }.store(in: &cancellables)
     }
     
     func startGame() {
@@ -137,7 +143,6 @@ class GameViewModel: ObservableObject {
     }
     
     func launchBall(impulse: CGVector) {
-        print("@@ Now \(currentPlayer) is pushing the ball...")
         guard !isBallMoving else { return }
         isBallMoving = true
         physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
@@ -148,8 +153,8 @@ class GameViewModel: ObservableObject {
     
     private func gotFinalPostion(_ finalPosition: CGPoint) {
         var success = false
+        let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
         if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
-            let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
             success = self.gameService.markCell(at: rowIndex, forPlayer: player)
             if player == .player1 {
                 if success {
@@ -170,6 +175,10 @@ class GameViewModel: ObservableObject {
             case .none:
                 break
             }
+        } else {
+            if player == .player1 {
+                scoreManager.missedShot(player: player1.name)
+            }
         }
         
         if self.winner == nil {
@@ -177,7 +186,10 @@ class GameViewModel: ObservableObject {
             self.toggleTurn()
         } else {
             playSound(.winner)
-            scoreManager.gameEnded(player: player1.name, isAWinner: player1 == winner)
+            scoreManager.gameEnded(player: player1.name, isAWinner: player1 == winner) { [weak self] finalScore in
+                guard let self else { return }
+                score = finalScore
+            }
         }
         self.isBallMoving = false
     }
@@ -189,7 +201,6 @@ class GameViewModel: ObservableObject {
             return
         }
         
-        print("@@ Current Player now: \(currentPlayer.name)")
         if gameMode == .againstComputer && currentPlayer != .computer {
             currentPlayer = .computer
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
@@ -197,7 +208,6 @@ class GameViewModel: ObservableObject {
             }
         } else {
             currentPlayer = (currentPlayer == player1) ? player2 : player1
-            print("@@ Current Player now: \(currentPlayer.name)")
         }
     }
     
@@ -231,6 +241,6 @@ extension GameViewModel {
 // MARK: - Sound Service
 extension GameViewModel {
     func playSound(_ event: SoundEvent) {
-        //soundService.playSound(for: event)
+        soundService.playSound(for: event)
     }
 }

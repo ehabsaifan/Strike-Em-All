@@ -9,95 +9,114 @@ import SwiftUI
 
 struct MainMenuView: View {
     @StateObject private var viewModel = MainMenuViewModel(contentProvider: GameContentProvider())
-
+    
     var body: some View {
-        VStack {
+        VStack(spacing: 20) {
+            // Title Section
             Text("Roll Strike")
                 .font(.largeTitle)
-                .bold()
-                .padding()
+                .fontWeight(.bold)
+                .foregroundColor(AppTheme.primaryColor)
+                .padding(.top, 40)
             
-            // Game mode picker
+            // Game Mode Picker
             Picker("Game Mode", selection: $viewModel.gameMode) {
                 Text("Single Player").tag(GameMode.singlePlayer)
                 Text("Two Players").tag(GameMode.twoPlayers)
-                Text("Against Computer").tag(GameMode.againstComputer)
+                Text("Vs. Computer").tag(GameMode.againstComputer)
             }
             .pickerStyle(SegmentedPickerStyle())
-            .padding()
+            .padding(.horizontal)
             
-            // Player name inputs
-            TextField("Player 1 Name", text: $viewModel.player1Name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            if viewModel.gameMode == .twoPlayers {
-                TextField("Player 2 Name", text: $viewModel.player2Name)
+            // Player Name Inputs
+            VStack(spacing: 12) {
+                TextField("Player 1 Name", text: $viewModel.player1Name)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
+                    .padding(.horizontal)
+                
+                if viewModel.gameMode == .twoPlayers {
+                    TextField("Player 2 Name", text: $viewModel.player2Name)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                }
             }
-//            TODO: For now lets ignore this! Will be added in a later stage
-//            Picker("Sound Category", selection: $viewModel.soundCategory) {
-//                ForEach(SoundCategory.allCases, id: \.self) { category in
-//                    Text(category.rawValue).tag(category)
-//                }
-//            }
-//            .pickerStyle(SegmentedPickerStyle())
-//            .padding()
             
+            // Rolling Object Carousel
+            RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType,
+                                      settings: RollingObjectCarouselSettings()) {
+                // Optionally handle selection done
+            }
+            .padding(.horizontal)
             
-            RollingObjectCarouselView(selectedBallType: $viewModel.rollingObjectType, settings: RollingObjectCarouselSettings()) {}
-                .padding()
-            
-            VStack(alignment: .leading) {
-                Text("Number of rows:")
+            // Row count setting (if needed)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Number of Rows:")
+                    .foregroundColor(AppTheme.secondaryColor)
+                    .padding(.leading)
                 Picker("Number of Rows", selection: $viewModel.selectedRowCount) {
                     ForEach(1...6, id: \.self) { number in
                         Text("\(number)")
                             .tag(number)
                     }
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: viewModel.selectedRowCount) { newValue in
-                    print("Row count changed to: \(newValue)")
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal)
+            }
+            
+            // Toggle for wrap-around edges
+            Toggle("Pass through edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
+                .padding(.horizontal)
+            
+            // Menu Buttons
+            HStack(spacing: 20) {
+                Button(action: {
+                    GameCenterManager.shared.showLeaderboard()
+                }) {
+                    Text("Leaderboard")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(AppTheme.secondaryColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                
+                Button(action: {
+                    GameCenterManager.shared.showAchievements()
+                }) {
+                    Text("Achievements")
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(AppTheme.secondaryColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
             }
-            .padding()
+            .padding(.horizontal)
             
-            Toggle("Pass through edges enabled", isOn: $viewModel.isWrapAroundEdgesEnabled)
-            .padding()
-            
+            // Start Game Button
             Button(action: { viewModel.showGameView = true }) {
                 Text("Start Game")
                     .font(.headline)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.green)
+                    .background(AppTheme.primaryColor)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                    .padding()
+                    .padding(.horizontal)
             }
             
-            HStack() {
-                Button("View Leaderboard") {
-                    GameCenterManager.shared.showLeaderboard()
-                }
-                .buttonStyle(.borderedProminent)
-                Spacer()
-                Button("View Achievements") {
-                    GameCenterManager.shared.showAchievements()
-                }
-                .buttonStyle(.bordered)
-            }
-            .padding()
+            Spacer()
         }
+        .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
         .onTapGesture {
             hideKeyboard()
         }
         .fullScreenCover(isPresented: $viewModel.showGameView) {
             GameView(viewModel: createGameViewModel())
         }
-        .onAppear() {
+        .onAppear {
             GameCenterManager.shared.authenticateLocalPlayer()
         }
     }

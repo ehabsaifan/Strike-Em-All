@@ -9,21 +9,16 @@ import Foundation
 import Combine
 
 protocol ScoreManagerProtocol {
-    var currentScore: AnyPublisher<Int, Never> { get }
+    var scorePublisher: CurrentValueSubject<Score, Never> { get }
        
     func gameStarted(player: String)
     func recordScore(atRow row: Int, player: String)
     func missedShot(player: String)
-    func gameEnded(player: String, isAWinner: Bool)
+    func gameEnded(player: String, isAWinner: Bool, completion: (Score) -> Void)
 }
 
 class ScoreManager: ScoreManagerProtocol, ObservableObject {
-    // MARK: - Publisher Setup
-    @Published private var _currentScore: Int = 0
-    var currentScore: AnyPublisher<Int, Never> {
-        $_currentScore.eraseToAnyPublisher()
-    }
-    
+    let scorePublisher: CurrentValueSubject<Score, Never>
     static let shared = ScoreManager()
     
     // MARK: - Game State Management
@@ -34,18 +29,19 @@ class ScoreManager: ScoreManagerProtocol, ObservableObject {
     
     private init() {
         self.scoreTracker = CurrentGameScoreTrackingService()
+        scorePublisher = CurrentValueSubject<Score, Never>(Score())
     }
 
     func gameStarted(player: String) {
-        _currentScore = 0
+        scorePublisher.send(Score())
         scoreTracker.startGame()
         
         // Proper Combine pipeline setup
-        scoreTracker.currentScore
+        scoreTracker.scorePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newScore in
                 print("New score: \(newScore)")
-                self?._currentScore = newScore
+                self?.scorePublisher.send(newScore)
             }
             .store(in: &cancellables)
     }
@@ -58,22 +54,23 @@ class ScoreManager: ScoreManagerProtocol, ObservableObject {
         scoreTracker.missedShot()
     }
     
-    func gameEnded(player: String, isAWinner: Bool) {
+    func gameEnded(player: String, isAWinner: Bool, completion: (Score) -> Void) {
         scoreTracker.gameEnded { [weak self] finalScore in
             guard let self = self else { return }
-            print("Final Score: \(finalScore)")
+            print("Final Score: \(finalScore.total)")
             if isAWinner {
-                self.winningCount += 1
-                self.winningStreak += 1
+                winningCount += 1
+                winningStreak += 1
                 print("\(player) won with score: \(finalScore)")
             } else {
-                self.winningStreak = 0
+                winningStreak = 0
                 print("\(player) lost with score: \(finalScore)")
             }
             
-            GameCenterManager.shared.reportScore(finalScore)
-            self.reportAchievement()
-            self.cancellables.removeAll()
+            GameCenterManager.shared.reportScore(finalScore.total)
+            reportAchievement()
+            cancellables.removeAll()
+            completion(finalScore)
         }
     }
     

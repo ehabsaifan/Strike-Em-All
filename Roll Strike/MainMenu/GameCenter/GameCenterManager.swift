@@ -39,8 +39,11 @@ class GameCenterManager: NSObject, ObservableObject {
                                   context: 0,
                                   player: GameCenterManager.player,
                                   leaderboardIDs: [GameCenterManager.leaderboardID]) { error in
+            
             if let error = error {
                 print("Error reporting score: \(error.localizedDescription)")
+            } else {
+                print("Score reported: \(score)")
             }
         }
     }
@@ -51,6 +54,8 @@ class GameCenterManager: NSObject, ObservableObject {
         GKAchievement.report([achievement]) { error in
             if let error = error {
                 print("Error reporting achievement: \(error.localizedDescription)")
+            } else {
+                print("Achievement reported: \(achievment)")
             }
         }
     }
@@ -66,7 +71,7 @@ class GameCenterManager: NSObject, ObservableObject {
     }
     
     func showAchievements() {
-        let vc = GKGameCenterViewController(achievementID: GameCenterAchievment.firstWin.rawValue)
+        let vc = GKGameCenterViewController()
         vc.gameCenterDelegate = self
         UIApplication.shared.keyWindow?.rootViewController?.present(vc, animated: true)
     }

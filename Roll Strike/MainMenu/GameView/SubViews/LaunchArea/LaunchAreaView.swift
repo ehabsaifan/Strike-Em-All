@@ -50,10 +50,9 @@ struct LaunchAreaView: View {
                         .resizable()
                         .frame(width: 24, height: 24)
                         .position(rightPin)
-                }.background(.blue)
+                }.background(AppTheme.primaryColor)
             }
         }
-        .background(.red)
         .gesture(
             DragGesture()
                 .onChanged { value in
