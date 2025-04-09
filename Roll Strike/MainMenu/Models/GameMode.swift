@@ -10,4 +10,5 @@ import Foundation
 enum GameMode {
     case singlePlayer
     case twoPlayers
+    case againstComputer
 }

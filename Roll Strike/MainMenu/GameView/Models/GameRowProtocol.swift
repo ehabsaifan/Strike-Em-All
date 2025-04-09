@@ -11,7 +11,6 @@ protocol GameRowProtocol {
     var leftMarking: MarkingState { get set }
     var rightMarking: MarkingState { get set }
     var displayContent: GameContent { get }
-    var cellEffect: CellEffect { get }
     var animationTrigger: Bool { get set }
     
     mutating func updateLeftMarking()

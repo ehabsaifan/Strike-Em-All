@@ -7,69 +7,58 @@
 
 import SwiftUI
 import SpriteKit
+import ConfettiSwiftUI
 
 struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
+    @State private var showBallCarousel = false
+    @State private var confettiCounter = 0
+    @State private var showEarnedPoints = false
+    @State private var earnedPointsText: String = ""
     
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Top bar with close button and centered title
-                VStack(spacing: 0) {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            presentationMode.wrappedValue.dismiss()
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.largeTitle)
-                                .foregroundColor(.red)
-                                .padding()
-                        }
+                GameHeaderView(
+                    player1: viewModel.player1,
+                    player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
+                    currentPlayer: viewModel.currentPlayer,
+                    player1Score: viewModel.score.total,       // Adjust if you have individual scores.
+                    player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score.total,
+                    onChangeBall: {
+                        // Show your ball carousel or initiate ball change mode.
+                        showBallCarousel = true
+                    },
+                    onQuitGame: {
+                        presentationMode.wrappedValue.dismiss()
                     }
-                    .overlay(
-                        Text("Roll Strike")
-                            .font(.largeTitle)
-                            .bold()
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    )
-                }
+                )
                 
-                HStack {
-                    PlayerNameView(name: viewModel.player2.name, isActive: viewModel.currentPlayer == viewModel.player2)
-                    
-                    Spacer()
-                    
-                    PlayerNameView(name: viewModel.player1.name, isActive: viewModel.currentPlayer == viewModel.player1)
-                }
-                .padding(.horizontal)
-                .padding([.top, .bottom], 8)
-                
-                // Game board
+                // Game board.
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
                         let row = viewModel.rows[index]
                         ZStack {
                             (index % 2 == 0 ? Color.white : Color(white: 0.95))
                             HStack(spacing: 0) {
-                                GameCellView(marking: row.leftMarking,
-                                             content: row.displayContent)
-                                .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
-                                .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                .padding(.leading, 5)
+                                GameCellView(marking: row.leftMarking, content: row.displayContent)
+                                    .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
+                                    .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                    .padding(.leading, 5)
                                 
                                 Rectangle()
                                     .fill(Color.gray.opacity(0.2))
                                     .frame(height: viewModel.rowHeight)
                                     .frame(maxWidth: .infinity)
                                 
-                                GameCellView(marking: row.rightMarking,
-                                             content: row.displayContent)
-                                .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
-                                .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                .padding(.trailing, 5)
+                                if viewModel.gameMode != .singlePlayer {
+                                    GameCellView(marking: row.rightMarking, content: row.displayContent)
+                                        .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
+                                        .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                        .padding(.trailing, 5)
+                                }
                             }
                         }
                         .frame(height: viewModel.rowHeight)
@@ -87,47 +76,77 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Control Buttons
-                HStack {
-                    Button(action: { viewModel.reset() }) {
-                        Text("Reset")
-                            .font(.headline)
-                            .padding()
-                            .background(Color.red.opacity(0.7))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    Spacer()
-                    Button(action: { viewModel.rollBall() }) {
-                        Text("Roll Ball")
-                            .font(.headline)
-                            .padding()
-                            .background(viewModel.currentPlayer == .computer ? Color.gray : Color.green.opacity(0.8))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    .disabled(viewModel.currentPlayer == .computer)
-                }
-                .padding()
+                // Launch area stays at the bottom.
+                LaunchAreaView(viewModel: viewModel.launchAreaVM)
+                    .frame(height: GameViewModel.launchAreaHeight)
             }
+            .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
                     title: Text("Game Over"),
-                    message: Text("\(viewModel.winner?.name ?? "") Wins"),
-                    dismissButton: .default(Text("OK")) { viewModel.reset() }
+                    message: Text("\(viewModel.winner?.name ?? "") Wins\nScore: \(viewModel.score.total)"),
+                    dismissButton: .default(Text("OK")) {
+                        viewModel.reset()
+                        confettiCounter += 1
+                    }
                 )
             }
-            .onChange(of: viewModel.winner) { _ in
+            .onChange(of: viewModel.winner, initial: false) { _, _ in
                 showWinnerAlert = viewModel.winner != nil
             }
             .zIndex(0)
             
-            // SpriteKit view for the ball (overlaid on top)
+            // SpriteKit view for ball simulation.
             SpriteView(scene: viewModel.gameScene, options: [.allowsTransparency])
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
                 .zIndex(1)
+            
+            // Overlay: Ball carousel for changing rolling object.
+            if showBallCarousel {
+                RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType,
+                                            settings: getCarouselSettings()) {
+                    withAnimation { showBallCarousel = false }
+                }
+                .frame(height: 50)
+                .zIndex(2)
+            }
+            
+            // Earned points overlay (temporary)
+            if showEarnedPoints {
+                Text(earnedPointsText)
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(AppTheme.secondaryColor)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AppTheme.tertiaryColor)
+                            .shadow(radius: 5)
+                    )
+                    .transition(.scale.combined(with: .opacity))
+                    .zIndex(3)
+            }
         }
+        .onChange(of: viewModel.score.lastShotPointsEarned, initial: false) { _, newPoints in
+            if newPoints > 0 {
+                earnedPointsText = "+\(newPoints)"
+                withAnimation(.easeOut(duration: 0.6)) {
+                    showEarnedPoints = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        showEarnedPoints = false
+                    }
+                }
+            }
+        }
+    }
+    
+    private func getCarouselSettings() -> RollingObjectCarouselSettings {
+        RollingObjectCarouselSettings(
+            segmentSettings: CustomSegmentedControlSettings(selectedTintColor: .yellow),
+            backGroundColor: .orange
+        )
     }
 }
 
@@ -139,6 +158,7 @@ private func createGameViewModel() -> GameViewModel {
     let contentProvider = GameContentProvider()
     let gameService = GameService(rollingObject: Ball(),
                                   contentProvider: contentProvider)
+    let soundService = SoundService(category: .street)
     
     // Create a SpriteKit scene for physics
     let gameScene = GameScene(size: UIScreen.main.bounds.size)
@@ -147,36 +167,10 @@ private func createGameViewModel() -> GameViewModel {
     
     let viewModel = GameViewModel(gameService: gameService,
                                   physicsService: physicsService,
-                                  contentProvider: contentProvider,
+                                  soundService: soundService,
                                   gameScene: gameScene,
                                   gameMode: .twoPlayers,
                                   player1: .player(name: "Ehab"),
-                                  player2: .computer,
-                                  cellEffect: RegularCell())
+                                  player2: .computer)
     return viewModel
-}
-
-// MARK: - Subviews
-struct PlayerNameView: View {
-    let name: String
-    let isActive: Bool
-    
-    var body: some View {
-        Text(name)
-            .font(.system(size: 16, weight: .medium))
-            .lineLimit(1)
-            .truncationMode(.tail)
-            .foregroundColor(isActive ? .primary : .secondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(isActive ? Color(.systemGray5) : Color(.systemGray6))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(isActive ? Color.blue : Color.clear, lineWidth: 1.5)
-            )
-            .animation(nil, value: isActive)
-    }
 }

@@ -12,8 +12,14 @@ class MainMenuViewModel: ObservableObject {
     @Published var player1Name: String = ""
     @Published var player2Name: String = ""
     @Published var showGameView: Bool = false
-    @Published var selectedRollingObjectType: RollingObjectType = .ball
-    @Published var selectedCellEffectType: CellEffectType = .regular
+    @Published var rollingObjectType: RollingObjectType = .beachBall
+    @Published var soundCategory: SoundCategory = .street
+    @Published var selectedRowCount: Int = 5 {
+        didSet {
+            print("ViewModel updated row count: \(selectedRowCount)")
+        }
+    }
+    @Published var isWrapAroundEdgesEnabled = false
 
     private let contentProvider: GameContentProvider
     
@@ -27,36 +33,14 @@ class MainMenuViewModel: ObservableObject {
     }
 
     func getPlayer2() -> Player {
-        guard gameMode != .singlePlayer else {
+        guard gameMode != .againstComputer else {
             return .computer
         }
         let name = player2Name.isEmpty ? "Player 2" : player2Name
         return .player(name: name)
     }
-
-    func getTargets() -> [GameContent] {
-        return contentProvider.getSelectedContents()
-    }
-
-    func createRollingObject() -> RollingObject {
-        switch selectedRollingObjectType {
-        case .ball:
-            return Ball()
-        case .fireBall:
-            return FireBall()
-        case .crumpledPaper:
-            return CrumpledPaper()
-        }
-    }
-
-    func createCellEffect() -> CellEffect {
-        switch selectedCellEffectType {
-        case .regular:
-            return RegularCell()
-        case .fire:
-            return FireCell()
-        case .wormhole:
-            return WormholeCell()
-        }
+    
+    func getSoundCategory() -> SoundCategory {
+        return soundCategory
     }
 }

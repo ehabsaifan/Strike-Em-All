@@ -6,51 +6,118 @@
 //
 
 import SwiftUI
+import Combine
 
 class GameViewModel: ObservableObject {
     private var gameService: GameServiceProtocol
-    private var contentProvider: GameContentProvider
     private var physicsService: PhysicsServiceProtocol
-    private var cellEffect: CellEffect
-        
+    private var soundService: SoundServiceProtocol
+    private var cancellables = Set<AnyCancellable>()
+    
     @Published var rows: [GameRowProtocol] = []
     @Published var currentPlayer: Player
     @Published var winner: Player?
     @Published var player1: Player
     @Published var player2: Player
     @Published var gameMode: GameMode
-    // For example, we add a property to track ball position (if needed)
-    @Published var ballPosition: CGPoint = .zero
-    // For robust collision detection using screen coordinates (if desired)
+    @Published var isBallMoving = false
+    @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
+    @Published var score: Score = Score()
     
+    @Published var scoreManager: ScoreManagerProtocol = ScoreManager.shared
+    
+    @Published var isWrapAroundEdgesEnabled = false {
+        didSet {
+            physicsService.setWrapAroundEnabled(isWrapAroundEdgesEnabled)
+        }
+    }
+    
+    @Published var selectedBallType: RollingObjectType = .beachBall {
+        didSet {
+            gameService.setRollingObject(selectedBallType.rollingObject)
+            updateRollingObject()
+        }
+    }
+    
+    let launchAreaVM: LaunchAreaViewModel
     let gameScene: GameScene
     let rowHeight: CGFloat = 70  // Used to calculate landing row
-    let ballSize: CGFloat = 40  // must match GameScene.ballSize
     
+    static let ballDiameter: CGFloat = 40  // must match GameScene.ballSize
+    static var ballStartYSpacing:CGFloat {
+        launchAreaHeight + GameViewModel.bottomSafeAreaInset
+    } // Must match gameScene.ballStartYSpacing
+    static let launchAreaHeight: CGFloat = 100
+    
+    static var bottomSafeAreaInset: CGFloat {
+        UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
+    }
+    static var screenWidth: CGFloat {
+        UIApplication.shared.keyWindow?.frame.width ?? 0
+    }
+        
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
-         contentProvider: GameContentProvider,
+         soundService: SoundServiceProtocol,
          gameScene: GameScene,
          gameMode: GameMode,
          player1: Player,
-         player2: Player,
-         cellEffect: CellEffect) {
+         player2: Player) {
         self.gameService = gameService
         self.physicsService = physicsService
-        self.contentProvider = contentProvider
+        self.soundService = soundService
         self.gameScene = gameScene
         self.gameMode = gameMode
         self.player1 = player1
         currentPlayer = player1
         self.player2 = player2
-        self.cellEffect = cellEffect
+        self.launchAreaVM = LaunchAreaViewModel(
+            launchAreaHeight: GameViewModel.launchAreaHeight,
+            ballDiameter: GameViewModel.ballDiameter
+        )
+        
         rows = []
+        selectedBallType = gameService.rollingObject.type
+        
+        launchAreaVM.$dragOffset
+            .sink { [weak self] newOffset in
+                self?.updateBallPosition(with: newOffset)
+            }
+            .store(in: &cancellables)
+        
+        launchAreaVM.$launchImpulse
+            .sink { [weak self] newImpulse in
+                guard let newImpulse else { return }
+                self?.launchBall(impulse: newImpulse)
+            }
+            .store(in: &cancellables)
+        
+        ScoreManager.shared.scorePublisher
+            .sink { [weak self] newValue in
+                self?.score = newValue
+            }.store(in: &cancellables)
     }
     
-    func startGame(with targets: [GameContent]) {
-        gameService.startGame(with: targets, cellEffect: cellEffect)
+    func startGame() {
+        gameService.startGame(with: gameService.contentProvider.getSelectedContents())
+        physicsService.setRollingObject(gameService.rollingObject)
         rows = gameService.rows
+        scoreManager.gameStarted(player: player1.name)
+    }
+    
+    private func updateRollingObject() {
+        guard !isBallMoving else {
+            return
+        }
+        physicsService.setRollingObject(gameService.rollingObject)
+    }
+    
+    private func enableWrapAroundEdges( _ enabled: Bool) {
+        guard !isBallMoving else {
+            return
+        }
+        isWrapAroundEdgesEnabled = enabled
     }
     
     // Robust, screen-based collision detection approach:
@@ -59,90 +126,121 @@ class GameViewModel: ObservableObject {
         let sortedRowFrames = rowFrames.sorted(by: { $0.key > $1.key }) // Ensure rows are in order
         
         let ballCenterY = UIScreen.main.bounds.maxY - finalPosition.y
-        let ballLowerEdge = ballCenterY + ballSize/2
-        let ballUpperEdge = ballCenterY - ballSize/2
-        print("@@ ballUpperEdge: \(ballUpperEdge) | ballCenterY: \(ballCenterY) | ballLowerEdge: \(ballLowerEdge)")
         
         for (index, rowFrame) in sortedRowFrames {
-            print("@@ index: \(index) -> \(rowFrame.minY) - \(rowFrame.maxY)")
             if (ballCenterY >= rowFrame.minY) && (ballCenterY <= rowFrame.maxY) {
                 return index
             }
         }
         
-        print("@@ No valid row detected for y: \(finalPosition.y)")
         return nil
     }
     
-    func rollBall() {
-        print("@@ Now \(currentPlayer) is rolling the ball...")
-        let maxY = UIScreen.main.bounds.maxY
-        physicsService.rollBallWithRandomPosition(maxY: maxY) { [weak self] finalPosition in
+    func updateBallPosition(with offset: CGSize) {
+        guard !isBallMoving else { return }
+        //playSound(.ropePull)
+        physicsService.updateBallPosition(with: offset)
+    }
+    
+    func launchBall(impulse: CGVector) {
+        guard !isBallMoving else { return }
+        isBallMoving = true
+        physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
             guard let self = self else { return }
-            
-            // Option 1: Use robust collision detection via row frames if available:
-            if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
-                print("@@ Ball hit row: \(rowIndex)")
-                let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
-                self.gameService.markCell(at: rowIndex, forPlayer: player)
-                self.rows = self.gameService.rows
-                physicsService.resetBall()
-                switch self.gameService.checkForWinner() {
-                case .player1:
-                    self.winner = player1
-                case .player2:
-                    self.winner = player2
-                case .none:
-                    break
-                }
-            }
-            
-            if self.winner == nil {
-                self.toggleTurn()
-            }
+            gotFinalPostion(finalPosition)
         }
     }
     
+    private func gotFinalPostion(_ finalPosition: CGPoint) {
+        var success = false
+        let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
+        if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
+            success = self.gameService.markCell(at: rowIndex, forPlayer: player)
+            if player == .player1 {
+                if success {
+                    scoreManager.recordScore(atRow: rowIndex, player: player1.name)
+                } else {
+                    scoreManager.missedShot(player: player1.name)
+                }
+            }
+            
+            self.rows = self.gameService.rows
+            physicsService.resetBall()
+            
+            switch self.gameService.checkForWinner() {
+            case .player1:
+                self.winner = player1
+            case .player2:
+                self.winner = player2
+            case .none:
+                break
+            }
+        } else {
+            if player == .player1 {
+                scoreManager.missedShot(player: player1.name)
+            }
+        }
+        
+        if self.winner == nil {
+            playSound(success ? .hitStrike : .missStrike)
+            self.toggleTurn()
+        } else {
+            playSound(.winner)
+            scoreManager.gameEnded(player: player1.name, isAWinner: player1 == winner) { [weak self] finalScore in
+                guard let self else { return }
+                score = finalScore
+            }
+        }
+        self.isBallMoving = false
+    }
+
     private func toggleTurn() {
         physicsService.resetBall()
-        if gameMode == .singlePlayer && currentPlayer != .computer {
+        physicsService.setRollingObject(gameService.rollingObject)
+        guard gameMode != .singlePlayer else {
+            return
+        }
+        
+        if gameMode == .againstComputer && currentPlayer != .computer {
             currentPlayer = .computer
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.computerMove()
             }
         } else {
             currentPlayer = (currentPlayer == player1) ? player2 : player1
-            print("@@ Current Player now: \(currentPlayer.name)")
-        }
-    }
-    
-    private func computerMove() {
-        rollBall()
-    }
-    
-    func checkForWinner() {
-        let playerOneScore = rows.filter { $0.rightMarking == .complete }.count
-        let playerTwoScore = rows.filter { $0.leftMarking == .complete }.count
-        
-        if playerOneScore == rows.count {
-            winner = player1
-        } else if playerTwoScore == rows.count {
-            winner = player2
         }
     }
     
     func getContent(for index: Int) -> GameContent {
-       // print("@@ returning \(contentProvider.getContent(for: index))")
-        return contentProvider.getContent(for: index)
+        return gameService.contentProvider.getContent(for: index)
     }
     
     func reset() {
-        print("@@ reset")
         gameService.reset()
+        physicsService.resetBall()
         rows = gameService.rows
         currentPlayer = player1
-        print("@@ Current Player now: \(currentPlayer.name)")
         winner = nil
-        physicsService.resetBall()
+        isBallMoving = false
+        physicsService.setRollingObject(gameService.rollingObject)
+        scoreManager.gameStarted(player: player1.name)
+    }
+}
+
+// MARK: - Computer move
+extension GameViewModel {
+    private func computerMove() {
+        guard currentPlayer == .computer else { return }
+        launchAreaVM.simulateComputerPull { [weak self] in
+            guard let launchImpulse = self?.launchAreaVM.launchImpulse else { return }
+            self?.launchBall(impulse: launchImpulse)
+        }
+    }
+}
+
+// MARK: - Sound Service
+extension GameViewModel {
+    func playSound(_ event: SoundEvent) {
+        soundService.playSound(for: event)
     }
 }
