@@ -14,11 +14,13 @@ class MainMenuViewModel: ObservableObject {
     @Published var showGameView: Bool = false
     @Published var rollingObjectType: RollingObjectType = .beachBall
     @Published var soundCategory: SoundCategory = .street
+    @Published var volume: Float = 1.0
     @Published var selectedRowCount: Int = 5 {
         didSet {
             print("ViewModel updated row count: \(selectedRowCount)")
         }
     }
+    
     @Published var isWrapAroundEdgesEnabled = false
 
     private let contentProvider: GameContentProvider

@@ -37,7 +37,6 @@ struct GameContentProvider {
     init(maxItems: Int = 5) {
         let validCount = max(1, min(maxItems, allContents.count)) // Ensure within range
         self.selectedContents = Array(allContents.shuffled().prefix(validCount))
-        print("Max items \(validCount) | Actual: \(selectedContents.count)")
     }
 
     // ✅ Returns content for a given index (ensuring consistency)

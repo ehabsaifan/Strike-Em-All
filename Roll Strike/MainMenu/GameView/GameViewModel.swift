@@ -40,6 +40,12 @@ class GameViewModel: ObservableObject {
         }
     }
     
+    @Published var volume: Float = 1.0 {
+        didSet {
+            soundService.setVolume(volume)
+        }
+    }
+    
     let launchAreaVM: LaunchAreaViewModel
     let gameScene: GameScene
     let rowHeight: CGFloat = 70  // Used to calculate landing row
@@ -79,6 +85,7 @@ class GameViewModel: ObservableObject {
         
         rows = []
         selectedBallType = gameService.rollingObject.type
+        volume = soundService.volume
         
         launchAreaVM.$dragOffset
             .sink { [weak self] newOffset in

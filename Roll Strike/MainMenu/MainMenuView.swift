@@ -95,6 +95,10 @@ struct MainMenuView: View {
             }
             .padding(.horizontal)
             
+            VolumeControlView(volume: $viewModel.volume)
+                .padding()
+                .opacity(0.7)
+            
             // Start Game Button
             Button(action: { viewModel.showGameView = true }) {
                 Text("Start Game")
@@ -127,7 +131,7 @@ struct MainMenuView: View {
         let gameService = GameService(rollingObject: rollingObject,
                                       contentProvider: contentProvider)
         let soundService = SoundService(category: viewModel.getSoundCategory())
-        
+        soundService.setVolume(viewModel.volume)
         // Create a SpriteKit scene for physics
         let gameScene = GameScene(size: UIScreen.main.bounds.size)
         gameScene.scaleMode = .resizeFill

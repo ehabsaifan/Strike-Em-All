@@ -17,25 +17,30 @@ struct GameView: View {
     @State private var confettiCounter = 0
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
+    @State private var showVolumeControl = false
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Header and game board sections remain as you have.
                 GameHeaderView(
                     player1: viewModel.player1,
                     player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
                     currentPlayer: viewModel.currentPlayer,
                     player1Score: viewModel.score.total,
                     player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score.total,
-                    onChangeBall: {
-                        showBallCarousel = true
-                    },
-                    onQuitGame: {
-                        presentationMode.wrappedValue.dismiss()
+                    onAction: { action in
+                        switch action {
+                        case .changeBall:
+                            withAnimation { showBallCarousel = true }
+                        case .changeVolume:
+                            withAnimation { showVolumeControl = true }
+                        case .quit:
+                            presentationMode.wrappedValue.dismiss()
+                        }
                     }
                 )
                 
+                // Animated score view, game board, etc.
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
                         let row = viewModel.rows[index]
@@ -75,17 +80,15 @@ struct GameView: View {
                 
                 Spacer()
                 
+                // Launch area.
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
                     .frame(height: GameViewModel.launchAreaHeight)
             }
-            // Attach the confetti modifier at the very top with a high zIndex.
             .confettiCannon(trigger: $confettiCounter,
                               num: 150,
                               openingAngle: Angle(degrees: 0),
                               closingAngle: Angle(degrees: 360),
                               radius: 250)
-            .zIndex(1)
-            // Background of your main view.
             .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
@@ -123,21 +126,28 @@ struct GameView: View {
                 .zIndex(2)
             }
             
-            // Earned points overlay.
-            if showEarnedPoints {
-                Text(earnedPointsText)
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundColor(AppTheme.secondaryColor)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(AppTheme.tertiaryColor)
-                            .shadow(radius: 5)
-                    )
-                    .transition(.scale.combined(with: .opacity))
+            if showVolumeControl {
+                // Volume control overlay
+                VolumeControlView(volume: $viewModel.volume)
+                    .padding()
+                    .shadow(radius: 10)
+                    .transition(.opacity)   //(.move(edge: .bottom))
                     .zIndex(3)
             }
         }
+        .onTapGesture {
+            withAnimation {
+                showVolumeControl = false
+            }
+        }
+        .simultaneousGesture(
+            DragGesture()
+                .onChanged { _ in
+                    withAnimation {
+                        showVolumeControl = false
+                    }
+                }
+        )
         .onChange(of: viewModel.score.lastShotPointsEarned, initial: false) { _, newPoints in
             if newPoints > 0 {
                 earnedPointsText = "+\(newPoints)"
