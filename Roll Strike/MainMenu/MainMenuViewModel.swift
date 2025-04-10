@@ -14,19 +14,23 @@ class MainMenuViewModel: ObservableObject {
     @Published var showGameView: Bool = false
     @Published var rollingObjectType: RollingObjectType = .beachBall
     @Published var soundCategory: SoundCategory = .street
-    @Published var volume: Float = 1.0
+    @Published var volume: Float = 1.0 {
+        didSet {
+            SimpleDefaults.setValue(volume, forKey: .volumePref)
+        }
+    }
     @Published var selectedRowCount: Int = 5 {
         didSet {
+            SimpleDefaults.setValue(selectedRowCount, forKey: .numberOfRows)
             print("ViewModel updated row count: \(selectedRowCount)")
         }
     }
     
     @Published var isWrapAroundEdgesEnabled = false
-
-    private let contentProvider: GameContentProvider
     
-    init(contentProvider: GameContentProvider) {
-        self.contentProvider = contentProvider
+    init() {
+        volume = SimpleDefaults.getValue(forKey: .volumePref, defaultValue: 1.0)
+        selectedRowCount = SimpleDefaults.getValue(forKey: .numberOfRows, defaultValue: 5)
     }
 
     func getPlayer1() -> Player {

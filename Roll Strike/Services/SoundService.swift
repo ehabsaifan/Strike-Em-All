@@ -12,6 +12,7 @@ protocol SoundServiceProtocol {
     
     func setCategory(_ category: SoundCategory)
     func playSound(for event: SoundEvent)
+    func stopSound(for event: SoundEvent)
     func stopCurrentPlayingAudio()
     func setVolume(_ volume: Float)
 }
@@ -81,6 +82,12 @@ class SoundService: SoundServiceProtocol {
         let x = audioPlayers[event]?.randomElement()
         currentAudioPlaying = x
         x?.play()
+    }
+    
+    func stopSound(for event: SoundEvent) {
+        print("Stopping sound for \(event.rawValue)")
+        let x = audioPlayers[event]?.randomElement()
+        x?.stop()
     }
     
     func stopCurrentPlayingAudio() {
