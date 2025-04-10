@@ -8,15 +8,24 @@
 import AVFoundation
 
 protocol SoundServiceProtocol {
+    var volume: Float { get }
+    
     func setCategory(_ category: SoundCategory)
     func playSound(for event: SoundEvent)
     func stopCurrentPlayingAudio()
+    func setVolume(_ volume: Float)
 }
 
 class SoundService: SoundServiceProtocol {
     private var audioPlayers: [SoundEvent: [AVAudioPlayer]] = [:]
     private var category: SoundCategory = .street
     private var currentAudioPlaying: AVAudioPlayer?
+    
+    private(set) var volume: Float = 1.0 {
+        didSet {
+            updateVolume()
+        }
+    }
     
     init(category: SoundCategory) {
         self.category = category
@@ -30,7 +39,7 @@ class SoundService: SoundServiceProtocol {
             let fileName = "\(category.getSoundFolderName())_\(soundName)"
             if let url = Bundle.main.url(forResource: fileName, withExtension: "mp3") {
                 do {
-                   // print("Found sound for \(fileName)")
+                    // print("Found sound for \(fileName)")
                     let player = try AVAudioPlayer(contentsOf: url)
                     player.prepareToPlay()
                     if var list = audioPlayers[event] {
@@ -45,7 +54,17 @@ class SoundService: SoundServiceProtocol {
             } else {
                 print("Cant find a resource at the path \(fileName)")
             }
-        }        
+        }
+    }
+    
+    private func updateVolume() {
+        for (_, players) in audioPlayers {
+            for player in players {
+                player.volume = volume
+            }
+        }
+        // Also update the current audio if playing.
+        currentAudioPlaying?.volume = volume
     }
     
     func setCategory(_ category: SoundCategory) {
@@ -67,5 +86,11 @@ class SoundService: SoundServiceProtocol {
     func stopCurrentPlayingAudio() {
         print("stop current playing audio")
         currentAudioPlaying?.stop()
+    }
+    
+    func setVolume(_ volume: Float) {
+        // Clamp to 0...1 range.
+        let clampedVolume = min(max(volume, 0.0), 1.0)
+        self.volume = clampedVolume
     }
 }

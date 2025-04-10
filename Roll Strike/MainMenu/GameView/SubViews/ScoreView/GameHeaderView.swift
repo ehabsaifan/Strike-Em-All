@@ -14,8 +14,7 @@ struct GameHeaderView: View {
     let player1Score: Int
     let player2Score: Int?     // If you have separate scores for player2.
     // Closure actions for the settings menu.
-    var onChangeBall: () -> Void
-    var onQuitGame: () -> Void
+    var onAction: (HeaderMenuAction) -> Void
 
     var body: some View {
         HStack {
@@ -51,9 +50,9 @@ struct GameHeaderView: View {
             
             // Right side: Settings menu
             Menu {
-                Button("Change Ball", action: onChangeBall)
-                Button("Quit Game", action: onQuitGame)
-                // Additional menu options can be added here.
+                Button("Change Ball", action: { onAction(.changeBall) })
+                Button("Volume", action: { onAction(.changeVolume) })
+                Button("Quit Game", action: { onAction(.quit) })
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.title)
