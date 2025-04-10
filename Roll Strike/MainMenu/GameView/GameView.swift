@@ -18,7 +18,7 @@ struct GameView: View {
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
     @State private var showVolumeControl = false
-
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -96,7 +96,6 @@ struct GameView: View {
                     message: Text("\(viewModel.winner?.name ?? "") Wins\nScore: \(viewModel.score.total)"),
                     dismissButton: .default(Text("OK")) {
                         viewModel.reset()
-                        confettiCounter += 1
                     }
                 )
             }
@@ -127,12 +126,21 @@ struct GameView: View {
             }
             
             if showVolumeControl {
-                // Volume control overlay
                 VolumeControlView(volume: $viewModel.volume)
                     .padding()
                     .shadow(radius: 10)
-                    .transition(.opacity)   //(.move(edge: .bottom))
+                    .transition(.opacity)
                     .zIndex(3)
+            }
+            
+            if showEarnedPoints {
+                // You can set a custom starting offset (e.g., from the ball’s position) and a final offset.
+                EarnedPointsView(
+                    text: earnedPointsText,
+                    // For example, have it end at an offset from the top:
+                    finalOffset: CGSize(width: 30, height: -UIScreen.main.bounds.height / 3)
+                )
+                .zIndex(3)
             }
         }
         .onTapGesture {
@@ -154,7 +162,7 @@ struct GameView: View {
                 withAnimation(.easeOut(duration: 0.6)) {
                     showEarnedPoints = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                     withAnimation(.easeIn(duration: 0.3)) {
                         showEarnedPoints = false
                     }

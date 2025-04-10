@@ -13,6 +13,7 @@ class GameViewModel: ObservableObject {
     private var physicsService: PhysicsServiceProtocol
     private var soundService: SoundServiceProtocol
     private var cancellables = Set<AnyCancellable>()
+    private var started = false
     
     @Published var rows: [GameRowProtocol] = []
     @Published var currentPlayer: Player
@@ -145,13 +146,17 @@ class GameViewModel: ObservableObject {
     
     func updateBallPosition(with offset: CGSize) {
         guard !isBallMoving else { return }
-        //playSound(.ropePull)
+        if started {
+            playSound(.ropePull)
+        }
         physicsService.updateBallPosition(with: offset)
+        started = true
     }
     
     func launchBall(impulse: CGVector) {
         guard !isBallMoving else { return }
         isBallMoving = true
+        stopSound(.ropePull)
         physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
             guard let self = self else { return }
             gotFinalPostion(finalPosition)
@@ -249,5 +254,9 @@ extension GameViewModel {
 extension GameViewModel {
     func playSound(_ event: SoundEvent) {
         soundService.playSound(for: event)
+    }
+    
+    func stopSound(_ event: SoundEvent) {
+        soundService.stopCurrentPlayingAudio()
     }
 }

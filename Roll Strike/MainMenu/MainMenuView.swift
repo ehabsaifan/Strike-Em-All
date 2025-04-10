@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainMenuView: View {
-    @StateObject private var viewModel = MainMenuViewModel(contentProvider: GameContentProvider())
+    @StateObject private var viewModel = MainMenuViewModel()
     
     var body: some View {
         VStack(spacing: 20) {
