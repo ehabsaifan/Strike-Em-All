@@ -17,18 +17,18 @@ struct GameView: View {
     @State private var confettiCounter = 0
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
-    
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
+                // Header and game board sections remain as you have.
                 GameHeaderView(
                     player1: viewModel.player1,
                     player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
                     currentPlayer: viewModel.currentPlayer,
-                    player1Score: viewModel.score.total,       // Adjust if you have individual scores.
+                    player1Score: viewModel.score.total,
                     player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score.total,
                     onChangeBall: {
-                        // Show your ball carousel or initiate ball change mode.
                         showBallCarousel = true
                     },
                     onQuitGame: {
@@ -36,7 +36,6 @@ struct GameView: View {
                     }
                 )
                 
-                // Game board.
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
                         let row = viewModel.rows[index]
@@ -76,10 +75,17 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Launch area stays at the bottom.
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
                     .frame(height: GameViewModel.launchAreaHeight)
             }
+            // Attach the confetti modifier at the very top with a high zIndex.
+            .confettiCannon(trigger: $confettiCounter,
+                              num: 150,
+                              openingAngle: Angle(degrees: 0),
+                              closingAngle: Angle(degrees: 360),
+                              radius: 250)
+            .zIndex(1)
+            // Background of your main view.
             .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
@@ -92,7 +98,12 @@ struct GameView: View {
                 )
             }
             .onChange(of: viewModel.winner, initial: false) { _, _ in
-                showWinnerAlert = viewModel.winner != nil
+                if viewModel.winner != nil {
+                    showWinnerAlert = true
+                    confettiCounter += 1
+                } else {
+                    showWinnerAlert = false
+                }
             }
             .zIndex(0)
             
@@ -102,7 +113,7 @@ struct GameView: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
             
-            // Overlay: Ball carousel for changing rolling object.
+            // Ball selection carousel.
             if showBallCarousel {
                 RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType,
                                             settings: getCarouselSettings()) {
@@ -112,7 +123,7 @@ struct GameView: View {
                 .zIndex(2)
             }
             
-            // Earned points overlay (temporary)
+            // Earned points overlay.
             if showEarnedPoints {
                 Text(earnedPointsText)
                     .font(.system(size: 36, weight: .bold))
