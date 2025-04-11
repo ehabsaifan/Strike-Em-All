@@ -78,7 +78,6 @@ class SoundService: SoundServiceProtocol {
     }
     
     func playSound(for event: SoundEvent) {
-        print("Play sound for \(event.rawValue)")
         let x = audioPlayers[event]?.randomElement()
         currentAudioPlaying = x
         x?.play()

@@ -103,6 +103,7 @@ class GameViewModel: ObservableObject {
         
         ScoreManager.shared.scorePublisher
             .sink { [weak self] newValue in
+                print("NewScore recieved: \(newValue)")
                 self?.score = newValue
             }.store(in: &cancellables)
     }
