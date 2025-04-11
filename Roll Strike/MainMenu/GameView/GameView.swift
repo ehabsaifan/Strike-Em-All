@@ -13,11 +13,16 @@ struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showWinnerAlert = false
-    @State private var showBallCarousel = false
     @State private var confettiCounter = 0
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
-    @State private var showVolumeControl = false
+    @State private var activeOverlay: ActiveOverlay = .none
+    
+    enum ActiveOverlay {
+        case none
+        case ballSelection
+        case volumeControl
+    }
     
     var body: some View {
         ZStack {
@@ -26,21 +31,20 @@ struct GameView: View {
                     player1: viewModel.player1,
                     player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
                     currentPlayer: viewModel.currentPlayer,
-                    player1Score: viewModel.score.total,
-                    player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score.total,
+                    player1Score: viewModel.score,
+                    player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score,
                     onAction: { action in
                         switch action {
                         case .changeBall:
-                            withAnimation { showBallCarousel = true }
+                            activeOverlay = .ballSelection
                         case .changeVolume:
-                            withAnimation { showVolumeControl = true }
+                            activeOverlay = .volumeControl
                         case .quit:
                             presentationMode.wrappedValue.dismiss()
                         }
                     }
                 )
                 
-                // Animated score view, game board, etc.
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
                         let row = viewModel.rows[index]
@@ -80,7 +84,6 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // Launch area.
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
                     .frame(height: GameViewModel.launchAreaHeight)
             }
@@ -116,16 +119,16 @@ struct GameView: View {
                 .zIndex(1)
             
             // Ball selection carousel.
-            if showBallCarousel {
+            if activeOverlay == .ballSelection {
                 RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType,
                                             settings: getCarouselSettings()) {
-                    withAnimation { showBallCarousel = false }
+                    withAnimation { activeOverlay = .none }
                 }
                 .frame(height: 50)
                 .zIndex(2)
             }
             
-            if showVolumeControl {
+            if activeOverlay == .volumeControl {
                 VolumeControlView(volume: $viewModel.volume)
                     .padding()
                     .shadow(radius: 10)
@@ -134,10 +137,8 @@ struct GameView: View {
             }
             
             if showEarnedPoints {
-                // You can set a custom starting offset (e.g., from the ball’s position) and a final offset.
                 EarnedPointsView(
                     text: earnedPointsText,
-                    // For example, have it end at an offset from the top:
                     finalOffset: CGSize(width: 30, height: -UIScreen.main.bounds.height / 3)
                 )
                 .zIndex(3)
@@ -145,20 +146,21 @@ struct GameView: View {
         }
         .onTapGesture {
             withAnimation {
-                showVolumeControl = false
+                activeOverlay = .none
             }
         }
         .simultaneousGesture(
             DragGesture()
                 .onChanged { _ in
                     withAnimation {
-                        showVolumeControl = false
+                        activeOverlay = .none
                     }
                 }
         )
-        .onChange(of: viewModel.score.lastShotPointsEarned, initial: false) { _, newPoints in
-            if newPoints > 0 {
-                earnedPointsText = "+\(newPoints)"
+        .onChange(of: viewModel.score, initial: false) { oldScore, newScore in
+            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
+            if newScore.lastShotPointsEarned > 0 {
+                earnedPointsText = "+\(newScore.lastShotPointsEarned)"
                 withAnimation(.easeOut(duration: 0.6)) {
                     showEarnedPoints = true
                 }
@@ -189,7 +191,6 @@ private func createGameViewModel() -> GameViewModel {
                                   contentProvider: contentProvider)
     let soundService = SoundService(category: .street)
     
-    // Create a SpriteKit scene for physics
     let gameScene = GameScene(size: UIScreen.main.bounds.size)
     gameScene.scaleMode = .resizeFill
     let physicsService = SpriteKitPhysicsService(scene: gameScene)

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Score {
+struct Score: Equatable {
     let lastShotPointsEarned: Int
     let total: Int
     let timeStamp: Date?
