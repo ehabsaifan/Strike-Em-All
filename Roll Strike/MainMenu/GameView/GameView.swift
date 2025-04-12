@@ -31,8 +31,8 @@ struct GameView: View {
                     player1: viewModel.player1,
                     player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
                     currentPlayer: viewModel.currentPlayer,
-                    player1Score: viewModel.score,
-                    player2Score: viewModel.gameMode == .singlePlayer ? nil : viewModel.score,
+                    player1Score: viewModel.scorePlayer1,
+                    player2Score: viewModel.scorePlayer2,
                     onAction: { action in
                         switch action {
                         case .changeBall:
@@ -96,7 +96,7 @@ struct GameView: View {
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
                     title: Text("Game Over"),
-                    message: Text("\(viewModel.winner?.name ?? "") Wins\nScore: \(viewModel.score.total)"),
+                    message: Text("\(viewModel.winner?.name ?? "") Wins\nScore: \(viewModel.winnerFinalScore.total)"),
                     dismissButton: .default(Text("OK")) {
                         viewModel.reset()
                     }
@@ -157,7 +157,21 @@ struct GameView: View {
                     }
                 }
         )
-        .onChange(of: viewModel.score, initial: false) { oldScore, newScore in
+        .onChange(of: viewModel.scorePlayer1, initial: false) { oldScore, newScore in
+            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
+            if newScore.lastShotPointsEarned > 0 {
+                earnedPointsText = "+\(newScore.lastShotPointsEarned)"
+                withAnimation(.easeOut(duration: 0.6)) {
+                    showEarnedPoints = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        showEarnedPoints = false
+                    }
+                }
+            }
+        }
+        .onChange(of: viewModel.scorePlayer2, initial: false) { oldScore, newScore in
             print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
             if newScore.lastShotPointsEarned > 0 {
                 earnedPointsText = "+\(newScore.lastShotPointsEarned)"
