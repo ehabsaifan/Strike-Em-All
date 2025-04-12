@@ -19,16 +19,14 @@ protocol ScoreManagerProtocol {
 
 class ScoreManager: ScoreManagerProtocol, ObservableObject {
     let scorePublisher: CurrentValueSubject<Score, Never>
-    static let shared = ScoreManager()
-    
     private var scoreCalculator: ScoreCalculatorProtocol
     private var winningCount = 0
     private var winningStreak = 0
     private var cancellables = Set<AnyCancellable>()
     
-    private init() {
-        self.scoreCalculator = ScoreCalculator()
-        self.scorePublisher = (scoreCalculator as! ScoreCalculator).scorePublisher
+    init(calculator: ScoreCalculatorProtocol = ScoreCalculator()) {
+        self.scoreCalculator = calculator
+        self.scorePublisher = calculator.scorePublisher
     }
     
     func gameStarted(player: String) {
@@ -44,36 +42,18 @@ class ScoreManager: ScoreManagerProtocol, ObservableObject {
     }
     
     func gameEnded(player: String, isAWinner: Bool, completion: @escaping (Score) -> Void) {
-        let finalScore = scoreCalculator.finishGame()
+        let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
         if isAWinner {
             winningCount += 1
             winningStreak += 1
         } else {
             winningStreak = 0
         }
+        // Report the score and update achievements via the AchievementManager (see next section).
         GameCenterManager.shared.reportScore(finalScore.total)
-        self.reportAchievement()
+        AchievementManager.shared.updateAchievements(winningCount: winningCount, winningStreak: winningStreak, score: finalScore.total)
         cancellables.removeAll()
         completion(finalScore)
     }
-    
-    private func reportAchievement() {
-        // Report achievements based on streaks.
-        switch winningStreak {
-        case 5:
-            GameCenterManager.shared.reportAchievement(achievment: .fiveWinsStreak, percentComplete: 100)
-        case 10:
-            GameCenterManager.shared.reportAchievement(achievment: .tenWinsStreak, percentComplete: 100)
-        default:
-            break
-        }
-        switch winningCount {
-        case 5:
-            GameCenterManager.shared.reportAchievement(achievment: .fiveWins, percentComplete: 100)
-        case 25:
-            GameCenterManager.shared.reportAchievement(achievment: .twintyFiveWins, percentComplete: 100)
-        default:
-            break
-        }
-    }
 }
+

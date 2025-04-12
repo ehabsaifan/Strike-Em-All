@@ -24,9 +24,14 @@ class GameViewModel: ObservableObject {
     @Published var isBallMoving = false
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
-    @Published var score: Score = Score()
     
-    @Published var scoreManager: ScoreManagerProtocol = ScoreManager.shared
+    // Separate scores for each player:
+    @Published var scorePlayer1: Score = Score()
+    @Published var scorePlayer2: Score = Score()
+    
+    // Score managers for each player.
+    var scoreManagerPlayer1: ScoreManagerProtocol
+    var scoreManagerPlayer2: ScoreManagerProtocol?
     
     @Published var isWrapAroundEdgesEnabled = false {
         didSet {
@@ -34,6 +39,7 @@ class GameViewModel: ObservableObject {
         }
     }
     
+    // Other published properties...
     @Published var selectedBallType: RollingObjectType = .beachBall {
         didSet {
             gameService.setRollingObject(selectedBallType.rollingObject)
@@ -42,9 +48,7 @@ class GameViewModel: ObservableObject {
     }
     
     @Published var volume: Float = 1.0 {
-        didSet {
-            soundService.setVolume(volume)
-        }
+        didSet { soundService.setVolume(volume) }
     }
     
     let launchAreaVM: LaunchAreaViewModel
@@ -52,9 +56,9 @@ class GameViewModel: ObservableObject {
     let rowHeight: CGFloat = 70  // Used to calculate landing row
     
     static let ballDiameter: CGFloat = 40  // must match GameScene.ballSize
-    static var ballStartYSpacing:CGFloat {
+    static var ballStartYSpacing: CGFloat {
         launchAreaHeight + GameViewModel.bottomSafeAreaInset
-    } // Must match gameScene.ballStartYSpacing
+    }
     static let launchAreaHeight: CGFloat = 100
     
     static var bottomSafeAreaInset: CGFloat {
@@ -63,7 +67,14 @@ class GameViewModel: ObservableObject {
     static var screenWidth: CGFloat {
         UIApplication.shared.keyWindow?.frame.width ?? 0
     }
-        
+    
+    var winnerFinalScore: Score {
+        guard winner == player1 else {
+            return scorePlayer2
+        }
+        return scorePlayer1
+    }
+    
     init(gameService: GameServiceProtocol,
          physicsService: PhysicsServiceProtocol,
          soundService: SoundServiceProtocol,
@@ -71,13 +82,14 @@ class GameViewModel: ObservableObject {
          gameMode: GameMode,
          player1: Player,
          player2: Player) {
+        
         self.gameService = gameService
         self.physicsService = physicsService
         self.soundService = soundService
         self.gameScene = gameScene
         self.gameMode = gameMode
         self.player1 = player1
-        currentPlayer = player1
+        self.currentPlayer = player1
         self.player2 = player2
         self.launchAreaVM = LaunchAreaViewModel(
             launchAreaHeight: GameViewModel.launchAreaHeight,
@@ -88,31 +100,44 @@ class GameViewModel: ObservableObject {
         selectedBallType = gameService.rollingObject.type
         volume = soundService.volume
         
+        self.scoreManagerPlayer1 = ScoreManager(calculator: ScoreCalculator())
+        if gameMode != .singlePlayer {
+            self.scoreManagerPlayer2 = ScoreManager(calculator: ScoreCalculator())
+        }
+        
+        // Subscriptions for launch area updates…
         launchAreaVM.$dragOffset
             .sink { [weak self] newOffset in
                 self?.updateBallPosition(with: newOffset)
             }
             .store(in: &cancellables)
-        
         launchAreaVM.$launchImpulse
             .sink { [weak self] newImpulse in
-                guard let newImpulse else { return }
+                guard let newImpulse = newImpulse else { return }
                 self?.launchBall(impulse: newImpulse)
             }
             .store(in: &cancellables)
         
-        ScoreManager.shared.scorePublisher
-            .sink { [weak self] newValue in
-                print("NewScore recieved: \(newValue)")
-                self?.score = newValue
-            }.store(in: &cancellables)
+        // Subscribe to both score managers.
+        scoreManagerPlayer1.scorePublisher
+            .sink { [weak self] score in
+                self?.scorePlayer1 = score
+            }
+            .store(in: &cancellables)
+        
+        scoreManagerPlayer2?.scorePublisher
+            .sink { [weak self] score in
+                self?.scorePlayer2 = score
+            }
+            .store(in: &cancellables)
     }
     
     func startGame() {
         gameService.startGame(with: gameService.contentProvider.getSelectedContents())
         physicsService.setRollingObject(gameService.rollingObject)
         rows = gameService.rows
-        scoreManager.gameStarted(player: player1.name)
+        scoreManagerPlayer1.gameStarted(player: player1.name)
+        scoreManagerPlayer2?.gameStarted(player: player2.name)
     }
     
     private func updateRollingObject() {
@@ -166,47 +191,59 @@ class GameViewModel: ObservableObject {
     
     private func gotFinalPostion(_ finalPosition: CGPoint) {
         var success = false
-        let player: GameService.PlayerType = self.currentPlayer == self.player1 ? .player1 : .player2
-        if let rowIndex = self.getRowAtBallPosition(finalPosition: finalPosition) {
-            success = self.gameService.markCell(at: rowIndex, forPlayer: player)
+        let player: GameService.PlayerType = (currentPlayer == player1) ? .player1 : .player2
+        if let rowIndex = getRowAtBallPosition(finalPosition: finalPosition) {
+            success = gameService.markCell(at: rowIndex, forPlayer: player)
             if player == .player1 {
                 if success {
-                    scoreManager.recordScore(atRow: rowIndex, player: player1.name)
+                    scoreManagerPlayer1.recordScore(atRow: rowIndex, player: player1.name)
                 } else {
-                    scoreManager.missedShot(player: player1.name)
+                    scoreManagerPlayer1.missedShot(player: player1.name)
+                }
+            } else {
+                if success {
+                    scoreManagerPlayer2?.recordScore(atRow: rowIndex, player: player2.name)
+                } else {
+                    scoreManagerPlayer2?.missedShot(player: player2.name)
                 }
             }
-            
-            self.rows = self.gameService.rows
+            rows = gameService.rows
             physicsService.resetBall()
             
-            switch self.gameService.checkForWinner() {
+            switch gameService.checkForWinner() {
             case .player1:
-                self.winner = player1
+                winner = player1
             case .player2:
-                self.winner = player2
+                winner = player2
             case .none:
                 break
             }
         } else {
             if player == .player1 {
-                scoreManager.missedShot(player: player1.name)
+                scoreManagerPlayer1.missedShot(player: player1.name)
+            } else {
+                scoreManagerPlayer2?.missedShot(player: player2.name)
             }
         }
         
-        if self.winner == nil {
+        if winner == nil {
             playSound(success ? .hitStrike : .missStrike)
-            self.toggleTurn()
+            toggleTurn()
         } else {
             playSound(.winner)
-            scoreManager.gameEnded(player: player1.name, isAWinner: player1 == winner) { [weak self] finalScore in
-                guard let self else { return }
-                score = finalScore
+            if player == .player1 {
+                scoreManagerPlayer1.gameEnded(player: player1.name, isAWinner: (player1 == winner)) { [weak self] finalScore in
+                    self?.scorePlayer1 = finalScore
+                }
+            } else {
+                scoreManagerPlayer2?.gameEnded(player: player2.name, isAWinner: (player2 == winner)) { [weak self] finalScore in
+                    self?.scorePlayer2 = finalScore
+                }
             }
         }
-        self.isBallMoving = false
+        isBallMoving = false
     }
-
+    
     private func toggleTurn() {
         physicsService.resetBall()
         physicsService.setRollingObject(gameService.rollingObject)
@@ -236,7 +273,8 @@ class GameViewModel: ObservableObject {
         winner = nil
         isBallMoving = false
         physicsService.setRollingObject(gameService.rollingObject)
-        scoreManager.gameStarted(player: player1.name)
+        scoreManagerPlayer1.gameStarted(player: player1.name)
+        scoreManagerPlayer2?.gameStarted(player: player2.name)
     }
 }
 
