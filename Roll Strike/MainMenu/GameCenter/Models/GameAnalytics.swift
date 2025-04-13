@@ -1,0 +1,19 @@
+//
+//  GameAnalytics.swift
+//  Roll Strike
+//
+//  Created by Ehab Saifan on 4/13/25.
+//
+
+import Foundation
+
+struct GameAnalytics: Codable {
+    var lifetimeCorrectShots: Int = 0
+    var lifetimeMissedShots: Int = 0
+    var lifetimeWinnings: Int = 0
+    var lifetimeGamesPlayed: Int = 0
+    var lifetimeLongestWinningStreak: Int = 0
+    var currentWinningStreak: Int = 0
+    var lastGameCorrectShots: Int = 0
+    var lastGameMissedShots: Int = 0
+}
