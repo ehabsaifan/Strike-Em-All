@@ -12,7 +12,8 @@ import SwiftUI
 
 protocol AnalyticsServiceProtocol {
     var analyticsPublisher: CurrentValueSubject<GameAnalytics, Never> { get }
-    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool)
+    
+    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int)
     func loadAnalytics(completion: @escaping (Result<GameAnalytics, Error>) -> Void)
     func saveAnalytics(completion: @escaping (Result<Void, Error>) -> Void)
 }
@@ -66,7 +67,8 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
     // MARK: - Public Methods
     
     /// Update analytics based on the game’s results.
-    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool) {
+    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int) {
+        analytics.lifetimeTotalScore += finalScore
         analytics.lifetimeGamesPlayed += 1
         analytics.lastGameCorrectShots = correctShots
         analytics.lastGameMissedShots = missedShots
@@ -103,6 +105,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
                 completion(.failure(error))
             } else if let record = record {
                 let loadedAnalytics = GameAnalytics(
+                    lifetimeTotalScore: record["lifetimeTotalScore"] as? Int ?? 0,
                     lifetimeCorrectShots: record["lifetimeCorrectShots"] as? Int ?? 0,
                     lifetimeMissedShots: record["lifetimeMissedShots"] as? Int ?? 0,
                     lifetimeWinnings: record["lifetimeWinnings"] as? Int ?? 0,
@@ -130,7 +133,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
             } else {
                 record = CKRecord(recordType: "GameAnalytics", recordID: self.recordID)
             }
-            
+            record["lifetimeTotalScore"] = self.analytics.lifetimeCorrectShots as CKRecordValue
             record["lifetimeCorrectShots"] = self.analytics.lifetimeCorrectShots as CKRecordValue
             record["lifetimeMissedShots"] = self.analytics.lifetimeMissedShots as CKRecordValue
             record["lifetimeWinnings"] = self.analytics.lifetimeWinnings as CKRecordValue
