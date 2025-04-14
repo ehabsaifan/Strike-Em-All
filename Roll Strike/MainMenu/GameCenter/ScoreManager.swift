@@ -20,8 +20,9 @@ protocol ScoreManagerProtocol {
 class ScoreManager: ScoreManagerProtocol, ObservableObject {
     let scorePublisher: CurrentValueSubject<Score, Never>
     private var scoreCalculator: ScoreCalculatorProtocol
-    private var winningCount = 0
-    private var winningStreak = 0
+    private var gameMissedShots = 0
+    private var gameCorrectShots = 0
+    
     private var cancellables = Set<AnyCancellable>()
     
     init(calculator: ScoreCalculatorProtocol = ScoreCalculator()) {
@@ -34,24 +35,27 @@ class ScoreManager: ScoreManagerProtocol, ObservableObject {
     }
     
     func recordScore(atRow row: Int, player: String) {
+        gameCorrectShots += 1
         scoreCalculator.recordScore(atRow: row)
     }
     
     func missedShot(player: String) {
+        gameMissedShots += 1
         scoreCalculator.missedShot()
     }
     
     func gameEnded(player: String, isAWinner: Bool, completion: @escaping (Score) -> Void) {
         let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
         if isAWinner {
-            winningCount += 1
-            winningStreak += 1
+            lifeTimeLongesttWinningStreak += 1
         } else {
-            winningStreak = 0
+            lifeTimeLongesttWinningStreak = 0
         }
-        // Report the score and update achievements via the AchievementManager (see next section).
+
         GameCenterManager.shared.reportScore(finalScore.total)
-        AchievementManager.shared.updateAchievements(winningCount: winningCount, winningStreak: winningStreak, score: finalScore.total)
+        AnalyticsManager.shared.updateAnalytics(correctShots: correctShots,
+                                                missedShots: missedShots,
+                                                didWin: player)
         cancellables.removeAll()
         completion(finalScore)
     }
