@@ -26,7 +26,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
     // For example: "GameAnalyticsRecord_<playerID>"
     init(recordName: String) {
         self.recordID = CKRecord.ID(recordName: recordName)
-        self.defaultsKey = "GameAnalyticsData_\(recordName)"
+        self.defaultsKey = .gameAnalyticsData(recordName)
         container = CKContainer.default()
         database = container.privateCloudDatabase
         
@@ -39,11 +39,12 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
         
         // Load from CloudKit asynchronously and update if available.
         loadAnalytics { [weak self] result in
+            guard let self else { return }
             DispatchQueue.main.async {
                 switch result {
                 case .success(let loaded):
-                    self?.analytics = loaded
-                    Self.saveToUserDefaults(loaded, forKey: self?.defaultsKey ?? "")
+                    self.analytics = loaded
+                    Self.saveToUserDefaults(loaded, forKey: self.defaultsKey)
                 case .failure(let error):
                     print("CloudKit load error: \(error.localizedDescription)")
                 }
@@ -56,7 +57,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
     private let container: CKContainer
     private let database: CKDatabase
     private let recordID: CKRecord.ID
-    private let defaultsKey: String
+    private let defaultsKey: SimpleDefaults.Key
     
     @Published var analytics: GameAnalytics
     var analyticsPublisher: CurrentValueSubject<GameAnalytics, Never> {
@@ -157,17 +158,17 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
     
     // MARK: - Offline Persistence Helpers
     
-    private static func loadFromUserDefaults(forKey key: String) -> GameAnalytics? {
-        if let data = UserDefaults.standard.data(forKey: key),
+    private static func loadFromUserDefaults(forKey key: SimpleDefaults.Key) -> GameAnalytics? {
+        if let data: Data = SimpleDefaults.getValue(forKey: key),
            let decoded = try? JSONDecoder().decode(GameAnalytics.self, from: data) {
             return decoded
         }
         return nil
     }
     
-    private static func saveToUserDefaults(_ analytics: GameAnalytics, forKey key: String) {
+    private static func saveToUserDefaults(_ analytics: GameAnalytics, forKey key: SimpleDefaults.Key) {
         if let data = try? JSONEncoder().encode(analytics) {
-            UserDefaults.standard.set(data, forKey: key)
+            SimpleDefaults.setValue(data, forKey: key)
         }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  ScoreManager.swift
+//  ScoreService.swift
 //  Roll Strike
 //
 //  Created by Ehab Saifan on 4/7/25.
@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-protocol ScoreManagerProtocol {
+protocol ScoreServiceProtocol {
     var scorePublisher: CurrentValueSubject<Score, Never> { get }
     
     func gameStarted(player: String)
@@ -17,17 +17,19 @@ protocol ScoreManagerProtocol {
     func gameEnded(player: String, isAWinner: Bool, completion: @escaping (Score) -> Void)
 }
 
-class ScoreManager: ScoreManagerProtocol, ObservableObject {
+class ScoreService: ScoreServiceProtocol, ObservableObject {
     let scorePublisher: CurrentValueSubject<Score, Never>
     private var scoreCalculator: ScoreCalculatorProtocol
     private var gameMissedShots = 0
     private var gameCorrectShots = 0
-    
+    private var analyticsService: AnalyticsServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(calculator: ScoreCalculatorProtocol = ScoreCalculator()) {
+    init(calculator: ScoreCalculatorProtocol = ScoreCalculator(),
+         analyticsService: AnalyticsServiceProtocol) {
         self.scoreCalculator = calculator
         self.scorePublisher = calculator.scorePublisher
+        self.analyticsService = analyticsService
     }
     
     func gameStarted(player: String) {
@@ -46,16 +48,12 @@ class ScoreManager: ScoreManagerProtocol, ObservableObject {
     
     func gameEnded(player: String, isAWinner: Bool, completion: @escaping (Score) -> Void) {
         let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
-        if isAWinner {
-            lifeTimeLongesttWinningStreak += 1
-        } else {
-            lifeTimeLongesttWinningStreak = 0
-        }
 
-        GameCenterManager.shared.reportScore(finalScore.total)
-        AnalyticsManager.shared.updateAnalytics(correctShots: correctShots,
-                                                missedShots: missedShots,
-                                                didWin: player)
+        GameCenterService.shared.reportScore(finalScore.total)
+        analyticsService.updateAnalytics(correctShots: gameCorrectShots,
+                                                missedShots: gameMissedShots,
+                                                didWin: isAWinner,
+                                                finalScore: finalScore.total)
         cancellables.removeAll()
         completion(finalScore)
     }

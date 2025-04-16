@@ -20,7 +20,7 @@ class GameViewModel: ObservableObject {
     @Published var winner: Player?
     @Published var player1: Player
     @Published var player2: Player
-    @Published var gameMode: GameMode
+    @Published var playerMode: PlayerMode
     @Published var isBallMoving = false
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
@@ -30,8 +30,8 @@ class GameViewModel: ObservableObject {
     @Published var scorePlayer2: Score = Score()
     
     // Score managers for each player.
-    var scoreManagerPlayer1: ScoreManagerProtocol
-    var scoreManagerPlayer2: ScoreManagerProtocol?
+    var scoreManagerPlayer1: ScoreServiceProtocol
+    var scoreManagerPlayer2: ScoreServiceProtocol?
     
     @Published var isWrapAroundEdgesEnabled = false {
         didSet {
@@ -79,7 +79,7 @@ class GameViewModel: ObservableObject {
          physicsService: PhysicsServiceProtocol,
          soundService: SoundServiceProtocol,
          gameScene: GameScene,
-         gameMode: GameMode,
+         playerMode: PlayerMode,
          player1: Player,
          player2: Player) {
         
@@ -87,7 +87,7 @@ class GameViewModel: ObservableObject {
         self.physicsService = physicsService
         self.soundService = soundService
         self.gameScene = gameScene
-        self.gameMode = gameMode
+        self.playerMode = playerMode
         self.player1 = player1
         self.currentPlayer = player1
         self.player2 = player2
@@ -99,10 +99,13 @@ class GameViewModel: ObservableObject {
         rows = []
         selectedBallType = gameService.rollingObject.type
         volume = soundService.volume
-        
-        self.scoreManagerPlayer1 = ScoreManager(calculator: ScoreCalculator())
-        if gameMode != .singlePlayer {
-            self.scoreManagerPlayer2 = ScoreManager(calculator: ScoreCalculator())
+        let analyticsService1 = AnalyticsService(recordName: player1.name)
+        self.scoreManagerPlayer1 = ScoreService(calculator: ScoreCalculator(),
+                                                analyticsService: analyticsService1)
+        if playerMode != .singlePlayer {
+            let analyticsService2 = AnalyticsService(recordName: player2.name)
+            self.scoreManagerPlayer2 = ScoreService(calculator: ScoreCalculator(),
+                                                    analyticsService: analyticsService2)
         }
         
         // Subscriptions for launch area updates…
@@ -247,12 +250,12 @@ class GameViewModel: ObservableObject {
     private func toggleTurn() {
         physicsService.resetBall()
         physicsService.setRollingObject(gameService.rollingObject)
-        guard gameMode != .singlePlayer else {
+        guard playerMode != .singlePlayer else {
             return
         }
         
-        if gameMode == .againstComputer && currentPlayer != .computer {
-            currentPlayer = .computer
+        if playerMode == .againstComputer && currentPlayer != computer {
+            currentPlayer = computer
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.computerMove()
             }
@@ -281,7 +284,7 @@ class GameViewModel: ObservableObject {
 // MARK: - Computer move
 extension GameViewModel {
     private func computerMove() {
-        guard currentPlayer == .computer else { return }
+        guard currentPlayer == computer else { return }
         launchAreaVM.simulateComputerPull { [weak self] in
             guard let launchImpulse = self?.launchAreaVM.launchImpulse else { return }
             self?.launchBall(impulse: launchImpulse)

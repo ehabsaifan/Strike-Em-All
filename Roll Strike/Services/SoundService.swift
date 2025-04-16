@@ -17,7 +17,7 @@ protocol SoundServiceProtocol {
     func setVolume(_ volume: Float)
 }
 
-class SoundService: SoundServiceProtocol {
+class SoundService: SoundServiceProtocol, ClassNameRepresentable {
     private var audioPlayers: [SoundEvent: [AVAudioPlayer]] = [:]
     private var category: SoundCategory = .street
     private var currentAudioPlaying: AVAudioPlayer?
@@ -29,6 +29,7 @@ class SoundService: SoundServiceProtocol {
     }
     
     init(category: SoundCategory) {
+        print("\(className): \(#function)")
         self.category = category
         SoundEvent.allCases.forEach { loadSound(for: $0) }
     }

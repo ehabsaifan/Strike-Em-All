@@ -13,7 +13,7 @@ struct RollStrikeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainMenuView() // This should be your main screen
+            LandingView() // This should be your main screen
         }
     }
 }
