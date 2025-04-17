@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 extension View {
     func hideKeyboard() {
@@ -27,12 +28,34 @@ extension UIApplication {
         }
         return rootVC
     }
-    
+
+    /// Returns the top-most view controller from the keyWindow's rootViewController.
+    static func topViewController(_ base: UIViewController? = UIApplication.shared.rootVC) -> UIViewController? {
+        if let nav = base as? UINavigationController {
+            return topViewController(nav.visibleViewController)
+        } else if let tab = base as? UITabBarController, let selected = tab.selectedViewController {
+            return topViewController(selected)
+        } else if let presented = base?.presentedViewController {
+            return topViewController(presented)
+        }
+        return base
+    }
+
     var keyWindow: UIWindow? {
         UIApplication.shared
             .connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap { $0.windows }
             .first { $0.isKeyWindow }
+    }
+}
+
+protocol ClassNameRepresentable {
+    var className: String { get }
+}
+
+extension ClassNameRepresentable {
+    var className: String {
+        return String(describing: Self.self)
     }
 }

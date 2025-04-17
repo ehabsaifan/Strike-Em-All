@@ -29,7 +29,7 @@ struct GameView: View {
             VStack(spacing: 0) {
                 GameHeaderView(
                     player1: viewModel.player1,
-                    player2: viewModel.gameMode == .singlePlayer ? nil : viewModel.player2,
+                    player2: viewModel.playerMode == .singlePlayer ? nil : viewModel.player2,
                     currentPlayer: viewModel.currentPlayer,
                     player1Score: viewModel.scorePlayer1,
                     player2Score: viewModel.scorePlayer2,
@@ -61,7 +61,7 @@ struct GameView: View {
                                     .frame(height: viewModel.rowHeight)
                                     .frame(maxWidth: .infinity)
                                 
-                                if viewModel.gameMode != .singlePlayer {
+                                if viewModel.playerMode != .singlePlayer {
                                     GameCellView(marking: row.rightMarking, content: row.displayContent)
                                         .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
                                         .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
@@ -213,8 +213,8 @@ private func createGameViewModel() -> GameViewModel {
                                   physicsService: physicsService,
                                   soundService: soundService,
                                   gameScene: gameScene,
-                                  gameMode: .twoPlayers,
-                                  player1: .player(name: "Ehab"),
-                                  player2: .computer)
+                                  playerMode: .twoPlayers,
+                                  player1: Player(name: "Ehab", type: .guest),
+                                  player2: computer)
     return viewModel
 }
