@@ -7,11 +7,11 @@
 
 import Foundation
 
-enum RollingObjectType: String, CaseIterable, Identifiable {
+enum RollingObjectType: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
+    case crumpledPaper = "Crumpled Paper"
     case beachBall = "Beach Ball"
     case ironBall = "Iron Ball"
-    case crumpledPaper = "Crumpled Paper"
     
     var imageName: String {
         switch self {

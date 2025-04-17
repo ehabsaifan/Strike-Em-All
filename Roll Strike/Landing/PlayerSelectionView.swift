@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PlayerSelectionView: View {
     @State private var players: [Player]
+    @State private var showAddSheet = false
     var onSelect: (Player) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -21,32 +22,74 @@ struct PlayerSelectionView: View {
         NavigationView {
             List {
                 ForEach(players, id: \.id) { player in
-                    Button(action: {
+                    Button(player.name) {
                         onSelect(player)
                         dismiss()
-                    }) {
-                        HStack {
-                            Text(player.name)
-                            Spacer()
-                            Text(player.type.rawValue.capitalized)
-                                .foregroundColor(.secondary)
-                        }
                     }
                 }
                 .onDelete(perform: deletePlayers)
             }
             .navigationTitle("Select Player")
-            .navigationBarItems(trailing: Button("Done") {
-                dismiss()
-            })
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showAddSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Add New Player")
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .sheet(isPresented: $showAddSheet) {
+                AddPlayerView { newName in
+                    let newPlayer = Player(name: newName, type: .guest, lastUsed: Date())
+                    PlayerService.shared.addOrUpdatePlayer(newPlayer)
+                    players.append(newPlayer)  // Refresh local list turn0search2
+                    onSelect(newPlayer)
+                    showAddSheet = false
+                    dismiss()
+                }
+            }
         }
     }
 
     private func deletePlayers(at offsets: IndexSet) {
-        for index in offsets {
-            let player = players[index]
-            PlayerService.shared.deletePlayer(player)
+        offsets.forEach { idx in
+            let p = players[idx]
+            PlayerService.shared.deletePlayer(p)
         }
         players.remove(atOffsets: offsets)
+    }
+}
+
+struct AddPlayerView: View {
+    @State private var name = ""
+    var onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Form {
+                TextField("Player Name", text: $name)
+                    .disableAutocorrection(true)
+            }
+            .navigationTitle("New Player")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        onSave(name)
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)  // Good UX for forms turn1search2
     }
 }

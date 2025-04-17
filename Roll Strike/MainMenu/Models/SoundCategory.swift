@@ -13,6 +13,17 @@ enum SoundCategory: String, CaseIterable, Identifiable {
     case polite
     case kids
     
+    var title: String {
+        switch self {
+        case .street:
+            "Street"
+        case .polite:
+            "Polite"
+        case .kids:
+            "Kids"
+        }
+    }
+    
     func getSoundFolderName() -> String {
         switch self {
         case .street:

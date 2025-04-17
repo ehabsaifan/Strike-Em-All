@@ -20,15 +20,11 @@ final class GameCenterService: NSObject, ObservableObject {
     // Use a completion block to indicate success or failure.
     func authenticateLocalPlayer(completion: @escaping (Bool, Error?) -> Void) {
         GKLocalPlayer.local.authenticateHandler = { viewController, error in
+            print("## \(viewController) | \(error)")
             DispatchQueue.main.async {
                 if let vc = viewController {
-                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                       let rootVC = windowScene.windows.first?.rootViewController {
-                        rootVC.present(vc, animated: true) {
-                            completion(false, nil)
-                        }
-                    } else {
-                        completion(false, error)
+                    UIApplication.shared.rootVC?.present(vc, animated: true) {
+                        completion(false, nil)
                     }
                 } else if GKLocalPlayer.local.isAuthenticated {
                     self.isAuthenticated = true

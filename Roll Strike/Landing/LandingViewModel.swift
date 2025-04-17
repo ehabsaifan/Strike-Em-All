@@ -42,10 +42,11 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
     }
     
     func performGameCenterLogin() {
-        guard !isLoading else { return }
+        guard !isLoading else {
+            return
+        }
         isLoading = true
         print("\(className): \(#function)\n")
-        
         GameCenterService.shared.authenticateLocalPlayer { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }

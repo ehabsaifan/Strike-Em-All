@@ -209,12 +209,20 @@ private func createGameViewModel() -> GameViewModel {
     gameScene.scaleMode = .resizeFill
     let physicsService = SpriteKitPhysicsService(scene: gameScene)
     
-    let viewModel = GameViewModel(gameService: gameService,
+    let config = GameConfiguration(playerMode: .twoPlayers,
+                                   player1: Player(name: "Ehab", type: .guest),
+                                   player2: computer,
+                                   soundCategory: .street,
+                                   wrapEnabled: false,
+                                   timed: false,
+                                   rollingObjectType: .beachBall,
+                                   rowCount: 5,
+                                   volume: 1)
+    
+    let viewModel = GameViewModel(config: config,
+                                  gameService: gameService,
                                   physicsService: physicsService,
                                   soundService: soundService,
-                                  gameScene: gameScene,
-                                  playerMode: .twoPlayers,
-                                  player1: Player(name: "Ehab", type: .guest),
-                                  player2: computer)
+                                  gameScene: gameScene)
     return viewModel
 }
