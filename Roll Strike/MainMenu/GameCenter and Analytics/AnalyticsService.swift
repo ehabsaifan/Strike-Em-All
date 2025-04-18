@@ -44,6 +44,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
                 switch result {
                 case .success(let loaded):
                     self.analytics = loaded
+                    print("CloudKit load success: \(loaded)")
                     Self.saveToUserDefaults(loaded, forKey: self.defaultsKey)
                 case .failure(let error):
                     print("CloudKit load error: \(error.localizedDescription)")
@@ -118,7 +119,6 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
                 )
                 completion(.success(loadedAnalytics))
             } else {
-                // No record found; treat as a new analytics.
                 completion(.success(GameAnalytics()))
             }
         }
@@ -134,7 +134,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
             } else {
                 record = CKRecord(recordType: "GameAnalytics", recordID: self.recordID)
             }
-            record["lifetimeTotalScore"] = self.analytics.lifetimeCorrectShots as CKRecordValue
+            record["lifetimeTotalScore"] = self.analytics.lifetimeTotalScore as CKRecordValue
             record["lifetimeCorrectShots"] = self.analytics.lifetimeCorrectShots as CKRecordValue
             record["lifetimeMissedShots"] = self.analytics.lifetimeMissedShots as CKRecordValue
             record["lifetimeWinnings"] = self.analytics.lifetimeWinnings as CKRecordValue

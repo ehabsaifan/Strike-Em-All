@@ -14,20 +14,35 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
     @Published var loginError: String? = nil
     @Published var selectedPlayer: Player? = nil
     @Published var isGuest: Bool = false
-    @Published var isLoading: Bool = false  // Indicates login is in progress
+    @Published var isLoading: Bool = false
     
+    var players: [Player] {
+        playerRepo.playersSubject.value
+    }
+    
+    let playerRepo: PlayerRepositoryProtocol
+    private let authService: AuthenticationServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init() {
-        GameCenterService.shared.$isAuthenticated
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$isAuthenticated)
+    
+    init(authService: AuthenticationServiceProtocol,
+         playerRepo: PlayerRepositoryProtocol) {
+        self.authService = authService
+        self.playerRepo = playerRepo
         
-        if let lastPlayer = PlayerService.shared.getLastUsedPlayer() {
+        isAuthenticated = authService.isAuthenticatedSubject.value
+        
+        authService.isAuthenticatedSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.isAuthenticated = $0
+            }.store(in: &cancellables)
+        
+        if let lastPlayer = playerRepo.getLastUsed() {
             selectedPlayer = lastPlayer
         }
         
-        PlayerService.shared.$players
+        playerRepo.playersSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] players in
                 guard let self = self else { return }
@@ -37,8 +52,7 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
                     self.selectedPlayer = players.first
                 }
                 print("\(self.className): \(#function), selectedPlayer: \(self.selectedPlayer?.name ?? "None")")
-            }
-            .store(in: &cancellables)
+            }.store(in: &cancellables)
     }
     
     func performGameCenterLogin() {
@@ -46,12 +60,10 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
             return
         }
         isLoading = true
-        print("\(className): \(#function)\n")
-        GameCenterService.shared.authenticateLocalPlayer { [weak self] success, error in
+        authService.authenticate { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.isLoading = false
-                print("\(self.className): \(#function)\nsuccess: \(success)")
                 if success {
                     // Create a player based on the Game Center user.
                     let gcPlayer = Player(
@@ -60,7 +72,7 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
                         type: .gameCenter,
                         lastUsed: Date()
                     )
-                    PlayerService.shared.addOrUpdatePlayer(gcPlayer)
+                    self.playerRepo.save(gcPlayer)
                     self.selectedPlayer = gcPlayer
                     self.loginError = nil
                 } else {
@@ -71,11 +83,14 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
     }
     
     func continueAsGuest(with name: String) {
-        print("\(className): \(#function)\nname: \(name)")
         let guest = Player(name: name, type: .guest, lastUsed: Date())
-        PlayerService.shared.addOrUpdatePlayer(guest)
+        playerRepo.save(guest)
         selectedPlayer = guest
         isGuest = true
         loginError = nil
+    }
+    
+    func saveSelectedPlayer() {
+        playerRepo.save(selectedPlayer!)
     }
 }

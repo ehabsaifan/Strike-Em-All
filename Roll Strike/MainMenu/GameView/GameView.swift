@@ -158,7 +158,6 @@ struct GameView: View {
                 }
         )
         .onChange(of: viewModel.scorePlayer1, initial: false) { oldScore, newScore in
-            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
             if newScore.lastShotPointsEarned > 0 {
                 earnedPointsText = "+\(newScore.lastShotPointsEarned)"
                 withAnimation(.easeOut(duration: 0.6)) {
@@ -172,7 +171,6 @@ struct GameView: View {
             }
         }
         .onChange(of: viewModel.scorePlayer2, initial: false) { oldScore, newScore in
-            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
             if newScore.lastShotPointsEarned > 0 {
                 earnedPointsText = "+\(newScore.lastShotPointsEarned)"
                 withAnimation(.easeOut(duration: 0.6)) {

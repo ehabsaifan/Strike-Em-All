@@ -8,12 +8,23 @@
 import SwiftUI
 
 struct LandingView: View {
-    @StateObject var viewModel = LandingViewModel()
+    @StateObject var viewModel: LandingViewModel
+    @EnvironmentObject private var playerRepo: PlayerService
+    
     @State private var navigateToFlow = false
     @State private var guestName: String = ""
     @State private var showPlayerSelection = false
     @State private var showAlert = false
     @State private var alertMessage: String = ""
+    
+    init(container: DIContainer) {
+        _viewModel = StateObject(
+            wrappedValue: LandingViewModel(
+                authService: container.authService,
+                playerRepo: container.playerRepo
+            )
+        )
+    }
     
     var body: some View {
         NavigationView {
@@ -35,7 +46,6 @@ struct LandingView: View {
                         
                         // Game Center Login Button
                         Button(action: {
-                            print("GameCenter Login pressed")
                             if viewModel.isAuthenticated {
                                 navigateToFlow = true
                             } else {
@@ -58,12 +68,11 @@ struct LandingView: View {
                         // Last-used Player Login, if available.
                         if let lastPlayer = viewModel.selectedPlayer {
                             Button(action: {
-                                print("Last Used Login pressed")
                                 viewModel.selectedPlayer?.lastUsed = Date()
-                                PlayerService.shared.addOrUpdatePlayer(viewModel.selectedPlayer!)
+                                viewModel.saveSelectedPlayer()
                                 
                                 if lastPlayer.type == .gameCenter,
-                                    !viewModel.isAuthenticated {
+                                   !viewModel.isAuthenticated {
                                     viewModel.performGameCenterLogin()
                                 } else {
                                     navigateToFlow = true
@@ -81,9 +90,8 @@ struct LandingView: View {
                             .disabled(viewModel.isLoading)
                             
                             // If more than one player exists, allow selecting a different one.
-                            if PlayerService.shared.players.count > 1 {
+                            if viewModel.players.count > 1 {
                                 Button(action: {
-                                    print("showPlayerSelection pressed")
                                     showPlayerSelection = true
                                 }) {
                                     Text("Choose Existing Player")
@@ -107,10 +115,8 @@ struct LandingView: View {
                             
                             Button(action: {
                                 guard !guestName.isEmpty else {
-                                    print("guestName is empty")
                                     return
                                 }
-                                print("continueAsGuest pressed")
                                 viewModel.continueAsGuest(with: guestName)
                                 navigateToFlow = true
                             }) {
@@ -132,11 +138,11 @@ struct LandingView: View {
                     // This ensures that even on a very small device the ScrollView can scroll.
                 }
                 .sheet(isPresented: $showPlayerSelection) {
-                    PlayerSelectionView(players: PlayerService.shared.players) { selected in
-                        viewModel.selectedPlayer = selected
+                    PlayerSelectionView(selectedPlayer: $viewModel.selectedPlayer) {
                         showPlayerSelection = false
                         navigateToFlow = true
                     }
+                    .environmentObject(playerRepo)
                 }
                 .alert(isPresented: $showAlert) {
                     Alert(title: Text("Login Error"),
@@ -170,12 +176,26 @@ struct LandingView: View {
         .scrollDismissesKeyboard(.interactively)
         .fullScreenCover(isPresented: $navigateToFlow) {
             MainMenuFlowView(loggedInPlayer: viewModel.selectedPlayer!)
+                .environmentObject(playerRepo)
         }
     }
 }
 
 struct LandingView_Previews: PreviewProvider {
     static var previews: some View {
-        LandingView()
+        LandingView(container: PreviewContainer())
+    }
+}
+
+struct PreviewContainer: DIContainer {
+    // Use the real singleton or you can provide simple mocks here
+    let gameCenterService: GameCenterProtocol = GameCenterService.shared
+    let authService: AuthenticationServiceProtocol = GameCenterService.shared
+    let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
+    
+    init() {
+        // Optionally pre‑populate with a demo player for preview:
+        let demo = Player(name: "DemoUser", type: .guest, lastUsed: Date())
+        playerRepo.save(demo)
     }
 }
