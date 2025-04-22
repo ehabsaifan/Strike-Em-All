@@ -207,6 +207,7 @@ private func createGameViewModel() -> GameViewModel {
     gameScene.scaleMode = .resizeFill
     let physicsService = SpriteKitPhysicsService(scene: gameScene)
     
+    let di = PreviewContainer()
     let config = GameConfiguration(playerMode: .twoPlayers,
                                    player1: Player(name: "Ehab", type: .guest),
                                    player2: computer,
@@ -221,6 +222,8 @@ private func createGameViewModel() -> GameViewModel {
                                   gameService: gameService,
                                   physicsService: physicsService,
                                   soundService: soundService,
+                                  analyticsFactory: di.analyticsFactory,
+                                  achievementService: di.achievementService,
                                   gameScene: gameScene)
     return viewModel
 }

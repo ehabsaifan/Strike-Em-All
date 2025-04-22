@@ -14,6 +14,8 @@ protocol AuthenticationServiceProtocol {
 }
 
 protocol GameCenterProtocol {
+    var isAuthenticatedSubject: CurrentValueSubject<Bool, Never> { get }
+    
     func reportScore(_ score: Int)
     func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double)
     func showLeaderboard()

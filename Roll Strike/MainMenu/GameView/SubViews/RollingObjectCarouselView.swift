@@ -69,7 +69,7 @@ struct RollingObjectCarouselView: View {
                         .padding(2)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(selectedBallType == type ? Color.yellow : Color.clear, lineWidth: 2)
+                                .stroke(selectedBallType == type ? AppTheme.secondaryColor: Color.clear, lineWidth: 2)
                         )
                         .onTapGesture {
                             selectedBallType = type

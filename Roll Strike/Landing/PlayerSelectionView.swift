@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PlayerSelectionView: View {
-    @EnvironmentObject private var playerRepo: PlayerService
+    @Environment(\.di) private var di
     @Environment(\.dismiss) private var dismiss
     
     @Binding private var selectedPlayer: Player?
@@ -32,7 +32,7 @@ struct PlayerSelectionView: View {
                 ForEach(localPlayers, id: \.id) { player in
                     Button {
                         selectedPlayer = player
-                        playerRepo.save(player)  // update lastUsed
+                        di.playerRepo.save(player)  // update lastUsed
                         onSelect()
                         dismiss()
                     } label: {
@@ -63,13 +63,13 @@ struct PlayerSelectionView: View {
                 }
             }
             .onAppear {
-                localPlayers = playerRepo.playersSubject.value  // sync
+                localPlayers = di.playerRepo.playersSubject.value  // sync
             }
             .sheet(isPresented: $showAddSheet) {
                 AddPlayerView { newName in
                     let newPlayer = Player(name: newName, type: .guest, lastUsed: Date())
-                    playerRepo.save(newPlayer)
-                    localPlayers = playerRepo.playersSubject.value
+                    di.playerRepo.save(newPlayer)
+                    localPlayers = di.playerRepo.playersSubject.value
                     selectedPlayer = newPlayer
                     showAddSheet = false
                     dismiss()
@@ -79,7 +79,7 @@ struct PlayerSelectionView: View {
     }
     
     private func deletePlayers(at offsets: IndexSet) {
-        for idx in offsets { playerRepo.delete(localPlayers[idx]) }
+        for idx in offsets { di.playerRepo.delete(localPlayers[idx]) }
         localPlayers.remove(atOffsets: offsets)
     }
 }

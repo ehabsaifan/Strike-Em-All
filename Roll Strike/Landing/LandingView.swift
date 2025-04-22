@@ -9,8 +9,7 @@ import SwiftUI
 
 struct LandingView: View {
     @StateObject var viewModel: LandingViewModel
-    @EnvironmentObject private var playerRepo: PlayerService
-    
+    @Environment(\.di) private var di
     @State private var navigateToFlow = false
     @State private var guestName: String = ""
     @State private var showPlayerSelection = false
@@ -25,7 +24,7 @@ struct LandingView: View {
             )
         )
     }
-    
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -142,7 +141,7 @@ struct LandingView: View {
                         showPlayerSelection = false
                         navigateToFlow = true
                     }
-                    .environmentObject(playerRepo)
+                    .environment(\.di, di)
                 }
                 .alert(isPresented: $showAlert) {
                     Alert(title: Text("Login Error"),
@@ -176,7 +175,7 @@ struct LandingView: View {
         .scrollDismissesKeyboard(.interactively)
         .fullScreenCover(isPresented: $navigateToFlow) {
             MainMenuFlowView(loggedInPlayer: viewModel.selectedPlayer!)
-                .environmentObject(playerRepo)
+                .environment(\.di, di)
         }
     }
 }
@@ -184,18 +183,18 @@ struct LandingView: View {
 struct LandingView_Previews: PreviewProvider {
     static var previews: some View {
         LandingView(container: PreviewContainer())
+            .environment(\.di, PreviewContainer())
     }
 }
 
 struct PreviewContainer: DIContainer {
-    // Use the real singleton or you can provide simple mocks here
-    let gameCenterService: GameCenterProtocol = GameCenterService.shared
     let authService: AuthenticationServiceProtocol = GameCenterService.shared
+    let gameCenter: GameCenterProtocol   = GameCenterService.shared
     let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
+    let achievementService: AchievementServiceProtocol = AchievementService.shared
     
-    init() {
-        // Optionally pre‑populate with a demo player for preview:
-        let demo = Player(name: "DemoUser", type: .guest, lastUsed: Date())
-        playerRepo.save(demo)
+    // **Instead** of a single AnalyticsService, expose a factory:
+    let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
+        AnalyticsService(recordName: recordName)
     }
 }

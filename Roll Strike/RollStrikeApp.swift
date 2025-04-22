@@ -10,31 +10,46 @@ import SwiftUI
 @main
 struct RollStrikeApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
-    let gameCenterService = GameCenterService.shared
-    let playerRepo     = PlayerService.shared
-    let container      = RollStrikeContainer(gameCenterService: GameCenterService.shared,
-                                             authService: GameCenterService.shared,
-                                             playerRepo: PlayerService.shared)
+  
+    let container = RollStrikeContainer()
     
     var body: some Scene {
         WindowGroup {
             LandingView(container: container)
         }
-        .environmentObject(playerRepo)
-        .environmentObject(gameCenterService)
+        .environment(\.di, container)
+    }
+}
+
+private struct DIContainerKey: EnvironmentKey {
+  static let defaultValue: DIContainer = RollStrikeContainer()
+}
+
+extension EnvironmentValues {
+    var di: DIContainer {
+        get { self[DIContainerKey.self] }
+        set { self[DIContainerKey.self] = newValue }
     }
 }
 
 struct RollStrikeContainer: DIContainer {
-    var gameCenterService: any GameCenterProtocol
-    var authService: any AuthenticationServiceProtocol
-    var playerRepo: any PlayerRepositoryProtocol
+    let authService: AuthenticationServiceProtocol = GameCenterService.shared
+    let gameCenter: GameCenterProtocol   = GameCenterService.shared
+    let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
+    let achievementService: AchievementServiceProtocol = AchievementService.shared
     
-    
+    // **Instead** of a single AnalyticsService, expose a factory:
+    let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
+        AnalyticsService(recordName: recordName)
+    }
 }
+
 protocol DIContainer {
-    var gameCenterService: GameCenterProtocol { get }
+    var gameCenter: GameCenterProtocol { get }
     var authService: AuthenticationServiceProtocol { get }
     var playerRepo: PlayerRepositoryProtocol { get }
+    var achievementService: AchievementServiceProtocol { get }
+    
+    /// NEW: factory to create per‐player analytics
+    var analyticsFactory: (String) -> AnalyticsServiceProtocol { get }
 }
