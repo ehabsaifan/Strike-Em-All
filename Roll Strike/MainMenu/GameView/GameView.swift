@@ -158,7 +158,6 @@ struct GameView: View {
                 }
         )
         .onChange(of: viewModel.scorePlayer1, initial: false) { oldScore, newScore in
-            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
             if newScore.lastShotPointsEarned > 0 {
                 earnedPointsText = "+\(newScore.lastShotPointsEarned)"
                 withAnimation(.easeOut(duration: 0.6)) {
@@ -172,7 +171,6 @@ struct GameView: View {
             }
         }
         .onChange(of: viewModel.scorePlayer2, initial: false) { oldScore, newScore in
-            print("\(oldScore.lastShotPointsEarned) -> \(newScore.lastShotPointsEarned)")
             if newScore.lastShotPointsEarned > 0 {
                 earnedPointsText = "+\(newScore.lastShotPointsEarned)"
                 withAnimation(.easeOut(duration: 0.6)) {
@@ -209,12 +207,23 @@ private func createGameViewModel() -> GameViewModel {
     gameScene.scaleMode = .resizeFill
     let physicsService = SpriteKitPhysicsService(scene: gameScene)
     
-    let viewModel = GameViewModel(gameService: gameService,
+    let di = PreviewContainer()
+    let config = GameConfiguration(playerMode: .twoPlayers,
+                                   player1: Player(name: "Ehab", type: .guest),
+                                   player2: computer,
+                                   soundCategory: .street,
+                                   wrapEnabled: false,
+                                   timed: false,
+                                   rollingObjectType: .beachBall,
+                                   rowCount: 5,
+                                   volume: 1)
+    
+    let viewModel = GameViewModel(config: config,
+                                  gameService: gameService,
                                   physicsService: physicsService,
                                   soundService: soundService,
-                                  gameScene: gameScene,
-                                  playerMode: .twoPlayers,
-                                  player1: Player(name: "Ehab", type: .guest),
-                                  player2: computer)
+                                  analyticsFactory: di.analyticsFactory,
+                                  achievementService: di.achievementService,
+                                  gameScene: gameScene)
     return viewModel
 }

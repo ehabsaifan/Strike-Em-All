@@ -29,7 +29,6 @@ class SoundService: SoundServiceProtocol, ClassNameRepresentable {
     }
     
     init(category: SoundCategory) {
-        print("\(className): \(#function)")
         self.category = category
         SoundEvent.allCases.forEach { loadSound(for: $0) }
     }

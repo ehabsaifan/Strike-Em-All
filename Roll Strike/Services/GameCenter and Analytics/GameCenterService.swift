@@ -6,42 +6,58 @@
 //
 
 import GameKit
+import Combine
+
+protocol AuthenticationServiceProtocol {
+    var isAuthenticatedSubject: CurrentValueSubject<Bool, Never> { get }
+    func authenticate(completion: @escaping (Bool, Error?) -> Void)
+}
+
+protocol GameCenterProtocol {
+    var isAuthenticatedSubject: CurrentValueSubject<Bool, Never> { get }
+    
+    func reportScore(_ score: Int)
+    func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double)
+    func showLeaderboard()
+    func showAchievements()
+}
 
 final class GameCenterService: NSObject, ObservableObject {
+    
     static let shared = GameCenterService()
     static let leaderboardID = "rollstrike.highscore"
     
-    @Published var isAuthenticated = false
+    let isAuthenticatedSubject = CurrentValueSubject<Bool, Never>(false)
     
     static var player: GKLocalPlayer {
         GKLocalPlayer.local
     }
-    
+}
+ 
+// MARK: - AuthenticationServiceProtocol
+extension GameCenterService: AuthenticationServiceProtocol {
     // Use a completion block to indicate success or failure.
-    func authenticateLocalPlayer(completion: @escaping (Bool, Error?) -> Void) {
+    func authenticate(completion: @escaping (Bool, Error?) -> Void) {
         GKLocalPlayer.local.authenticateHandler = { viewController, error in
             DispatchQueue.main.async {
                 if let vc = viewController {
-                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                       let rootVC = windowScene.windows.first?.rootViewController {
-                        rootVC.present(vc, animated: true) {
-                            completion(false, nil)
-                        }
-                    } else {
-                        completion(false, error)
+                    UIApplication.shared.rootVC?.present(vc, animated: true) {
+                        completion(false, nil)
                     }
                 } else if GKLocalPlayer.local.isAuthenticated {
-                    self.isAuthenticated = true
-                    print("Player authenticated: \(GKLocalPlayer.local.alias)")
+                    self.isAuthenticatedSubject.send(true)
                     completion(true, nil)
                 } else {
-                    self.isAuthenticated = false
+                    self.isAuthenticatedSubject.send(false)
                     completion(false, error)
                 }
             }
         }
     }
-    
+}
+
+// MARK: - GameCenterProtocol
+extension GameCenterService: GameCenterProtocol {
     func reportScore(_ score: Int) {
         let scoreReporter = GKLeaderboardScore()
         scoreReporter.leaderboardID = GameCenterService.leaderboardID
@@ -80,7 +96,7 @@ final class GameCenterService: NSObject, ObservableObject {
     }
     
     func showAchievements() {
-        let vc = GKGameCenterViewController()
+        let vc = GKGameCenterViewController(state: .achievements)
         vc.gameCenterDelegate = self
         UIApplication.topViewController()?.present(vc, animated: true)
     }

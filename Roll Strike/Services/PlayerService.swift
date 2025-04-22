@@ -8,63 +8,74 @@
 import Foundation
 import Combine
 
-final class PlayerService: ObservableObject, ClassNameRepresentable {
+protocol PlayerRepositoryProtocol {
+    var playersSubject: CurrentValueSubject<[Player], Never> { get }
+    
+    func reload()
+    func getLastUsed() -> Player?
+    func save(_ player: Player)
+    func delete(_ player: Player)
+}
+
+final class PlayerService: ObservableObject, ClassNameRepresentable, PlayerRepositoryProtocol {    
     static let shared = PlayerService()
-    @Published var players: [Player] = []
+    let playersSubject = CurrentValueSubject<[Player], Never>([])
     
     private let playersKey = "SavedPlayers"
     
+    
     private init() {
-        print("\(className): \(#function)")
         loadPlayers()
     }
+
     
     private func loadPlayers() {
         if let data: Data = UserDefaults.standard.data(forKey: playersKey),
            let savedPlayers = try? JSONDecoder().decode([Player].self, from: data) {
             // Sort by most recent usage.
-            players = savedPlayers.sorted { $0.lastUsed > $1.lastUsed }
+            let loaded = savedPlayers.sorted { $0.lastUsed > $1.lastUsed }
+            playersSubject.send(loaded)
         } else {
-            players = []
+            playersSubject.send([])
         }
-        print("\(className): \(#function)")
     }
     
     private func savePlayers() {
         do {
-            let data = try JSONEncoder().encode(players)
+            let current = playersSubject.value
+            let data = try JSONEncoder().encode(current)
             UserDefaults.standard.set(data, forKey: playersKey)
         } catch {
             print(error)
         }
     }
     
-    func reloadPlayers() {
+    func reload() {
         loadPlayers()
-        print("\(className): \(#function)")
     }
     
-    func addOrUpdatePlayer(_ player: Player) {
-        if let index = players.firstIndex(where: { $0.id == player.id }) {
+    func save(_ player: Player) {
+        var current = playersSubject.value
+        if let index = current.firstIndex(where: { $0.id == player.id }) {
             // Update lastUsed and name.
-            players[index].lastUsed = Date()
-            players[index].name = player.name
+            current[index].lastUsed = Date()
+            current[index].name = player.name
         } else {
-            players.append(player)
+            current.append(player)
         }
-        players.sort { $0.lastUsed > $1.lastUsed }
+        current.sort { $0.lastUsed > $1.lastUsed }
+        playersSubject.send(current)
         savePlayers()
-        print("\(className): \(#function)")
     }
     
-    func deletePlayer(_ player: Player) {
-        players.removeAll { $0.id == player.id }
+    func delete(_ player: Player) {
+        var current = playersSubject.value
+        current.removeAll { $0.id == player.id }
+        playersSubject.send(current)
         savePlayers()
-        print("\(className): \(#function)")
     }
     
-    func getLastUsedPlayer() -> Player? {
-        print("\(className): \(#function)")
-        return players.first
+    func getLastUsed() -> Player? {
+        return playersSubject.value.first
     }
 }
