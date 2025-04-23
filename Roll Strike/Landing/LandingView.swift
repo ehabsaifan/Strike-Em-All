@@ -46,6 +46,7 @@ struct LandingView: View {
                         // Game Center Login Button
                         Button(action: {
                             if viewModel.isAuthenticated {
+                                viewModel.continueWithGameCenterLogin()
                                 navigateToFlow = true
                             } else {
                                 viewModel.performGameCenterLogin()
