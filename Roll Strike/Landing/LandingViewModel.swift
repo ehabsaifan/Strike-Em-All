@@ -65,21 +65,25 @@ final class LandingViewModel: ObservableObject, ClassNameRepresentable {
                 guard let self = self else { return }
                 self.isLoading = false
                 if success {
-                    // Create a player based on the Game Center user.
-                    let gcPlayer = Player(
-                        id: GKLocalPlayer.local.gamePlayerID,
-                        name: GKLocalPlayer.local.alias,
-                        type: .gameCenter,
-                        lastUsed: Date()
-                    )
-                    self.playerRepo.save(gcPlayer)
-                    self.selectedPlayer = gcPlayer
-                    self.loginError = nil
+                    self.continueWithGameCenterLogin()
                 } else {
                     self.loginError = error?.localizedDescription ?? "Game Center authentication failed."
                 }
             }
         }
+    }
+    
+    func continueWithGameCenterLogin() {
+        // Create a player based on the Game Center user.
+        let gcPlayer = Player(
+            id: GKLocalPlayer.local.gamePlayerID,
+            name: GKLocalPlayer.local.alias,
+            type: .gameCenter,
+            lastUsed: Date()
+        )
+        self.playerRepo.save(gcPlayer)
+        self.selectedPlayer = gcPlayer
+        self.loginError = nil
     }
     
     func continueAsGuest(with name: String) {
