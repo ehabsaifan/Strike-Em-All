@@ -87,12 +87,20 @@ struct PlayerModeSelectionView: View {
             
             // only this overlay floats on top
             if isSigningIn {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                ProgressView("Signing in…")
-                    .padding(16)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(10)
+                ZStack {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.3)
+
+                        Text("Signing in…")
+                            .foregroundColor(.white)
+                            .font(.body)
+                    }
+                    .padding(24)
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(12)
+                }
             }
         }
     }
