@@ -15,7 +15,7 @@ struct RollStrikeApp: App {
     
     var body: some Scene {
         WindowGroup {
-            LandingView(container: container)
+            LandingDashboardView(container: container)
         }
         .environment(\.di, container)
     }

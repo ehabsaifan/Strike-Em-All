@@ -17,65 +17,90 @@ protocol PlayerRepositoryProtocol {
     func delete(_ player: Player)
 }
 
-final class PlayerService: ObservableObject, ClassNameRepresentable, PlayerRepositoryProtocol {    
+final class PlayerService: ObservableObject, ClassNameRepresentable {
     static let shared = PlayerService()
     let playersSubject = CurrentValueSubject<[Player], Never>([])
-    
     private let playersKey = "SavedPlayers"
-    
+    private let kvStore = NSUbiquitousKeyValueStore.default
     
     private init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(ubiquitousKeysDidChange),
+            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: kvStore
+        )
         loadPlayers()
     }
-
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func savePlayers(_ list: [Player]) {
+        let snapshot = list
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let data = try JSONEncoder().encode(snapshot)
+                UserDefaults.standard.set(data, forKey: self.playersKey)
+                self.kvStore.set(data, forKey: self.playersKey)
+                self.kvStore.synchronize()
+            } catch {
+                print(error)
+            }
+        }
+    }
     
     private func loadPlayers() {
-        if let data: Data = UserDefaults.standard.data(forKey: playersKey),
-           let savedPlayers = try? JSONDecoder().decode([Player].self, from: data) {
-            // Sort by most recent usage.
-            let loaded = savedPlayers.sorted { $0.lastUsed > $1.lastUsed }
-            playersSubject.send(loaded)
-        } else {
-            playersSubject.send([])
+        DispatchQueue.global(qos: .background).async {
+            let data = self.kvStore.data(forKey: self.playersKey)
+            ?? UserDefaults.standard.data(forKey: self.playersKey)
+            
+            let list: [Player]
+            if let data {
+                do {
+                    let decoded = try JSONDecoder().decode([Player].self, from: data)
+                    list = decoded.sorted { $0.lastUsed > $1.lastUsed }
+                } catch {
+                    print(error)
+                    list = []
+                }
+            } else {
+                list = []
+            }
+            DispatchQueue.main.async {
+                self.playersSubject.send(list)
+            }
         }
     }
     
-    private func savePlayers() {
-        do {
-            let current = playersSubject.value
-            let data = try JSONEncoder().encode(current)
-            UserDefaults.standard.set(data, forKey: playersKey)
-        } catch {
-            print(error)
-        }
-    }
-    
-    func reload() {
+    @objc private func ubiquitousKeysDidChange(_ note: Notification) {
         loadPlayers()
     }
+}
+
+// MARK: - PlayerRepositoryProtocol
+extension PlayerService: PlayerRepositoryProtocol {
+    func reload() { loadPlayers() }
+    
+    func getLastUsed() -> Player? { playersSubject.value.first }
     
     func save(_ player: Player) {
         var current = playersSubject.value
-        if let index = current.firstIndex(where: { $0.id == player.id }) {
-            // Update lastUsed and name.
-            current[index].lastUsed = Date()
-            current[index].name = player.name
+        if let idx = current.firstIndex(where: { $0.id == player.id }) {
+            current[idx].name = player.name
+            current[idx].lastUsed = Date()
         } else {
             current.append(player)
         }
-        current.sort { $0.lastUsed > $1.lastUsed }
-        playersSubject.send(current)
-        savePlayers()
+        let updated = current.sorted { $0.lastUsed > $1.lastUsed }
+        playersSubject.send(updated)
+        savePlayers(updated)
     }
     
     func delete(_ player: Player) {
-        var current = playersSubject.value
-        current.removeAll { $0.id == player.id }
-        playersSubject.send(current)
-        savePlayers()
-    }
-    
-    func getLastUsed() -> Player? {
-        return playersSubject.value.first
+        let updated = playersSubject.value.filter { $0.id != player.id }
+        playersSubject.send(updated)
+        savePlayers(updated)
     }
 }

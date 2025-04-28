@@ -83,8 +83,8 @@ final class GameViewModel: ObservableObject {
         physicsService: PhysicsServiceProtocol,
         soundService: SoundServiceProtocol,
         analyticsFactory: @escaping (String) -> AnalyticsServiceProtocol,
-        achievementService: AchievementServiceProtocol? = nil,
-        gameCenterService: GameCenterProtocol? = nil,
+        achievementService: AchievementServiceProtocol?,
+        gameCenterService: GameCenterProtocol?,
         gameScene: GameScene
     ) {
         self.config = config

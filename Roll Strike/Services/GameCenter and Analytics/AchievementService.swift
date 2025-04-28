@@ -20,18 +20,26 @@ class AchievementService: ObservableObject, AchievementServiceProtocol {
     
     func updateAchievements(totalWins: Int, currentStreak: Int, finalScore: Int) {
         print("Reporting achievements. totalWins: \(totalWins) | currentStreak: \(currentStreak) | finalScore: \(finalScore)")
-        if currentStreak >= 5 {
-            GameCenterService.shared.reportAchievement(achievment: .fiveWinsStreak, percentComplete: 100)
+        if totalWins >= 1 {
+            GameCenterService.shared.reportAchievement(achievment: .firstWin, percentComplete: 100)
         }
-        if currentStreak >= 10 {
-            GameCenterService.shared.reportAchievement(achievment: .tenWinsStreak, percentComplete: 100)
-        }
-        if currentStreak >= 5 {
+        
+        if totalWins >= 5 {
             GameCenterService.shared.reportAchievement(achievment: .fiveWins, percentComplete: 100)
         }
-        if currentStreak >= 25 {
+        
+        if totalWins >= 25 {
             GameCenterService.shared.reportAchievement(achievment: .twintyFiveWins, percentComplete: 100)
         }
         // You can add more achievement conditions based on score thresholds, accuracy, or time played.
+    }
+    
+    private func reportStreak(streak: Int) {
+        if streak >= 5 {
+            GameCenterService.shared.reportAchievement(achievment: .fiveWinsStreak, percentComplete: 100)
+        }
+        if streak >= 10 {
+            GameCenterService.shared.reportAchievement(achievment: .tenWinsStreak, percentComplete: 100)
+        }
     }
 }

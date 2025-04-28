@@ -128,6 +128,7 @@ struct GameSettingsView: View {
             soundService: soundService,
             analyticsFactory: di.analyticsFactory,
             achievementService: di.achievementService,
+            gameCenterService: di.gameCenter,
             gameScene: gameScene
         )
     }

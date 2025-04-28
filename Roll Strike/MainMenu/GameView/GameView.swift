@@ -224,6 +224,7 @@ private func createGameViewModel() -> GameViewModel {
                                   soundService: soundService,
                                   analyticsFactory: di.analyticsFactory,
                                   achievementService: di.achievementService,
+                                  gameCenterService: di.gameCenter,
                                   gameScene: gameScene)
     return viewModel
 }
