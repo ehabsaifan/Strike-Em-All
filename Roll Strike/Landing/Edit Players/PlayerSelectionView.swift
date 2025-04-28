@@ -29,25 +29,32 @@ struct PlayerSelectionView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(localPlayers, id: \.id) { player in
-                    Button {
-                        selectedPlayer = player
-                        di.playerRepo.save(player)  // update lastUsed
-                        onSelect()
-                        dismiss()
-                    } label: {
-                        HStack {
-                            Text(player.name)
-                            Spacer()
-                            if selectedPlayer?.id == player.id {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(AppTheme.primaryColor)
+                if localPlayers.isEmpty {
+                    Button("Add Players") {
+                        showAddSheet = true
+                    }
+                } else {
+                    ForEach(localPlayers, id: \.id) { player in
+                        Button {
+                            selectedPlayer = player
+                            di.playerRepo.save(player)  // update lastUsed
+                            onSelect()
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(player.name)
+                                Spacer()
+                                if selectedPlayer?.id == player.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(AppTheme.primaryColor)
+                                }
                             }
                         }
                     }
+                    .onDelete(perform: deletePlayers)
                 }
-                .onDelete(perform: deletePlayers)
             }
+            
             .navigationTitle("Select Player")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -63,7 +70,7 @@ struct PlayerSelectionView: View {
                 }
             }
             .onAppear {
-                localPlayers = di.playerRepo.playersSubject.value  // sync
+                localPlayers = di.playerRepo.playersSubject.value
             }
             .sheet(isPresented: $showAddSheet) {
                 AddPlayerView { newName in
@@ -81,34 +88,5 @@ struct PlayerSelectionView: View {
     private func deletePlayers(at offsets: IndexSet) {
         for idx in offsets { di.playerRepo.delete(localPlayers[idx]) }
         localPlayers.remove(atOffsets: offsets)
-    }
-}
-
-struct AddPlayerView: View {
-    @State private var name = ""
-    var onSave: (String) -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                TextField("Player Name", text: $name)
-                    .disableAutocorrection(true)
-            }
-            .navigationTitle("New Player")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                        onSave(name)
-                    }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-        }
-        .scrollDismissesKeyboard(.interactively)
     }
 }

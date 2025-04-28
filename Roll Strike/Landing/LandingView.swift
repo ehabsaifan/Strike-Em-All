@@ -135,12 +135,16 @@ struct LandingView: View {
                         Spacer(minLength: 20)
                     }
                     .padding(.vertical)
-                    // This ensures that even on a very small device the ScrollView can scroll.
                 }
                 .sheet(isPresented: $showPlayerSelection) {
                     PlayerSelectionView(selectedPlayer: $viewModel.selectedPlayer) {
-                        showPlayerSelection = false
-                        navigateToFlow = true
+                        if viewModel.selectedPlayer?.type == .gameCenter,
+                           !viewModel.isAuthenticated {
+                            viewModel.performGameCenterLogin()
+                        } else {
+                            showPlayerSelection = false
+                            navigateToFlow = true
+                        }
                     }
                     .environment(\.di, di)
                 }
