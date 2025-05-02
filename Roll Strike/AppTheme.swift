@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AppTheme {
+struct AppTheme: ShapeStyle {
     static let primaryColor = Color("BrandPrimaryColor")   // Maps to #2C3E50
     static let secondaryColor = Color("BrandSecondaryColor") // Maps to #E67E22
     static let tertiaryColor = Color("BrandTertiaryColor")   // Maps to #ECF0F1

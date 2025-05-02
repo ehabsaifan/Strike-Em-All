@@ -16,17 +16,14 @@ struct LaunchAreaView: View {
             Rectangle()
                 .fill(Color.clear)
                 .ignoresSafeArea(edges: .bottom)
-            
             GeometryReader { geo in
-                let width = viewModel.ballCenterPoint.x * 2
-                
-                let leftPin = CGPoint(x: width * 0.3, y: viewModel.restingBallCenterY)
-                let rightPin = CGPoint(x: width * 0.7, y: viewModel.restingBallCenterY)
+                let leftPin = CGPoint(x: viewModel.screenWidth * 0.3, y: viewModel.ballDiameter)
+                let rightPin = CGPoint(x: viewModel.screenWidth * 0.7, y: viewModel.ballDiameter)
                 
                 // Compute the current ball center based on the drag offset.
                 let currentBallCenter = CGPoint(
-                    x: width / 2 + viewModel.dragOffset.width,
-                    y: viewModel.restingBallCenterY + viewModel.dragOffset.height
+                    x: viewModel.screenWidth / 2 + viewModel.dragOffset.width,
+                    y: viewModel.ballDiameter + viewModel.dragOffset.height
                 )
                 
                 ZStack {
@@ -50,7 +47,8 @@ struct LaunchAreaView: View {
                         .resizable()
                         .frame(width: 24, height: 24)
                         .position(rightPin)
-                }.background(AppTheme.primaryColor)
+                }
+                .background(AppTheme.primaryColor)                
             }
         }
         .gesture(

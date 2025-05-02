@@ -71,7 +71,7 @@ struct PlayerStatsView: View {
                     .font(.headline)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(AppTheme.secondaryColor)
+                    .background(AppTheme.primaryColor)
                     .foregroundColor(.white)
                     .cornerRadius(8)
             }

@@ -13,20 +13,22 @@ class GameScene: SKScene {
     let ballDiameter: CGFloat = GameViewModel.ballDiameter
     let ballStartY: CGFloat = GameViewModel.ballStartYSpacing
     
+    private var borderNode: SKShapeNode!
     private var ball: SKSpriteNode!
     // Flag to ensure callback is only called once per movement cycle.
     private var ballHasStopped = false
     // Use a magnitude threshold to detect when the ball has essentially stopped.
     private let velocityThreshold: CGFloat = 4.0
-        
+    
     private var ballRadius: CGFloat {
         ball.size.height / 2
     }
     
     // Callback to notify when the ball stops.
     var onBallStopped: ((CGPoint) -> Void)?
+    
     var wrapAroundEnabled: Bool = false
-        
+    
     // The starting position for the ball in the scene.
     var ballStartPosition: CGPoint {
         CGPoint(x: frame.midX, y: frame.minY + ballStartY - ballRadius)
@@ -42,13 +44,16 @@ class GameScene: SKScene {
     
     override func didMove(to view: SKView) {
         backgroundColor = .clear
+        buildBorder()
         
         // Set up the physics world boundaries.
         if wrapAroundEnabled {
             physicsBody = nil
         } else {
-            physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+            physicsBody = SKPhysicsBody(edgeLoopFrom: bounds)
         }
+        updateBorderStyle()
+        
         physicsWorld.gravity = .zero
         
         // Create the ball node.
@@ -114,6 +119,67 @@ class GameScene: SKScene {
         }
     }
     
+    /// Configures the ball's physics properties based on the rolling object's type.
+    private func configureBall(for rollingObject: RollingObject) {
+        switch rollingObject.type {
+        case .ironBall:
+            ball.physicsBody?.mass = 1.1
+            ball.physicsBody?.linearDamping = 0.7
+            ball.physicsBody?.angularDamping = 0.6
+        case .crumpledPaper:
+            ball.physicsBody?.mass = 0.6
+            ball.physicsBody?.linearDamping = CGFloat.random(in: 0.5...1.0)
+            ball.physicsBody?.angularDamping = CGFloat.random(in: 0.3...0.8)
+            ball.physicsBody?.restitution = CGFloat.random(in: 0.2...0.5)
+            ball.physicsBody?.friction = CGFloat.random(in: 0.5...0.9)
+        default:
+            setDefaultBallPhysicsBody()
+        }
+    }
+    
+    /// Resets the ball's physics properties to default values.
+    private func setDefaultBallPhysicsBody() {
+        ball.physicsBody?.velocity = .zero
+        ball.physicsBody?.angularVelocity = .zero
+        ball.physicsBody?.restitution = 0.2
+        ball.physicsBody?.friction = 0.5
+        ball.physicsBody?.mass = 0.8
+        ball.physicsBody?.linearDamping = 0.4
+        ball.physicsBody?.angularDamping = 0.3
+        ball.physicsBody?.allowsRotation = true
+    }
+    
+    private func buildBorder() {
+        guard wrapAroundEnabled else {
+            return
+        }
+        let rect = CGRect(origin: .zero, size: size)
+        // Pick whatever corner radius looks right for your device
+        let cornerRadius: CGFloat = 30
+        let path = CGPath(
+            roundedRect: rect,
+            cornerWidth: cornerRadius,
+            cornerHeight: cornerRadius,
+            transform: nil
+        )
+        borderNode = SKShapeNode(path: path)
+        borderNode.position    = CGPoint(x: 0, y: 0)
+        borderNode.lineWidth   = 1
+        borderNode.zPosition   = 100   // above everything else
+        addChild(borderNode)
+        updateBorderStyle()      // set
+    }
+    
+    private func updateBorderStyle() {
+        guard wrapAroundEnabled else {
+            return
+        }
+        borderNode.strokeColor = .black.withAlphaComponent(0.8)
+        borderNode.glowWidth   = 12
+    }
+}
+
+extension GameScene {
     /// Updates the ball’s position directly during dragging.
     func updateBallPosition(with offset: CGSize) {
         guard ball != nil else { return }
@@ -186,35 +252,5 @@ class GameScene: SKScene {
         ball.removeAllActions()
         onBallStopped = nil
         ballHasStopped = true
-    }
-    
-    /// Configures the ball's physics properties based on the rolling object's type.
-    private func configureBall(for rollingObject: RollingObject) {
-        switch rollingObject.type {
-        case .ironBall:
-            ball.physicsBody?.mass = 1.2
-            ball.physicsBody?.linearDamping = 0.7
-            ball.physicsBody?.angularDamping = 0.6
-        case .crumpledPaper:
-            ball.physicsBody?.mass = 0.4
-            ball.physicsBody?.linearDamping = CGFloat.random(in: 0.5...1.0)
-            ball.physicsBody?.angularDamping = CGFloat.random(in: 0.3...0.8)
-            ball.physicsBody?.restitution = CGFloat.random(in: 0.2...0.5)
-            ball.physicsBody?.friction = CGFloat.random(in: 0.5...0.9)
-        default:
-            setDefaultBallPhysicsBody()
-        }
-    }
-    
-    /// Resets the ball's physics properties to default values.
-    private func setDefaultBallPhysicsBody() {
-        ball.physicsBody?.velocity = .zero
-        ball.physicsBody?.angularVelocity = .zero
-        ball.physicsBody?.restitution = 0.2
-        ball.physicsBody?.friction = 0.5
-        ball.physicsBody?.mass = 0.6
-        ball.physicsBody?.linearDamping = 0.4
-        ball.physicsBody?.angularDamping = 0.3
-        ball.physicsBody?.allowsRotation = true
     }
 }

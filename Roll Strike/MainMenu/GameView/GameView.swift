@@ -44,28 +44,34 @@ struct GameView: View {
                         }
                     }
                 )
-                
+                Divider()
+                    .background(AppTheme.primaryColor)
                 VStack(spacing: 0) {
                     ForEach(0..<viewModel.rows.count, id: \.self) { index in
                         let row = viewModel.rows[index]
+                        Divider()
                         ZStack {
-                            (index % 2 == 0 ? Color.white : Color(white: 0.95))
                             HStack(spacing: 0) {
                                 GameCellView(marking: row.leftMarking, content: row.displayContent)
                                     .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
                                     .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
                                     .padding(.leading, 5)
+                                    .background(AppTheme.tertiaryColor)
+                                
+                                Divider()
                                 
                                 Rectangle()
-                                    .fill(Color.gray.opacity(0.2))
+                                    .foregroundStyle(AppTheme.tertiaryColor)
                                     .frame(height: viewModel.rowHeight)
                                     .frame(maxWidth: .infinity)
                                 
                                 if viewModel.playerMode != .singlePlayer {
+                                    Divider()
                                     GameCellView(marking: row.rightMarking, content: row.displayContent)
                                         .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
                                         .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
                                         .padding(.trailing, 5)
+                                        .background(AppTheme.tertiaryColor)
                                 }
                             }
                         }
@@ -76,6 +82,7 @@ struct GameView: View {
                             }
                         )
                     }
+                    Divider()
                 }
                 .frame(maxWidth: .infinity)
                 .onPreferenceChange(RowFramePreferenceKey.self) { frames in
@@ -88,11 +95,11 @@ struct GameView: View {
                     .frame(height: GameViewModel.launchAreaHeight)
             }
             .confettiCannon(trigger: $confettiCounter,
-                              num: 150,
-                              openingAngle: Angle(degrees: 0),
-                              closingAngle: Angle(degrees: 360),
-                              radius: 250)
-            .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
+                            num: 150,
+                            openingAngle: Angle(degrees: 0),
+                            closingAngle: Angle(degrees: 360),
+                            radius: 250)
+            // .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
             .alert(isPresented: $showWinnerAlert) {
                 Alert(
                     title: Text("Game Over"),
@@ -118,30 +125,12 @@ struct GameView: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
             
-            // Ball selection carousel.
-            if activeOverlay == .ballSelection {
-                RollingObjectCarouselView(selectedBallType: $viewModel.selectedBallType,
-                                            settings: getCarouselSettings()) {
-                    withAnimation { activeOverlay = .none }
-                }
-                .frame(height: 50)
-                .zIndex(2)
-            }
-            
-            if activeOverlay == .volumeControl {
-                VolumeControlView(volume: $viewModel.volume)
-                    .padding()
-                    .shadow(radius: 10)
-                    .transition(.opacity)
-                    .zIndex(3)
-            }
-            
             if showEarnedPoints {
                 EarnedPointsView(
                     text: earnedPointsText,
                     finalOffset: CGSize(width: 30, height: -UIScreen.main.bounds.height / 3)
                 )
-                .zIndex(3)
+                .zIndex(4)
             }
         }
         .onTapGesture {
@@ -183,12 +172,39 @@ struct GameView: View {
                 }
             }
         }
+        .overlay(
+            Group {
+                if activeOverlay == .ballSelection {
+                    RollingObjectCarouselView(
+                        selectedBallType: $viewModel.selectedBallType,
+                        settings: getCarouselSettings()
+                    ) {}
+                        .padding()
+                        .transition(.opacity)
+                }
+            },
+            alignment: .center
+        )
+        .overlay(
+            Group {
+                if activeOverlay == .volumeControl {
+                    VolumeControlView(volume: $viewModel.volume)
+                        .padding()
+                        .transition(.opacity)
+                        .shadow(radius: 10)
+                }
+            },
+            alignment: .center
+        )
     }
     
     private func getCarouselSettings() -> RollingObjectCarouselSettings {
         RollingObjectCarouselSettings(
-            segmentSettings: CustomSegmentedControlSettings(selectedTintColor: .yellow),
-            backGroundColor: .orange
+            segmentSettings: CustomSegmentedControlSettings(
+                selectedTintColor: UIColor(AppTheme.secondaryColor),
+                normalTextColor: .black,
+                selectedTextColor: .white),
+            backGroundColor: AppTheme.primaryColor
         )
     }
 }
@@ -227,4 +243,16 @@ private func createGameViewModel() -> GameViewModel {
                                   gameCenterService: di.gameCenter,
                                   gameScene: gameScene)
     return viewModel
+}
+
+struct PreviewContainer: DIContainer {
+    let authService: AuthenticationServiceProtocol = GameCenterService.shared
+    let gameCenter: GameCenterProtocol   = GameCenterService.shared
+    let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
+    let achievementService: AchievementServiceProtocol = AchievementService.shared
+    
+    // **Instead** of a single AnalyticsService, expose a factory:
+    let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
+        AnalyticsService(recordName: recordName)
+    }
 }

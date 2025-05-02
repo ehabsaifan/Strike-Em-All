@@ -9,95 +9,102 @@ import SwiftUI
 
 struct GameSettingsView: View {
     @Environment(\.di) private var di
-    
     @Binding var config: GameConfiguration
-    
     @State private var showGameView = false
     @StateObject private var vmHolder = GameViewModelHolder()
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                RollingObjectCarouselView(
-                    selectedBallType: $config.rollingObjectType,
-                    settings: RollingObjectCarouselSettings()
-                ) { }
-                
-                Divider().background(Color.gray.opacity(0.3))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("How many rows would you like to play?")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                    Picker("Number of Rows", selection: $config.rowCount) {
-                        ForEach(1..<7, id: \.self) { Text("\($0)") }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                
-                Divider().background(Color.gray.opacity(0.3))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Enable object to pass through edges")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                    Toggle("Wrap Around Edges", isOn: $config.wrapEnabled)
-                        .tint(AppTheme.secondaryColor)
-                }
-                
-                Divider().background(Color.gray.opacity(0.3))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Enable to race against the clock.")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                    Toggle("Timed Mode", isOn: $config.timed)
-                        .tint(AppTheme.secondaryColor)
-                }
-                
-                Divider().background(Color.gray.opacity(0.3))
-                
-                //                Picker("Sound Category", selection: $config.soundCategory) {
-                //                    ForEach(SoundCategory.allCases, id: \.self) {
-                //                        Text($0.title).tag($0)
-                //                    }
-                //                }
-                //                .pickerStyle(.menu)
-                
-                //                Divider().background(Color.gray.opacity(0.3))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Adjust game sound volume")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                    VolumeControlView(volume: $config.volume)
-                }
-                                
-                Divider().background(Color.gray.opacity(0.3))
-                Spacer()
-                
-                Button(action: {
-                    let vm = makeGameViewModel()
-                    vmHolder.viewModel = vm
-                    vm.startGame()
-                    showGameView = true
-                }) {
-                    Text("Start Game")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .foregroundColor(.white)
-                        .background(AppTheme.primaryColor)
-                        .cornerRadius(8)
-                        .fullScreenCover(isPresented: $showGameView) {
-                            if let vm = vmHolder.viewModel {
-                                GameView(viewModel: vm)
-                            }
+        VStack {
+            ScrollView {
+                VStack(spacing: 8) {
+                    SectionBlock(
+                        title: "Choose Rolling Object",
+                        content: {
+                            RollingObjectCarouselView(
+                                selectedBallType: $config.rollingObjectType,
+                                settings: RollingObjectCarouselSettings(segmentSettings: CustomSegmentedControlSettings(
+                                    selectedTintColor: UIColor(AppTheme.secondaryColor),
+                                    normalTextColor: .black,
+                                    selectedTextColor: UIColor(AppTheme.secondaryColor)))) { }
                         }
+                    )
+                    
+                    SectionBlock(
+                        title: "Choose number of rows",
+                        content: {
+                            CustomSegmentedControl(selectedSegment: $config.rowCount,
+                                                   items: config.maxNumberOfRows,
+                                                   label: { "\($0)" },
+                                                   settings: CustomSegmentedControlSettings(
+                                                    selectedTintColor: UIColor(AppTheme.secondaryColor),
+                                                    normalTextColor: .black,
+                                                    selectedTextColor: .white))
+                        }
+                    )
+                    
+                    SectionBlock(
+                        title: "Enable object to pass through edges",
+                        content: {
+                            Toggle("Wrap Around Edges", isOn: $config.wrapEnabled)
+                                .tint(AppTheme.secondaryColor)
+                        }
+                    )
+                    
+                    SectionBlock(
+                        title: "Enable to race against the clock.",
+                        content: {
+                            Toggle("Timed Mode", isOn: $config.timed)
+                                .tint(AppTheme.secondaryColor)
+                        }
+                    )
+                    
+                    //Divider()
+                    //                Picker("Sound Category", selection: $config.soundCategory) {
+                    //                    ForEach(SoundCategory.allCases, id: \.self) {
+                    //                        Text($0.title).tag($0)
+                    //                    }
+                    //                }
+                    //                .pickerStyle(.menu)
+                    
+                    //                Divider()
+                    
+                    SectionBlock(
+                        title: "Adjust game sound volume",
+                        content: {
+                            VolumeControlView(volume: $config.volume)
+                        }
+                    )
                 }
             }
-            .padding()
+            
+            Button(action: {
+                let vm = makeGameViewModel()
+                vmHolder.viewModel = vm
+                vm.startGame()
+                showGameView = true
+            }) {
+                Text("Start Game")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.primaryColor)
+                    .cornerRadius(8)
+                
+            }
+            .shadow(color: Color.black.opacity(0.25),
+                    radius: 4,
+                    x: 0,
+                    y: -4)
+            .fullScreenCover(isPresented: $showGameView) {
+                if let vm = vmHolder.viewModel {
+                    GameView(viewModel: vm)
+                }
+            }
+            .padding([.top, .leading, .trailing])
         }
         .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func makeGameViewModel() -> GameViewModel {
