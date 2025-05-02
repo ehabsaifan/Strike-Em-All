@@ -13,7 +13,6 @@ struct MainMenuFlowView: View {
     
     @State private var config: GameConfiguration
     @State private var showPlayerWarning = false
-    @State private var navigate = false
     
     let loggedInPlayer: Player
     enum Route {
@@ -40,7 +39,12 @@ struct MainMenuFlowView: View {
                     .foregroundColor(.white)
                     .background(AppTheme.primaryColor)
                     .cornerRadius(8)
+                    .shadow(color: Color.black.opacity(0.25),
+                                    radius: 4,
+                                    x: 0,
+                                    y: -4)
                 }
+                .padding()
                 .disabled(config.playerMode == .twoPlayers && config.player2 == nil)
                 .opacity((config.playerMode == .twoPlayers && config.player2 == nil) ? 0.5 : 1)
                 .simultaneousGesture(TapGesture().onEnded {
@@ -48,7 +52,6 @@ struct MainMenuFlowView: View {
                         showPlayerWarning = true
                       } else {
                         showPlayerWarning = false
-                        navigate = true
                       }
                 })
                 
@@ -60,7 +63,6 @@ struct MainMenuFlowView: View {
                         .padding(.top, 4)
                 }
             }
-            .padding()
             .onChange(of: config.player2, initial: false) { _,_ in
                 showPlayerWarning = false
             }
@@ -69,9 +71,12 @@ struct MainMenuFlowView: View {
                     showPlayerWarning = false
                 }
             }
-            .navigationDestination(isPresented: $navigate) {
-              GameSettingsView(config: $config)
-                .environment(\.di, di)
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                    case .settings:
+                      GameSettingsView(config: $config)
+                        .environment(\.di, di)
+                    }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -81,5 +86,6 @@ struct MainMenuFlowView: View {
                 }
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

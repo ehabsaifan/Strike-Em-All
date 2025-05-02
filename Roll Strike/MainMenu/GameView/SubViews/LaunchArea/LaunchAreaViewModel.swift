@@ -16,16 +16,8 @@ class LaunchAreaViewModel: ObservableObject {
     let launchAreaHeight: CGFloat
     let ballDiameter: CGFloat
     
-    // Computed: the resting center of the ball (so its bottom aligns with the string)
-    var restingBallCenterY: CGFloat {
-        -GameViewModel.bottomSafeAreaInset + launchAreaHeight - ballDiameter / 2
-    }
-    
-    var ballCenterPoint: CGPoint {
-        CGPoint(
-            x: GameViewModel.screenWidth / 2,
-            y: GameViewModel.ballStartYSpacing - ballDiameter / 2
-        )
+    var screenWidth: CGFloat {
+         GameViewModel.screenWidth
     }
     
     init(launchAreaHeight: CGFloat, ballDiameter: CGFloat) {

@@ -19,69 +19,55 @@ struct RollingObjectCarouselSettings {
 }
 
 struct RollingObjectCarouselView: View {
-    @Binding var selectedBallType: RollingObjectType {
-        didSet {
-            selectedIndex = ballTypes.firstIndex(of: selectedBallType) ?? 0
-        }
-    }
-    
-    // Use a state variable to drive the custom segmented control.
-    @State private var selectedIndex: Int = 0
+    @Binding var selectedBallType: RollingObjectType
     
     let settings: RollingObjectCarouselSettings
-    
-    // Closure to notify when selection is done.
     var onSelectionDone: () -> Void
     
-    // A helper array mapping indices to ball types.
-    private var ballTypes: [RollingObjectType] {
-        RollingObjectType.allCases
-    }
+    private var ballTypes: [RollingObjectType] { RollingObjectType.allCases }
     
     init(selectedBallType: Binding<RollingObjectType>,
-         settings: RollingObjectCarouselSettings,
-         onSelectionDone: @escaping () -> Void) {
+         settings: RollingObjectCarouselSettings = .init(),
+         onSelectionDone: @escaping () -> Void)
+    {
         self._selectedBallType = selectedBallType
         self.settings = settings
         self.onSelectionDone = onSelectionDone
-        // Initialize selectedIndex with the index of the current selectedBallType.
-        self._selectedIndex = State(initialValue: ballTypes.firstIndex(of: selectedBallType.wrappedValue) ?? 0)
     }
     
     var body: some View {
-        VStack(spacing: 2) {
-            // Custom segmented control replacing the Picker.
-            CustomSegmentedControl(selectedSegment: $selectedIndex, items: ballTypes.map { $0.rawValue }, settings: settings.segmentSettings)
-                .onChange(of: selectedIndex, initial: false) { _, newIndex in
-                    selectedBallType = ballTypes[newIndex]
-                    onSelectionDone()
-                }
-            
-            // A horizontal scrolling list of ball images (optional if you want both controls).
-            HStack {
-                ForEach(ballTypes, id: \.self) { type in
+        HStack(spacing: 0) {
+            ForEach(ballTypes, id: \.self) { type in
+                VStack {
+                    Text(type.rawValue)
+                        .font(.caption)
+                        .foregroundStyle(selectedBallType == type ? Color(settings.segmentSettings.selectedTextColor):
+                                            Color(settings.segmentSettings.normalTextColor))
                     Image(type.imageName)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 40, height: 40)
+                        .frame(height: 40)
                         .frame(maxWidth: .infinity)
-                        .padding(.all)
-                        .padding(2)
+                        .padding(4)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(selectedBallType == type ? AppTheme.secondaryColor: Color.clear, lineWidth: 2)
+                                .stroke(selectedBallType == type ?
+                                        AppTheme.secondaryColor: Color.clear, lineWidth: 2)
+                            
                         )
                         .onTapGesture {
                             selectedBallType = type
-                            withAnimation {
-                                onSelectionDone()
-                            }
+                            onSelectionDone()
                         }
                 }
             }
-            .padding(.all)
         }
-        .cornerRadius(8)
-        .background(settings.backGroundColor.opacity(0.8))
+        .padding(8)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(settings.backGroundColor)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
     }
 }

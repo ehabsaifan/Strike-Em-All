@@ -28,6 +28,8 @@ struct GameConfiguration {
     var wrapEnabled: Bool = false
     var timed: Bool = false
     
+    let maxNumberOfRows = Array(1...6)
+       
     var rollingObjectType: RollingObjectType = SimpleDefaults.getEnum(forKey: .rollingObject) ?? .crumpledPaper {
         didSet {
             SimpleDefaults.setEnum(rollingObjectType, forKey: .rollingObject)

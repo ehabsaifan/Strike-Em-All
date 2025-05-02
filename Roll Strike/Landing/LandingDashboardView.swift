@@ -28,40 +28,34 @@ struct LandingDashboardView: View {
         NavigationView {
             ZStack {
                 VStack(spacing: 16) {
-                    // MARK: – Players
-                    List {
-                        Section(header:
-                                    Text("Players")
-                            .font(.headline)
-                            .foregroundColor(AppTheme.primaryColor)
-                        ) {
-                            if vm.players.isEmpty {
-                                Button("Add Players") {
-                                    showAddPlayer = true
-                                }
-                            } else {
-                                ForEach(vm.players) { player in
-                                    PlayerRow(
-                                        player: player,
-                                        onStats: { showStatsFor = player },
-                                        onPlay: {
-                                            vm.currentPlayer = player
-                                            if player.type == .gameCenter && !vm.isAuthenticated {
-                                                vm.signInGameCenter()
-                                            } else {
-                                                vm.startGame()
+                    ScrollView {
+                        SectionBlock(
+                            title: "Players",
+                            content: {
+                                if vm.players.isEmpty {
+                                    Button("Add Players") {
+                                        showAddPlayer = true
+                                    }
+                                } else {
+                                    ForEach(vm.players) { player in
+                                        PlayerRow(
+                                            player: player,
+                                            onStats: { showStatsFor = player },
+                                            onPlay: {
+                                                vm.currentPlayer = player
+                                                if player.type == .gameCenter && !vm.isAuthenticated {
+                                                    vm.signInGameCenter()
+                                                } else {
+                                                    vm.startGame()
+                                                }
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
-                        }
+                        )
                     }
-                    .listStyle(.insetGrouped)
-                    
-                    Spacer()
-                    
-                    // 3. Sign in / Signed in button at bottom
+
                     Button {
                         vm.signInGameCenter()
                     } label: {
@@ -75,10 +69,13 @@ struct LandingDashboardView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                     }
-                    .padding()
+                    .shadow(color: Color.black.opacity(0.25),
+                                    radius: 4,
+                                    x: 0,
+                                    y: -4)
+                    .padding(.horizontal)
                     .disabled(vm.isSigningIn || vm.isAuthenticated)
                 }
-                
                 // 2) GLOBAL spinner overlay
                 if vm.isSigningIn {
                     Color.black.opacity(0.3)
@@ -133,11 +130,11 @@ struct LandingDashboardView: View {
                     vm.addGuest(player)
                 }
             }
-        }
-        // Full-screen game flow
-        .fullScreenCover(isPresented: $vm.navigateToGame) {
-            MainMenuFlowView(loggedInPlayer: vm.currentPlayer!)
-                .environment(\.di, di)
+            // Full-screen game flow
+            .fullScreenCover(isPresented: $vm.navigateToGame) {
+                MainMenuFlowView(loggedInPlayer: vm.currentPlayer!)
+                    .environment(\.di, di)
+            }
         }
     }
     
@@ -162,25 +159,22 @@ struct LandingDashboardView: View {
                 }
                 
                 HStack(spacing: 12) {
-                    Button(action: onStats) {
-                        Text("Stats ▶︎")
-                            .font(.subheadline)
-                            .padding(.horizontal, 12)
-                            .frame(height: 25)
+                    SmallActionButton(
+                        title: "Stats ▶︎",
+                        icon: nil,
+                        color: AppTheme.primaryColor
+                    ) {
+                        onStats()
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.regular)
-                    .tint(AppTheme.secondaryColor)
                     
-                    Button(action: onPlay) {
-                        Text("Play ▶︎")
-                            .font(.subheadline)
-                            .padding(.horizontal, 12)
-                            .frame(height: 25)
+                    SmallActionButton(
+                        title: "Play ▶︎",
+                        icon: nil,
+                        color: AppTheme.secondaryColor,
+                        buttonStyle: .borderedProminent
+                    ) {
+                        onPlay()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.regular)
-                    .tint(AppTheme.secondaryColor)
                 }
             }
         }

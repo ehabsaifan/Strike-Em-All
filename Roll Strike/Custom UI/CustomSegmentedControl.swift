@@ -12,27 +12,29 @@ struct CustomSegmentedControlSettings {
     let normalTextColor: UIColor
     let selectedTextColor: UIColor
     
-    init(selectedTintColor: UIColor = .white,
+    init(selectedTintColor: UIColor = UIColor(AppTheme.secondaryColor),
          normalTextColor: UIColor = .black,
-         selectedTextColor: UIColor = .black) {
+         selectedTextColor: UIColor = UIColor(AppTheme.tertiaryColor)) {
         self.selectedTintColor = selectedTintColor
         self.normalTextColor = normalTextColor
         self.selectedTextColor = selectedTextColor
     }
 }
 
-struct CustomSegmentedControl: UIViewRepresentable {
-    @Binding var selectedSegment: Int
-    var items: [String]
+struct CustomSegmentedControl<T: Hashable>: UIViewRepresentable {
+    @Binding var selectedSegment: T
+    var items: [T]
+    var label: (T) -> String
     var settings: CustomSegmentedControlSettings = CustomSegmentedControlSettings()
-
+    
     func makeCoordinator() -> Coordinator {
-        Coordinator(selectedSegment: $selectedSegment)
+        Coordinator(selectedSegment: $selectedSegment, items: items)
     }
     
     func makeUIView(context: Context) -> UISegmentedControl {
-        let control = UISegmentedControl(items: items)
-        control.selectedSegmentIndex = selectedSegment
+        let titles = items.map(label)
+        let control = UISegmentedControl(items: titles)
+        control.selectedSegmentIndex = items.firstIndex(of: selectedSegment) ?? 0
         control.selectedSegmentTintColor = settings.selectedTintColor
         control.setTitleTextAttributes([.foregroundColor: settings.normalTextColor], for: .normal)
         control.setTitleTextAttributes([.foregroundColor: settings.selectedTextColor], for: .selected)
@@ -41,18 +43,27 @@ struct CustomSegmentedControl: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UISegmentedControl, context: Context) {
-        uiView.selectedSegmentIndex = selectedSegment
+        guard let idx = items.firstIndex(of: selectedSegment),
+              uiView.selectedSegmentIndex != idx
+        else {
+            return
+        }
+        uiView.selectedSegmentIndex = idx
     }
-    
-    class Coordinator: NSObject {
-        @Binding var selectedSegment: Int
         
-        init(selectedSegment: Binding<Int>) {
+    class Coordinator: NSObject {
+        @Binding var selectedSegment: T
+        let items: [T]
+        
+        init(selectedSegment: Binding<T>, items: [T]) {
             self._selectedSegment = selectedSegment
+            self.items = items
         }
         
         @objc func valueChanged(_ sender: UISegmentedControl) {
-            selectedSegment = sender.selectedSegmentIndex
+            let idx = sender.selectedSegmentIndex
+            guard items.indices.contains(idx) else { return }
+            selectedSegment = items[idx]
         }
     }
 }
