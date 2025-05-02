@@ -9,6 +9,7 @@ import Foundation
 
 struct GameAnalytics: Codable {
     var lifetimeTotalScore: Int = 0
+    var lifetimeTotalTimePlayed: Double = 0
     var lifetimeCorrectShots: Int = 0
     var lifetimeMissedShots: Int = 0
     var lifetimeWinnings: Int = 0

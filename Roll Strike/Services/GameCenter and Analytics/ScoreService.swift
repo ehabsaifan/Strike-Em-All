@@ -23,6 +23,7 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     private var scoreCalculator: ScoreCalculatorProtocol
     private var gameMissedShots = 0
     private var gameCorrectShots = 0
+    private var startTime: Date?
     
     private var analyticsService: AnalyticsServiceProtocol
     private var gameCenterService: GameCenterProtocol?
@@ -42,6 +43,7 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     
     func gameStarted(player: Player) {
         scoreCalculator.startGame()
+        startTime = Date()
     }
     
     func recordScore(atRow row: Int, player: Player) {
@@ -55,11 +57,16 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     }
     
     func gameEnded(player: Player, isAWinner: Bool, completion: @escaping (Score) -> Void) {
-        let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)        
+        guard let startTime else {
+            return
+        }
+        let gameTimePlayed = Date().timeIntervalSince(startTime)
+        let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
         analyticsService.updateAnalytics(correctShots: gameCorrectShots,
                                          missedShots: gameMissedShots,
                                          didWin: isAWinner,
-                                         finalScore: finalScore.total)
+                                         finalScore: finalScore.total,
+                                         gameTimePlayed: gameTimePlayed)
         gameCenterService?.reportScore(finalScore.total)
         let analyticsValue = analyticsService.analyticsPublisher.value
         achievementService?.updateAchievements(

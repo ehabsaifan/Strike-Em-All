@@ -13,7 +13,7 @@ import SwiftUI
 protocol AnalyticsServiceProtocol {
     var analyticsPublisher: CurrentValueSubject<GameAnalytics, Never> { get }
     
-    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int)
+    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int, gameTimePlayed: Double)
     func loadAnalytics(completion: @escaping (Result<GameAnalytics, Error>) -> Void)
     func saveAnalytics(completion: @escaping (Result<Void, Error>) -> Void)
 }
@@ -69,13 +69,18 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
     // MARK: - Public Methods
     
     /// Update analytics based on the game’s results.
-    func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int) {
+    func updateAnalytics(correctShots: Int,
+                         missedShots: Int,
+                         didWin: Bool,
+                         finalScore: Int,
+                         gameTimePlayed: Double) {
         analytics.lifetimeTotalScore += finalScore
         analytics.lifetimeGamesPlayed += 1
         analytics.lastGameCorrectShots = correctShots
         analytics.lastGameMissedShots = missedShots
         analytics.lifetimeCorrectShots += correctShots
         analytics.lifetimeMissedShots += missedShots
+        analytics.lifetimeTotalTimePlayed += gameTimePlayed
         
         if didWin {
             analytics.lifetimeWinnings += 1
@@ -108,6 +113,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
             } else if let record = record {
                 let loadedAnalytics = GameAnalytics(
                     lifetimeTotalScore: record["lifetimeTotalScore"] as? Int ?? 0,
+                    lifetimeTotalTimePlayed: record["lifetimeTotalTimePlayed"] as? Double ?? 0,
                     lifetimeCorrectShots: record["lifetimeCorrectShots"] as? Int ?? 0,
                     lifetimeMissedShots: record["lifetimeMissedShots"] as? Int ?? 0,
                     lifetimeWinnings: record["lifetimeWinnings"] as? Int ?? 0,
@@ -135,6 +141,7 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
                 record = CKRecord(recordType: "GameAnalytics", recordID: self.recordID)
             }
             record["lifetimeTotalScore"] = self.analytics.lifetimeTotalScore as CKRecordValue
+            record["lifetimeTotalTimePlayed"] = self.analytics.lifetimeTotalTimePlayed as CKRecordValue
             record["lifetimeCorrectShots"] = self.analytics.lifetimeCorrectShots as CKRecordValue
             record["lifetimeMissedShots"] = self.analytics.lifetimeMissedShots as CKRecordValue
             record["lifetimeWinnings"] = self.analytics.lifetimeWinnings as CKRecordValue
