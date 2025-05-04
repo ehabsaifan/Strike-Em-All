@@ -1,6 +1,6 @@
 //
 //  AnalyticsService.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/13/25.
 //
@@ -82,6 +82,14 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
         analytics.lifetimeMissedShots += missedShots
         analytics.lifetimeTotalTimePlayed += gameTimePlayed
         
+        let wasPerfectGame = (missedShots == 0)
+        if wasPerfectGame {
+            analytics.lifetimePerfectGamesCount += 1
+            analytics.lifetimeLongestPerfectGamesStreak += 1
+        } else {
+          analytics.lifetimeLongestPerfectGamesStreak = 0
+        }
+        
         if didWin {
             analytics.lifetimeWinnings += 1
             analytics.currentWinningStreak += 1
@@ -121,7 +129,9 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
                     lifetimeLongestWinningStreak: record["lifetimeLongestWinningStreak"] as? Int ?? 0,
                     currentWinningStreak: record["currentWinningStreak"] as? Int ?? 0,
                     lastGameCorrectShots: record["lastGameCorrectShots"] as? Int ?? 0,
-                    lastGameMissedShots: record["lastGameMissedShots"] as? Int ?? 0
+                    lastGameMissedShots: record["lastGameMissedShots"] as? Int ?? 0,
+                    lifetimePerfectGamesCount: record["lifetimePerfectGamesCount"] as? Int ?? 0,
+                    lifetimeLongestPerfectGamesStreak: record["lifetimeLongestPerfectGamesStreak"] as? Int ?? 0
                 )
                 completion(.success(loadedAnalytics))
             } else {
@@ -150,6 +160,8 @@ final class AnalyticsService: AnalyticsServiceProtocol, ObservableObject {
             record["currentWinningStreak"] = self.analytics.currentWinningStreak as CKRecordValue
             record["lastGameCorrectShots"] = self.analytics.lastGameCorrectShots as CKRecordValue
             record["lastGameMissedShots"] = self.analytics.lastGameMissedShots as CKRecordValue
+            record["lifetimePerfectGamesCount"] = self.analytics.lifetimePerfectGamesCount as CKRecordValue
+            record["lifetimeLongestPerfectGamesStreak"] = self.analytics.lifetimeLongestPerfectGamesStreak as CKRecordValue
             
             self.database.save(record) { savedRecord, saveError in
                 DispatchQueue.main.async {

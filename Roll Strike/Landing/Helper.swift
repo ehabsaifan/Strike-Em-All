@@ -1,6 +1,6 @@
 //
 //  Helper.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/23/25.
 //

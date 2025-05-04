@@ -1,6 +1,6 @@
 //
 //  LaunchAreaViewModel.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 3/29/25.
 //

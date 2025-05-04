@@ -1,6 +1,6 @@
 //
 //  Roll_StrikeTests.swift
-//  Roll StrikeTests
+//  Strike ’Em AllTests
 //
 //  Created by Ehab Saifan on 3/4/25.
 //

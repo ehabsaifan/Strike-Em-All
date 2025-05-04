@@ -1,6 +1,6 @@
 //
 //  GameAnalytics.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/13/25.
 //
@@ -18,4 +18,6 @@ struct GameAnalytics: Codable {
     var currentWinningStreak: Int = 0
     var lastGameCorrectShots: Int = 0
     var lastGameMissedShots: Int = 0
+    var lifetimePerfectGamesCount: Int = 0 
+    var lifetimeLongestPerfectGamesStreak: Int = 0
 }

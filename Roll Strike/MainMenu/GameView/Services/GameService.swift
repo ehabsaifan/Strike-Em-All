@@ -1,6 +1,6 @@
 //
 //  GameService.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 3/5/25.
 //
