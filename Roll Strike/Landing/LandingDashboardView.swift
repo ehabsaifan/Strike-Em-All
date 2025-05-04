@@ -1,6 +1,6 @@
 //
 //  LandingDashboardView.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/23/25.
 //
@@ -87,7 +87,7 @@ struct LandingDashboardView: View {
                         .cornerRadius(10)
                 }
             }
-            .navigationTitle("Roll Strike")
+            .navigationTitle("Strike ’Em All")
             .navigationBarTitleDisplayMode(.inline)
             
             // 4. Edit Users toolbar

@@ -1,6 +1,6 @@
 //
 //  ScoreService.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/7/25.
 //
@@ -23,6 +23,7 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     private var scoreCalculator: ScoreCalculatorProtocol
     private var gameMissedShots = 0
     private var gameCorrectShots = 0
+    private var startTime: Date?
     
     private var analyticsService: AnalyticsServiceProtocol
     private var gameCenterService: GameCenterProtocol?
@@ -42,6 +43,7 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     
     func gameStarted(player: Player) {
         scoreCalculator.startGame()
+        startTime = Date()
     }
     
     func recordScore(atRow row: Int, player: Player) {
@@ -55,18 +57,42 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     }
     
     func gameEnded(player: Player, isAWinner: Bool, completion: @escaping (Score) -> Void) {
-        let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)        
+        guard let startTime else {
+            return
+        }
+        let gameTimePlayed = Date().timeIntervalSince(startTime)
+        let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
         analyticsService.updateAnalytics(correctShots: gameCorrectShots,
                                          missedShots: gameMissedShots,
                                          didWin: isAWinner,
-                                         finalScore: finalScore.total)
-        gameCenterService?.reportScore(finalScore.total)
+                                         finalScore: finalScore.total,
+                                         gameTimePlayed: gameTimePlayed)
+        
         let analyticsValue = analyticsService.analyticsPublisher.value
+        let totalGames = analyticsValue.lifetimeGamesPlayed
+        let totalWins = analyticsValue.lifetimeWinnings
+        let winningStreak = analyticsValue.currentWinningStreak
+        let playTotalTime   = analyticsValue.lifetimeTotalTimePlayed
+        let perfectGames = analyticsValue.lifetimePerfectGamesCount
+        let perfectStreak = analyticsValue.lifetimeLongestPerfectGamesStreak
+        let accuracy = Double(analyticsValue.lifetimeCorrectShots) /
+        Double(analyticsValue.lifetimeCorrectShots + analyticsValue.lifetimeMissedShots)
+        
+        gameCenterService?.report(finalScore.total, board: .score)
+        gameCenterService?.report(totalWins, board: .totalWins)
+        gameCenterService?.report(winningStreak, board: .longestStreak)
+        gameCenterService?.report(totalGames, board: .gamesPlayed)
+        
         achievementService?.updateAchievements(
-            totalWins: analyticsValue.lifetimeWinnings,
-            currentStreak: analyticsValue.currentWinningStreak,
-            finalScore: finalScore.total
-        )
+            totalWins: totalWins,
+            currentStreak: winningStreak,
+            finalScore: finalScore.total,
+            totalGames: totalGames,
+            totaleTime: playTotalTime,
+            perfectGames: perfectGames,
+            perfectStreak: perfectStreak,
+            accuracy: accuracy
+            )
         cancellables.removeAll()
         completion(finalScore)
     }

@@ -1,6 +1,6 @@
 //
 //  Roll_StrikeUITestsLaunchTests.swift
-//  Roll StrikeUITests
+//  Strike ’Em AllUITests
 //
 //  Created by Ehab Saifan on 3/4/25.
 //

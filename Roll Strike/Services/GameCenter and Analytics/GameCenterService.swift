@@ -1,6 +1,6 @@
 //
 //  GameCenterService.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/6/25.
 //
@@ -16,17 +16,14 @@ protocol AuthenticationServiceProtocol {
 protocol GameCenterProtocol {
     var isAuthenticatedSubject: CurrentValueSubject<Bool, Never> { get }
     
-    func reportScore(_ score: Int)
+    func report(_ val: Int, board: GameCenterLeaderBoardID)
     func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double)
     func showLeaderboard()
     func showAchievements()
 }
 
 final class GameCenterService: NSObject, ObservableObject {
-    
     static let shared = GameCenterService()
-    static let leaderboardID = "rollstrike.highscore"
-    
     let isAuthenticatedSubject = CurrentValueSubject<Bool, Never>(false)
     
     static var player: GKLocalPlayer {
@@ -58,19 +55,19 @@ extension GameCenterService: AuthenticationServiceProtocol {
 
 // MARK: - GameCenterProtocol
 extension GameCenterService: GameCenterProtocol {
-    func reportScore(_ score: Int) {
+    func report(_ val: Int, board: GameCenterLeaderBoardID) {
         let scoreReporter = GKLeaderboardScore()
-        scoreReporter.leaderboardID = GameCenterService.leaderboardID
-        scoreReporter.value = score
-        GKLeaderboard.submitScore(score,
+        scoreReporter.leaderboardID = board.rawValue
+        scoreReporter.value = val
+        GKLeaderboard.submitScore(val,
                                   context: 0,
                                   player: GameCenterService.player,
-                                  leaderboardIDs: [GameCenterService.leaderboardID]) { error in
+                                  leaderboardIDs: [board.rawValue]) { error in
             
             if let error = error {
                 print("Error reporting score: \(error.localizedDescription)")
             } else {
-                print("Score reported: \(score)")
+                print("Score reported: \(val)")
             }
         }
     }
@@ -88,7 +85,7 @@ extension GameCenterService: GameCenterProtocol {
     }
     
     func showLeaderboard() {
-        let vc = GKGameCenterViewController(leaderboardID: GameCenterService.leaderboardID,
+        let vc = GKGameCenterViewController(leaderboardID: GameCenterLeaderBoardID.score.rawValue,
                                             playerScope: .global,
                                             timeScope: .allTime)
         vc.gameCenterDelegate = self

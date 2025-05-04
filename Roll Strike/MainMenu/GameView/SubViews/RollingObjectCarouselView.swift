@@ -1,6 +1,6 @@
 //
 //  BallSelectionView.swift
-//  Roll Strike
+//  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/1/25.
 //
