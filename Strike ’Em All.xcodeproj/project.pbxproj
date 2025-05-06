@@ -28,25 +28,25 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		CEF0AFFA2D7789BE0028064F /* Roll Strike.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Roll Strike.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEF0AFFA2D7789BE0028064F /* Strike ’Em All.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Strike ’Em All.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEF0B0132D7789BF0028064F /* Roll StrikeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Roll StrikeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEF0B01D2D7789BF0028064F /* Roll StrikeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Roll StrikeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		CEF0AFFC2D7789BE0028064F /* Roll Strike */ = {
+		CEF0AFFC2D7789BE0028064F /* Strike ’Em All */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Roll Strike";
+			path = "Strike ’Em All";
 			sourceTree = "<group>";
 		};
-		CEF0B0162D7789BF0028064F /* Roll StrikeTests */ = {
+		CEF0B0162D7789BF0028064F /* Strike ’Em AllTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Roll StrikeTests";
+			path = "Strike ’Em AllTests";
 			sourceTree = "<group>";
 		};
-		CEF0B0202D7789BF0028064F /* Roll StrikeUITests */ = {
+		CEF0B0202D7789BF0028064F /* Strike ’Em AllUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Roll StrikeUITests";
+			path = "Strike ’Em AllUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -87,9 +87,9 @@
 		CEF0AFF12D7789BD0028064F = {
 			isa = PBXGroup;
 			children = (
-				CEF0AFFC2D7789BE0028064F /* Roll Strike */,
-				CEF0B0162D7789BF0028064F /* Roll StrikeTests */,
-				CEF0B0202D7789BF0028064F /* Roll StrikeUITests */,
+				CEF0AFFC2D7789BE0028064F /* Strike ’Em All */,
+				CEF0B0162D7789BF0028064F /* Strike ’Em AllTests */,
+				CEF0B0202D7789BF0028064F /* Strike ’Em AllUITests */,
 				CE84F17F2D9E1D040046A3DA /* Frameworks */,
 				CEF0AFFB2D7789BE0028064F /* Products */,
 			);
@@ -98,7 +98,7 @@
 		CEF0AFFB2D7789BE0028064F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CEF0AFFA2D7789BE0028064F /* Roll Strike.app */,
+				CEF0AFFA2D7789BE0028064F /* Strike ’Em All.app */,
 				CEF0B0132D7789BF0028064F /* Roll StrikeTests.xctest */,
 				CEF0B01D2D7789BF0028064F /* Roll StrikeUITests.xctest */,
 			);
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CEF0AFF92D7789BE0028064F /* Roll Strike */ = {
+		CEF0AFF92D7789BE0028064F /* Strike ’Em All */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll Strike" */;
+			buildConfigurationList = CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Strike ’Em All" */;
 			buildPhases = (
 				CEF0AFF62D7789BE0028064F /* Sources */,
 				CEF0AFF72D7789BE0028064F /* Frameworks */,
@@ -122,14 +122,14 @@
 				CE84F17E2D9E1AA60046A3DA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				CEF0AFFC2D7789BE0028064F /* Roll Strike */,
+				CEF0AFFC2D7789BE0028064F /* Strike ’Em All */,
 			);
-			name = "Roll Strike";
+			name = "Strike ’Em All";
 			packageProductDependencies = (
 				CE84F1802D9E1D040046A3DA /* ConfettiSwiftUI */,
 			);
 			productName = "Roll Strike";
-			productReference = CEF0AFFA2D7789BE0028064F /* Roll Strike.app */;
+			productReference = CEF0AFFA2D7789BE0028064F /* Strike ’Em All.app */;
 			productType = "com.apple.product-type.application";
 		};
 		CEF0B0122D7789BF0028064F /* Roll StrikeTests */ = {
@@ -146,7 +146,7 @@
 				CEF0B0152D7789BF0028064F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				CEF0B0162D7789BF0028064F /* Roll StrikeTests */,
+				CEF0B0162D7789BF0028064F /* Strike ’Em AllTests */,
 			);
 			name = "Roll StrikeTests";
 			packageProductDependencies = (
@@ -169,7 +169,7 @@
 				CEF0B01F2D7789BF0028064F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				CEF0B0202D7789BF0028064F /* Roll StrikeUITests */,
+				CEF0B0202D7789BF0028064F /* Strike ’Em AllUITests */,
 			);
 			name = "Roll StrikeUITests";
 			packageProductDependencies = (
@@ -201,7 +201,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Roll Strike" */;
+			buildConfigurationList = CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Strike ’Em All" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -218,7 +218,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CEF0AFF92D7789BE0028064F /* Roll Strike */,
+				CEF0AFF92D7789BE0028064F /* Strike ’Em All */,
 				CEF0B0122D7789BF0028064F /* Roll StrikeTests */,
 				CEF0B01C2D7789BF0028064F /* Roll StrikeUITests */,
 			);
@@ -280,12 +280,12 @@
 		};
 		CEF0B0152D7789BF0028064F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = CEF0AFF92D7789BE0028064F /* Roll Strike */;
+			target = CEF0AFF92D7789BE0028064F /* Strike ’Em All */;
 			targetProxy = CEF0B0142D7789BF0028064F /* PBXContainerItemProxy */;
 		};
 		CEF0B01F2D7789BF0028064F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = CEF0AFF92D7789BE0028064F /* Roll Strike */;
+			target = CEF0AFF92D7789BE0028064F /* Strike ’Em All */;
 			targetProxy = CEF0B01E2D7789BF0028064F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -415,11 +415,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Roll Strike/Roll Strike.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Strike ’Em All/Roll Strike.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VF725LAA9U;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Strike ’Em All";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -451,11 +451,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Roll Strike/Roll Strike.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Strike ’Em All/Roll Strike.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = VF725LAA9U;
+				DEVELOPMENT_TEAM = GZTXBMXS9G;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Strike ’Em All";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -557,7 +557,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Roll Strike" */ = {
+		CEF0AFF52D7789BD0028064F /* Build configuration list for PBXProject "Strike ’Em All" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CEF0B0252D7789BF0028064F /* Debug */,
@@ -566,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Roll Strike" */ = {
+		CEF0B0272D7789BF0028064F /* Build configuration list for PBXNativeTarget "Strike ’Em All" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CEF0B0282D7789BF0028064F /* Debug */,

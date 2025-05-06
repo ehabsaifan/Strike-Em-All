@@ -1,5 +1,5 @@
 //
-//  RollStrikeApp.swift
+//  StrikeEmAll.swift
 //  Strike ’Em All
 //
 //  Created by Ehab Saifan on 3/5/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct RollStrikeApp: App {
+struct StrikeEmAll: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   
     let container = RollStrikeContainer()
