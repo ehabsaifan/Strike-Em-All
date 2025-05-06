@@ -9,54 +9,6 @@ import SwiftUI
 import Combine
 
 final class GameViewModel: ObservableObject {
-    private let config: GameConfiguration
-    private let gameService: GameServiceProtocol
-    private let physicsService: PhysicsServiceProtocol
-    private let soundService: SoundServiceProtocol
-    private let analyticsFactory: (String) -> AnalyticsServiceProtocol
-   
-    private let achievementService: AchievementServiceProtocol?
-    private let gameCenterService: GameCenterProtocol?
-    
-    private var cancellables = Set<AnyCancellable>()
-    private var started = false
-    
-    @Published var rows: [GameRowProtocol] = []
-    @Published var currentPlayer: Player
-    @Published var winner: Player? = nil
-    @Published var player1: Player
-    @Published var player2: Player?
-    @Published var playerMode: PlayerMode
-    @Published var isBallMoving = false
-    @Published var launchImpulse: CGVector? = nil
-    @Published var rowFrames: [Int: CGRect] = [:]
-    
-    @Published var scorePlayer1: Score = Score()
-    @Published var scorePlayer2: Score = Score()
-    var scoreManagerPlayer1: ScoreServiceProtocol
-    var scoreManagerPlayer2: ScoreServiceProtocol?
-    
-    @Published var isWrapAroundEdgesEnabled = false {
-        didSet {
-            physicsService.setWrapAroundEnabled(isWrapAroundEdgesEnabled)
-        }
-    }
-    
-    @Published var selectedBallType: RollingObjectType = .beachBall {
-        didSet {
-            gameService.setRollingObject(selectedBallType.rollingObject)
-            updateRollingObject()
-        }
-    }
-    
-    @Published var volume: Float = 1.0 {
-        didSet { soundService.setVolume(volume) }
-    }
-    
-    let launchAreaVM: LaunchAreaViewModel
-    let gameScene: GameScene
-    let rowHeight: CGFloat = 70  // Used to calculate landing row
-    
     static let ballDiameter: CGFloat = 40  // must match GameScene.ballSize
     static var ballStartYSpacing: CGFloat {
         launchAreaHeight + GameViewModel.bottomSafeAreaInset
@@ -70,11 +22,76 @@ final class GameViewModel: ObservableObject {
         UIApplication.shared.keyWindow?.frame.width ?? 0
     }
     
-    var winnerFinalScore: Score {
-        guard winner == player1 else {
-            return scorePlayer2
+    @Published var rows: [GameRowProtocol] = []
+    @Published var currentPlayer: Player
+    @Published var result: GameResultInfo? = nil
+    @Published var player1: Player
+    @Published var player2: Player?
+    @Published var playerMode: PlayerMode
+    @Published var isBallMoving = false
+    @Published var launchImpulse: CGVector? = nil
+    @Published var rowFrames: [Int: CGRect] = [:]
+    @Published var timeRemaining: TimeInterval = 0
+    @Published var scorePlayer1: Score = Score()
+    @Published var scorePlayer2: Score = Score()
+    @Published var isWrapAroundEdgesEnabled = false {
+        didSet {
+            physicsService.setWrapAroundEnabled(isWrapAroundEdgesEnabled)
         }
-        return scorePlayer1
+    }
+    @Published var selectedBallType: RollingObjectType = .beachBall {
+        didSet {
+            gameService.setRollingObject(selectedBallType.rollingObject)
+            updateRollingObject()
+        }
+    }
+    @Published var volume: Float = 1.0 {
+        didSet {
+            soundService.setVolume(volume)
+            SimpleDefaults.setValue(volume, forKey: .volumePref)
+        }
+    }
+    
+    var scoreManagerPlayer1: ScoreServiceProtocol
+    var scoreManagerPlayer2: ScoreServiceProtocol?
+    var winnerFinalScore: Score {
+        guard let endState = endState else {
+            fatalError("invalid end state")
+        }
+        switch endState {
+        case .tie:
+            return scorePlayer1
+        case .lost:
+            return scorePlayer1
+        case .winner(let player):
+            if player == player2 {
+                return scorePlayer2
+            }
+            return scorePlayer1
+        }
+        
+    }
+    
+    let launchAreaVM: LaunchAreaViewModel
+    let gameScene: GameScene
+    let rowHeight: CGFloat = 70  // Used to calculate landing row
+    
+    private let config: GameConfiguration
+    private let gameService: GameServiceProtocol
+    private let physicsService: PhysicsServiceProtocol
+    private let soundService: SoundServiceProtocol
+    private let analyticsFactory: (String) -> AnalyticsServiceProtocol
+    
+    private let achievementService: AchievementServiceProtocol?
+    private let gameCenterService: GameCenterProtocol?
+    
+    private var cancellables = Set<AnyCancellable>()
+    private var timerCancellable: AnyCancellable?
+    private var started = false
+    private var endState: EndState? = nil
+    
+    enum EndState: Codable, Equatable {
+        case tie, lost(Player), winner(Player)
     }
     
     init(
@@ -115,7 +132,8 @@ final class GameViewModel: ObservableObject {
         }
         let analytics1 = analyticsFactory(config.player1.id)
         self.scoreManagerPlayer1 = ScoreService(
-            calculator: ScoreCalculator(),
+            calculator: config.timerEnabled ?
+            TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
             analyticsService: analytics1,
             gameCenterService: gameCenter1,
             achievementService: achievement1)
@@ -131,7 +149,8 @@ final class GameViewModel: ObservableObject {
             }
             let analytics2 = analyticsFactory(secPlayer.id)
             self.scoreManagerPlayer2 = ScoreService(
-                calculator: ScoreCalculator(),
+                calculator:  config.timerEnabled ?
+                TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
                 analyticsService: analytics2,
                 gameCenterService: gameCenter2,
                 achievementService: achievement2)
@@ -173,40 +192,16 @@ final class GameViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func startGame() {
-        gameService.startGame(with: gameService.contentProvider.getSelectedContents())
-        physicsService.setRollingObject(gameService.rollingObject)
-        rows = gameService.rows
-        scoreManagerPlayer1.gameStarted(player: player1)
-        if player2 != nil {
-            scoreManagerPlayer2?.gameStarted(player: player2!)
-        }
-    }
-    
     private func updateRollingObject() {
         guard !isBallMoving else { return }
         physicsService.setRollingObject(gameService.rollingObject)
     }
     
-    func updateBallPosition(with offset: CGSize) {
-        guard !isBallMoving else { return }
-        if started { playSound(.ropePull) }
-        physicsService.updateBallPosition(with: offset)
-        started = true
-    }
-    
-    func launchBall(impulse: CGVector) {
-        guard !isBallMoving else { return }
-        isBallMoving = true
-        stopSound(.ropePull)
-        physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
-            self?.gotFinalPosition(finalPosition)
-        }
-    }
-    
     private func gotFinalPosition(_ finalPosition: CGPoint) {
         var success = false
+        var winner: Player?
         let playerType: GameService.PlayerType = (currentPlayer == player1) ? .player1 : .player2
+        
         if let rowIndex = getRowAtBallPosition(finalPosition: finalPosition) {
             success = gameService.markCell(at: rowIndex, forPlayer: playerType)
             if playerType == .player1 {
@@ -218,28 +213,79 @@ final class GameViewModel: ObservableObject {
             }
             rows = gameService.rows
             physicsService.resetBall()
-            switch gameService.checkForWinner() {
-            case .player1: winner = player1
-            case .player2: winner = player2
+            switch gameService.playerCompletedGame() {
+            case .player1:
+                winner = player1
+                endState = .winner(player1)
+            case .player2:
+                winner = player2
+                endState = .winner(player2!)
             case .none: break
             }
         } else {
             if playerType == .player1 { scoreManagerPlayer1.missedShot(player: player1) }
             else { scoreManagerPlayer2?.missedShot(player: player2!) }
         }
-        if winner == nil {
+        if endState == nil {
             playSound(success ? .hitStrike : .missStrike)
             toggleTurn()
         } else {
-            playSound(.winner)
-            scoreManagerPlayer1.gameEnded(player: player1, isAWinner: (player1 == winner)) { [weak self] final in
-                self?.scorePlayer1 = final
-            }
-            scoreManagerPlayer2?.gameEnded(player: player2!, isAWinner: (player2! == winner)) { [weak self] final in
-                self?.scorePlayer2 = final
-            }
+            reportSores(winner: winner)
         }
         isBallMoving = false
+    }
+    
+    private func endGameDueToTimeout() {
+        var winner: Player?
+        switch config.playerMode {
+        case .singlePlayer:
+            endState = .lost(player1)
+        default:
+            if scorePlayer1.total != scorePlayer2.total {
+                winner = scorePlayer1.total > scorePlayer2.total ? player1: player2
+                endState = .winner(winner!)
+                print("Winner by score should be \(winner!.name)")
+            } else {
+                let player1Rows = gameService.getRowsStatus(for: .player1)
+                let player2Rows = gameService.getRowsStatus(for: .player2)
+                if player1Rows.correctShots != player2Rows.correctShots {
+                    winner = player1Rows.correctShots > player2Rows.correctShots ? player1: player2
+                    endState = .winner(winner!)
+                    print("Winner correct shots should be \(winner!.name)")
+                } else if player1Rows.completedRows != player2Rows.completedRows {
+                    winner = player1Rows.completedRows > player2Rows.completedRows ? player1: player2
+                    endState = .winner(winner!)
+                    print("Winner completed rows should be \(winner!.name)")
+                }
+            }
+        }
+        if endState == nil {
+            endState = .tie
+            print("Tie \(scorePlayer1.total) | \(scorePlayer2.total)")
+        }
+        reportSores(winner: winner)
+    }
+    
+    private func reportSores(winner: Player?) {
+        switch endState {
+        case .lost:
+            //Play loosing sound playSound(.winner)
+            break
+        case .tie,
+                .winner:
+            playSound(.winner)
+        default:
+            break
+        }
+        scoreManagerPlayer1.gameEnded(player: player1, isAWinner: (player1 == winner)) { [weak self] final in
+            self?.scorePlayer1 = final
+        }
+        scoreManagerPlayer2?.gameEnded(player: player2!, isAWinner: (player2! == winner)) { [weak self] final in
+            self?.scorePlayer2 = final
+        }
+        prepareResultInfo()
+        resetBall()
+        timerCancellable?.cancel()
     }
     
     private func getRowAtBallPosition(finalPosition: CGPoint) -> Int? {
@@ -270,20 +316,95 @@ final class GameViewModel: ObservableObject {
         }
     }
     
-    func getContent(for index: Int) -> GameContent {
-        return gameService.contentProvider.getContent(for: index)
+    private func setTimerIfNeeded() {
+        switch config.timeMode {
+        case .unlimited:
+            break
+        case .limited:
+            timeRemaining = config.timeLimit
+            timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
+                .autoconnect()
+                .sink { [weak self] _ in
+                    guard let self else { return }
+                    timeRemaining -= 1
+                    if timeRemaining <= 0 {
+                        timerCancellable?.cancel()
+                        endGameDueToTimeout()
+                    }
+                }
+        }
     }
     
+    private func prepareResultInfo() {
+        let analy = scoreManagerPlayer1.analyticsService.analyticsPublisher.value
+        let player1Info = PlayerResultInfo(player: player1,
+                                           score: scorePlayer1,
+                                           correctShots: analy.lastGameCorrectShots,
+                                           missedShots: analy.lastGameMissedShots)
+        var player2Info: PlayerResultInfo?
+        if let analy2 = scoreManagerPlayer2?.analyticsService.analyticsPublisher.value {
+            player2Info = PlayerResultInfo(player: player2!,
+                                           score: scorePlayer2,
+                                           correctShots: analy2.lastGameCorrectShots,
+                                           missedShots: analy2.lastGameMissedShots)
+        }
+        
+        self.result = GameResultInfo(endState: endState!,
+                                     timePlayed: scoreManagerPlayer1.gameTimePlayed!,
+                                     player1Info: player1Info,
+                                     player2Info: player2Info)
+    }
+    
+    private func resetBall() {
+        physicsService.resetBall()
+        isBallMoving = false
+    }
+}
+
+// MARK: - Public methods
+extension GameViewModel {
     func reset() {
         gameService.reset()
-        physicsService.resetBall()
-        rows = gameService.rows
+        resetBall()
         currentPlayer = player1
-        winner = nil
-        isBallMoving = false
+        endState = nil
+        
+        rows = gameService.rows
         physicsService.setRollingObject(gameService.rollingObject)
         scoreManagerPlayer1.gameStarted(player: player1)
         scoreManagerPlayer2?.gameStarted(player: player2!)
+        result = nil
+        timerCancellable?.cancel()
+        setTimerIfNeeded()
+    }
+    
+    func startGame() {
+        gameService.startGame(with: gameService.contentProvider.getSelectedContents())
+        rows = gameService.rows
+        physicsService.setRollingObject(gameService.rollingObject)
+        scoreManagerPlayer1.gameStarted(player: player1)
+        scoreManagerPlayer2?.gameStarted(player: player2!)
+        setTimerIfNeeded()
+    }
+    
+    func updateBallPosition(with offset: CGSize) {
+        guard !isBallMoving else { return }
+        if started { playSound(.ropePull) }
+        physicsService.updateBallPosition(with: offset)
+        started = true
+    }
+    
+    func launchBall(impulse: CGVector) {
+        guard !isBallMoving else { return }
+        isBallMoving = true
+        stopSound(.ropePull)
+        physicsService.moveBall(with: impulse, ball: gameService.rollingObject) { [weak self] finalPosition in
+            self?.gotFinalPosition(finalPosition)
+        }
+    }
+    
+    func getContent(for index: Int) -> GameContent {
+        return gameService.contentProvider.getContent(for: index)
     }
 }
 

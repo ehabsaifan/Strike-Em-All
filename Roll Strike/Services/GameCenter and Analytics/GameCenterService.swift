@@ -65,9 +65,9 @@ extension GameCenterService: GameCenterProtocol {
                                   leaderboardIDs: [board.rawValue]) { error in
             
             if let error = error {
-                print("Error reporting score: \(error.localizedDescription)")
+                print("Error reporting \(val) to \(board.rawValue): \(error.localizedDescription)")
             } else {
-                print("Score reported: \(val)")
+                print("Reported: \(val) to \(board.rawValue)")
             }
         }
     }

@@ -26,7 +26,7 @@ struct EarnedPointsView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.orange)
+                    .fill(AppTheme.secondaryColor)
                     .shadow(radius: 5)
             )
             .offset(offset)
