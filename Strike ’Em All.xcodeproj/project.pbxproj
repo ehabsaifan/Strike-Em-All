@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CEC07B9F2DCA98A8008AC6D0 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = CEC07B9E2DCA98A8008AC6D0 /* ConfettiSwiftUI */; };
+		CED11CE32DCAD7350020B4B2 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = CED11CE22DCAD7350020B4B2 /* ConfettiSwiftUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CEC07B9F2DCA98A8008AC6D0 /* ConfettiSwiftUI in Frameworks */,
+				CED11CE32DCAD7350020B4B2 /* ConfettiSwiftUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,14 +72,13 @@
 			buildRules = (
 			);
 			dependencies = (
-				CEC07BA12DCA99B7008AC6D0 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CEF0AFFC2D7789BE0028064F /* Strike ’Em All */,
 			);
 			name = "Strike ’Em All";
 			packageProductDependencies = (
-				CEC07B9E2DCA98A8008AC6D0 /* ConfettiSwiftUI */,
+				CED11CE22DCAD7350020B4B2 /* ConfettiSwiftUI */,
 			);
 			productName = "Roll Strike";
 			productReference = CEF0AFFA2D7789BE0028064F /* Strike ’Em All.app */;
@@ -110,7 +109,7 @@
 			mainGroup = CEF0AFF12D7789BD0028064F;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				CEC07B9D2DCA98A8008AC6D0 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
+				CED11CE12DCAD7350020B4B2 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CEF0AFFB2D7789BE0028064F /* Products */;
@@ -141,13 +140,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		CEC07BA12DCA99B7008AC6D0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = CEC07BA02DCA99B7008AC6D0 /* ConfettiSwiftUI */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		CEF0B0252D7789BF0028064F /* Debug */ = {
@@ -365,7 +357,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CEC07B9D2DCA98A8008AC6D0 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+		CED11CE12DCAD7350020B4B2 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI.git";
 			requirement = {
@@ -376,14 +368,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CEC07B9E2DCA98A8008AC6D0 /* ConfettiSwiftUI */ = {
+		CED11CE22DCAD7350020B4B2 /* ConfettiSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CEC07B9D2DCA98A8008AC6D0 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
-			productName = ConfettiSwiftUI;
-		};
-		CEC07BA02DCA99B7008AC6D0 /* ConfettiSwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CEC07B9D2DCA98A8008AC6D0 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
+			package = CED11CE12DCAD7350020B4B2 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
 			productName = ConfettiSwiftUI;
 		};
 /* End XCSwiftPackageProductDependency section */
