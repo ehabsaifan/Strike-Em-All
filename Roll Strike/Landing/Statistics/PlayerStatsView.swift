@@ -24,17 +24,17 @@ struct PlayerStatsView: View {
     }
 
   var body: some View {
-    VStack(spacing: 16) {
-      Text("\(player.name)’s Stats")
-        .font(.title2).bold()
-
-      StatRow(label: "Games Played", value: "\(statsVM.analytics.lifetimeGamesPlayed)")
-      StatRow(label: "Total Score",   value: "\(statsVM.analytics.lifetimeTotalScore)")
-      StatRow(label: "Correct Shots", value: "\(statsVM.analytics.lifetimeCorrectShots)")
-      StatRow(label: "Missed Shots",  value: "\(statsVM.analytics.lifetimeMissedShots)")
-      StatRow(label: "Best Streak",   value: "\(statsVM.analytics.lifetimeLongestWinningStreak)")
-
-      Spacer()
+      VStack(spacing: 16) {
+          Text("\(player.name)’s Stats")
+              .font(.title2).bold()
+          
+          SingaleStatRow(label: "Games Played", value1: "\(statsVM.analytics.lifetimeGamesPlayed)")
+          SingaleStatRow(label: "Total Score",   value1: "\(statsVM.analytics.lifetimeTotalScore)")
+          SingaleStatRow(label: "Correct Shots", value1: "\(statsVM.analytics.lifetimeCorrectShots)")
+          SingaleStatRow(label: "Missed Shots",  value1: "\(statsVM.analytics.lifetimeMissedShots)")
+          SingaleStatRow(label: "Best Streak",   value1: "\(statsVM.analytics.lifetimeLongestWinningStreak)")
+          
+          Spacer()
 
       Group {
         if player.type == .gameCenter && !di.authService.isAuthenticatedSubject.value {
@@ -83,17 +83,4 @@ struct PlayerStatsView: View {
     }
     .padding()
   }
-}
-
-struct StatRow: View {
-    let label: String, value: String
-    var body: some View {
-        HStack {
-            Text(label).foregroundColor(AppTheme.primaryColor)
-            Spacer()
-            Text(value)
-                .bold()
-                .foregroundColor(AppTheme.secondaryColor)
-        }
-    }
 }

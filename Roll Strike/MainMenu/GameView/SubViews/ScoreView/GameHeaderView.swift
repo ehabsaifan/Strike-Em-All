@@ -8,15 +8,18 @@
 import SwiftUI
 
 struct GameHeaderView: View {
+    @State private var bouncing = false
+    
     let player1: Player
     let player2: Player?
     let currentPlayer: Player
     let player1Score: Score
     let player2Score: Score?
-
+    let timeRemaining: TimeInterval
+    
     var onAction: (HeaderMenuAction) -> Void
-
-   private  var player1StartingScore: Int {
+    
+    private  var player1StartingScore: Int {
         max(0, player1Score.total - player1Score.lastShotPointsEarned)
     }
     
@@ -30,48 +33,66 @@ struct GameHeaderView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                if player2 != nil {
-                    Text("\(currentPlayer.name) turn...")
-                        .font(.headline.italic())
-                        .foregroundColor(AppTheme.accentColor)
-                        .padding(.leading, 16)
-                }
-                Spacer()
-                Menu {
-                    Button("Change Ball", action: { onAction(.changeBall) })
-                    Button("Volume", action: { onAction(.changeVolume) })
-                    Button("Quit Game", action: { onAction(.quit) })
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title)
-                        .foregroundColor(AppTheme.primaryColor)
-                }
-                .padding(.trailing, 16)
+        ZStack {
+            if timeRemaining != 0 {
+                Text("\(Int(timeRemaining))")
+                    .padding(.leading, 16)
+                    .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    .foregroundColor(.accentColor)
+                    .scaleEffect(bouncing ? 1.2 : 1)      // bounce scale
+                    .onChange(of: timeRemaining, initial: false) { _, t in
+                        // when you hit 30 or below, kick off the bounce
+                        if t <= 30 {
+                            withAnimation(.interpolatingSpring(stiffness: 500, damping: 20)
+                                .repeatForever(autoreverses: true)) {
+                                    bouncing = true
+                                }
+                        }
+                    }
             }
-        HStack {
-                HStack(alignment: .center, spacing: 8) {
-                    Text("\(player1.name) →")
-                        .font(isPlayer1Active ? .headline.bold(): .headline)
-                        .foregroundColor(AppTheme.primaryColor)
-                    AnimatedScoreView(startingScore: player1StartingScore,
-                                      finalScore: player1Score.total)
-                }
-                
-                if let player2 = player2, let player2Score = player2Score {
+            VStack(alignment: .leading) {
+                HStack {
+                    if player2 != nil {
+                        Text("\(currentPlayer.name)'s turn")
+                            .font(.headline.italic())
+                            .foregroundColor(AppTheme.accentColor)
+                            .padding(.leading, 16)
+                    }
                     Spacer()
-                    HStack(alignment: .center, spacing: 8) {
-                        AnimatedScoreView(startingScore: player2StartingScore,
-                                          finalScore: player2Score.total)
-                        Text("← \(player2.name)")
-                            .font(!isPlayer1Active ? .headline.bold(): .headline)
+                    Menu {
+                        Button("Change Ball", action: { onAction(.changeBall) })
+                        Button("Volume", action: { onAction(.changeVolume) })
+                        Button("Quit Game", action: { onAction(.quit) })
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title)
                             .foregroundColor(AppTheme.primaryColor)
                     }
                     .padding(.trailing, 16)
                 }
+                HStack {
+                    HStack(alignment: .center, spacing: 8) {
+                        Text("\(player1.name) →")
+                            .font(isPlayer1Active ? .headline.bold(): .headline)
+                            .foregroundColor(AppTheme.primaryColor)
+                        AnimatedScoreView(startingScore: player1StartingScore,
+                                          finalScore: player1Score.total)
+                    }
+                    
+                    if let player2 = player2, let player2Score = player2Score {
+                        Spacer()
+                        HStack(alignment: .center, spacing: 8) {
+                            AnimatedScoreView(startingScore: player2StartingScore,
+                                              finalScore: player2Score.total)
+                            Text("← \(player2.name)")
+                                .font(!isPlayer1Active ? .headline.bold(): .headline)
+                                .foregroundColor(AppTheme.primaryColor)
+                        }
+                        .padding(.trailing, 16)
+                    }
+                }
+                .padding(.leading, 16)
             }
-            .padding(.leading, 16)
         }
         .padding(.bottom)
     }

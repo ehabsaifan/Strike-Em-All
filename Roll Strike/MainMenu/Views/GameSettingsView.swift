@@ -53,8 +53,18 @@ struct GameSettingsView: View {
                     SectionBlock(
                         title: "Enable to race against the clock.",
                         content: {
-                            Toggle("Timed Mode", isOn: $config.timed)
+                            Toggle("Timed Mode", isOn: $config.timerEnabled)
                                 .tint(AppTheme.secondaryColor)
+                            if config.timerEnabled {
+                                CustomSegmentedControl(selectedSegment: $config.timeLimit,
+                                                       items: config.timeOptions,
+                                                       label: { "\(Int($0))" },
+                                                       settings: CustomSegmentedControlSettings(
+                                                        selectedTintColor: UIColor(AppTheme.secondaryColor),
+                                                        normalTextColor: .black,
+                                                        selectedTextColor: .white))
+                                .padding(.top, 4)
+                            }
                         }
                     )
                     

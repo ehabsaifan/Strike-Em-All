@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Score: Equatable {
+struct Score: Equatable, Codable {
     let lastShotPointsEarned: Int
     let total: Int
     let winnerBonus: Int

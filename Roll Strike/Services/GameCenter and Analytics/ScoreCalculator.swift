@@ -9,6 +9,7 @@ import Foundation
 import Combine
 
 protocol ScoreCalculatorProtocol {
+    var startTime: Date? { get }
     var baseScore: Int { get }
     var comboMultiplier: Double { get }
     var timeBonusMultiplier: Double { get }
@@ -31,7 +32,7 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
     
     private var streakRows: Set<Int> = []
     private var streakCompleteRows: Set<Int> = []
-    private var gameStartTime: Date?
+    private(set) var startTime: Date?
     
     private func reset() {
         scorePublisher.send(Score())
@@ -39,12 +40,12 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
         timeBonusMultiplier = 1.0
         streakRows = []
         streakCompleteRows = []
-        gameStartTime = nil
+        startTime = nil
     }
     
     func startGame() {
         reset()
-        gameStartTime = Date()
+        startTime = Date()
     }
     
     func recordScore(atRow row: Int) {
@@ -75,7 +76,7 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
     }
     
     func finishGame(isWinner: Bool) -> Score {
-        guard let start = gameStartTime else { return scorePublisher.value }
+        guard let start = startTime else { return scorePublisher.value }
         let elapsedSeconds = Date().timeIntervalSince(start)
         if elapsedSeconds < 60 {
             timeBonusMultiplier = 1.1
@@ -94,5 +95,29 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
         scorePublisher.send(finalScore)
         print("Game ended: final score: \(finalScore.total) with bonus multiplier \(timeBonusMultiplier)")
         return finalScore
+    }
+}
+
+class TimedScoreCalculator: ScoreCalculator {
+    private let totalTime: TimeInterval
+    
+    init(baseScore: Int = 10, totalTime: TimeInterval) {
+        self.totalTime = totalTime
+        super.init()
+    }
+    
+    override func finishGame(isWinner: Bool) -> Score {
+        guard let start = startTime else { return  scorePublisher.value }
+        let score = scorePublisher.value
+        let elapsed = Date().timeIntervalSince(start)
+        let timeBonus = isWinner ? max(0, (totalTime - elapsed) / totalTime) : 0 
+        let bonusPoints = Int(Double(score.total) + timeBonus * 0.1)
+        let winnerPoints = isWinner ? winnerBonus : 0
+        let final = Score(lastShotPointsEarned: bonusPoints,
+                          total: score.total + bonusPoints,
+                          winnerBonus: winnerPoints,
+                          timeStamp: Date())
+        scorePublisher.send(final)
+        return final
     }
 }

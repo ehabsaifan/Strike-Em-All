@@ -14,9 +14,11 @@ protocol GameServiceProtocol {
     
     func startGame(with targets: [GameContent])
     func markCell(at rowIndex: Int, forPlayer player: GameService.PlayerType) -> Bool
-    func checkForWinner() -> GameService.PlayerType?
+    func playerCompletedGame() -> GameService.PlayerType?
     func setRollingObject(_ newObject: RollingObject)
     func reset()
+    
+    func getRowsStatus(for player: GameService.PlayerType) -> (completedRows: Int, correctShots: Int)
 }
 
 class GameService: GameServiceProtocol {
@@ -66,7 +68,33 @@ class GameService: GameServiceProtocol {
         return newMarking != prevMarking
     }
     
-    func checkForWinner() -> PlayerType? {
+    func getRowsStatus(for player: PlayerType) -> (completedRows: Int, correctShots: Int) {
+        var correctShots = 0
+        var completedRows = 0
+        for row in rows {
+            switch player {
+            case .player1:
+                if row.leftMarking == .complete {
+                    correctShots += 2
+                    completedRows += 1
+                }
+                if row.leftMarking == .half {
+                    completedRows += 1
+                }
+            case .player2:
+                if row.rightMarking == .complete {
+                    correctShots += 2
+                    completedRows += 1
+                }
+                if row.rightMarking == .half {
+                    completedRows += 1
+                }
+            }
+        }
+        return (completedRows: completedRows, correctShots: correctShots)
+    }
+    
+    func playerCompletedGame() -> PlayerType? {
         let playerOneScore = rows.filter { $0.leftMarking == .complete }.count
         let playerTwoScore = rows.filter { $0.rightMarking == .complete }.count
         

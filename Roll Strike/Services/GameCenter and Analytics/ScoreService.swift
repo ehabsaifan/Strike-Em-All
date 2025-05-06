@@ -9,7 +9,9 @@ import Foundation
 import Combine
 
 protocol ScoreServiceProtocol {
+    var gameTimePlayed: TimeInterval? { get }
     var scorePublisher: CurrentValueSubject<Score, Never> { get }
+    var analyticsService: AnalyticsServiceProtocol { get }
     
     func gameStarted(player: Player)
     func recordScore(atRow row: Int, player: Player)
@@ -19,13 +21,14 @@ protocol ScoreServiceProtocol {
 
 class ScoreService: ScoreServiceProtocol, ObservableObject {
     let scorePublisher: CurrentValueSubject<Score, Never>
+    private(set) var gameTimePlayed: TimeInterval? = nil
     
     private var scoreCalculator: ScoreCalculatorProtocol
     private var gameMissedShots = 0
     private var gameCorrectShots = 0
     private var startTime: Date?
     
-    private var analyticsService: AnalyticsServiceProtocol
+    private(set) var analyticsService: AnalyticsServiceProtocol
     private var gameCenterService: GameCenterProtocol?
     private var achievementService: AchievementServiceProtocol?
     private var cancellables = Set<AnyCancellable>()
@@ -44,6 +47,9 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     func gameStarted(player: Player) {
         scoreCalculator.startGame()
         startTime = Date()
+        gameTimePlayed = nil
+        gameMissedShots = 0
+        gameCorrectShots = 0
     }
     
     func recordScore(atRow row: Int, player: Player) {
@@ -60,13 +66,13 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
         guard let startTime else {
             return
         }
-        let gameTimePlayed = Date().timeIntervalSince(startTime)
+        gameTimePlayed = Date().timeIntervalSince(startTime)
         let finalScore = scoreCalculator.finishGame(isWinner: isAWinner)
         analyticsService.updateAnalytics(correctShots: gameCorrectShots,
                                          missedShots: gameMissedShots,
                                          didWin: isAWinner,
                                          finalScore: finalScore.total,
-                                         gameTimePlayed: gameTimePlayed)
+                                         gameTimePlayed: gameTimePlayed!)
         
         let analyticsValue = analyticsService.analyticsPublisher.value
         let totalGames = analyticsValue.lifetimeGamesPlayed

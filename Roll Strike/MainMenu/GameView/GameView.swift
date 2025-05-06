@@ -7,13 +7,10 @@
 
 import SwiftUI
 import SpriteKit
-import ConfettiSwiftUI
 
 struct GameView: View {
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
-    @State private var showWinnerAlert = false
-    @State private var confettiCounter = 0
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
     @State private var activeOverlay: ActiveOverlay = .none
@@ -33,6 +30,7 @@ struct GameView: View {
                     currentPlayer: viewModel.currentPlayer,
                     player1Score: viewModel.scorePlayer1,
                     player2Score: viewModel.scorePlayer2,
+                    timeRemaining: viewModel.timeRemaining,
                     onAction: { action in
                         switch action {
                         case .changeBall:
@@ -94,28 +92,18 @@ struct GameView: View {
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
                     .frame(height: GameViewModel.launchAreaHeight)
             }
-            .confettiCannon(trigger: $confettiCounter,
-                            num: 150,
-                            openingAngle: Angle(degrees: 0),
-                            closingAngle: Angle(degrees: 360),
-                            radius: 250)
-            // .background(AppTheme.tertiaryColor.edgesIgnoringSafeArea(.all))
-            .alert(isPresented: $showWinnerAlert) {
-                Alert(
-                    title: Text("Game Over"),
-                    message: Text("\(viewModel.winner?.name ?? "") Wins\nScore: \(viewModel.winnerFinalScore.total)"),
-                    dismissButton: .default(Text("OK")) {
-                        viewModel.reset()
+            .sheet(item: $viewModel.result) { result in
+                GameResultView(
+                    result: result,
+                    onAction: { action in
+                        switch action {
+                        case .restart:
+                            viewModel.reset()
+                        case .quit:
+                            presentationMode.wrappedValue.dismiss()
+                        }
                     }
                 )
-            }
-            .onChange(of: viewModel.winner, initial: false) { _, _ in
-                if viewModel.winner != nil {
-                    showWinnerAlert = true
-                    confettiCounter += 1
-                } else {
-                    showWinnerAlert = false
-                }
             }
             .zIndex(0)
             
@@ -229,7 +217,6 @@ private func createGameViewModel() -> GameViewModel {
                                    player2: computer,
                                    soundCategory: .street,
                                    wrapEnabled: false,
-                                   timed: false,
                                    rollingObjectType: .beachBall,
                                    rowCount: 5,
                                    volume: 1)

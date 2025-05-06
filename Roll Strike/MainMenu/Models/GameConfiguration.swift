@@ -22,13 +22,22 @@ struct GameConfiguration {
             }
         }
     }
+    
+    enum TimeMode: Hashable {
+        case unlimited
+        case limited
+    }
+    
     var player1: Player = defaultPlayer1
     var player2: Player?
     var soundCategory: SoundCategory = .street
     var wrapEnabled: Bool = false
-    var timed: Bool = false
+    
+    var timeMode: TimeMode = .unlimited
+    var timeLimit: TimeInterval = 120
     
     let maxNumberOfRows = Array(1...6)
+    let timeOptions: [TimeInterval] = [30, 60, 90, 120, 180, 240, 300]
        
     var rollingObjectType: RollingObjectType = SimpleDefaults.getEnum(forKey: .rollingObject) ?? .crumpledPaper {
         didSet {
@@ -45,6 +54,12 @@ struct GameConfiguration {
     var volume: Float = SimpleDefaults.getValue(forKey: .volumePref) ?? 1.0 {
         didSet {
             SimpleDefaults.setValue(volume, forKey: .volumePref)
+        }
+    }
+    
+    var timerEnabled: Bool = false {
+        didSet {
+            timeMode = timerEnabled ? .limited: .unlimited
         }
     }
 }
