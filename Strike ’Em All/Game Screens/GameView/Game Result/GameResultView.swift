@@ -78,7 +78,7 @@ struct GameResultView: View {
                     Text("Time played:")
                         .font(.caption)
                         .foregroundStyle(AppTheme.accentColor)
-                    Text(formattedTime(result.timePlayed)).bold()
+                    Text(result.timePlayed.formattedTime).bold()
                         .foregroundStyle(AppTheme.secondaryColor)
                 }
                 //.frame(maxWidth: .infinity, alignment: .leading)
@@ -141,12 +141,6 @@ struct GameResultView: View {
         case .lost(let player):  return "\(player.name) Lost!"
         case .tie:              return "It's a Tie!"
         }
-    }
-    
-    private func formattedTime(_ t: TimeInterval) -> String {
-        let mins = Int(t) / 60
-        let secs = Int(t) % 60
-        return String(format: "%02d:%02d", mins, secs)
     }
 }
 

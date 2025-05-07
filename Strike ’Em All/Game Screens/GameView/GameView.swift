@@ -30,7 +30,8 @@ struct GameView: View {
                     currentPlayer: viewModel.currentPlayer,
                     player1Score: viewModel.scorePlayer1,
                     player2Score: viewModel.scorePlayer2,
-                    timeRemaining: viewModel.timeRemaining,
+                    timeCounter: viewModel.timeCounter,
+                    enableBouncing: viewModel.timerEnabled,
                     onAction: { action in
                         switch action {
                         case .changeBall:

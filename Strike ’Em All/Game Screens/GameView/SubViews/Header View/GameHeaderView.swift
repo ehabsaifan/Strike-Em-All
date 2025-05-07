@@ -15,7 +15,8 @@ struct GameHeaderView: View {
     let currentPlayer: Player
     let player1Score: Score
     let player2Score: Score?
-    let timeRemaining: TimeInterval
+    let timeCounter: TimeInterval
+    let enableBouncing: Bool
     
     var onAction: (HeaderMenuAction) -> Void
     
@@ -34,22 +35,19 @@ struct GameHeaderView: View {
     
     var body: some View {
         ZStack {
-            if timeRemaining != 0 {
-                Text("\(Int(timeRemaining))")
-                    .padding(.leading, 16)
-                    .font(.system(size: 28, weight: .bold, design: .monospaced))
-                    .foregroundColor(.accentColor)
-                    .scaleEffect(bouncing ? 1.2 : 1)      // bounce scale
-                    .onChange(of: timeRemaining, initial: false) { _, t in
-                        // when you hit 30 or below, kick off the bounce
-                        if t <= 30 {
-                            withAnimation(.interpolatingSpring(stiffness: 500, damping: 20)
-                                .repeatForever(autoreverses: true)) {
-                                    bouncing = true
-                                }
-                        }
+            Text(timeCounter.formattedTime)
+                .padding(.leading, 16)
+                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                .foregroundColor(.accentColor)
+                .scaleEffect(bouncing ? 1.2 : 1)
+                .onChange(of: timeCounter, initial: false) { _, t in
+                    if enableBouncing, t <= 30 {
+                        withAnimation(.interpolatingSpring(stiffness: 500, damping: 20)
+                            .repeatForever(autoreverses: true)) {
+                                bouncing = true
+                            }
                     }
-            }
+                }
             VStack(alignment: .leading) {
                 HStack {
                     if player2 != nil {
