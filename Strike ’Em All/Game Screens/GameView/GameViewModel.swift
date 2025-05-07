@@ -31,7 +31,7 @@ final class GameViewModel: ObservableObject {
     @Published var isBallMoving = false
     @Published var launchImpulse: CGVector? = nil
     @Published var rowFrames: [Int: CGRect] = [:]
-    @Published var timeRemaining: TimeInterval = 0
+    @Published var timeCounter: TimeInterval = 0
     @Published var scorePlayer1: Score = Score()
     @Published var scorePlayer2: Score = Score()
     @Published var isWrapAroundEdgesEnabled = false {
@@ -69,7 +69,10 @@ final class GameViewModel: ObservableObject {
             }
             return scorePlayer1
         }
-        
+    }
+    
+    var timerEnabled: Bool {
+        config.timerEnabled
     }
     
     let launchAreaVM: LaunchAreaViewModel
@@ -316,23 +319,23 @@ final class GameViewModel: ObservableObject {
         }
     }
     
-    private func setTimerIfNeeded() {
-        switch config.timeMode {
-        case .unlimited:
-            break
-        case .limited:
-            timeRemaining = config.timeLimit
-            timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-                .autoconnect()
-                .sink { [weak self] _ in
-                    guard let self else { return }
-                    timeRemaining -= 1
-                    if timeRemaining <= 0 {
+    private func startTimer() {
+        timeCounter = config.timeLimit
+        timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                switch config.timeMode {
+                case .unlimited:
+                    timeCounter += 1
+                case .limited:
+                    timeCounter -= 1
+                    if timeCounter <= 0 {
                         timerCancellable?.cancel()
                         endGameDueToTimeout()
                     }
                 }
-        }
+            }
     }
     
     private func prepareResultInfo() {
@@ -375,7 +378,7 @@ extension GameViewModel {
         scoreManagerPlayer2?.gameStarted(player: player2!)
         result = nil
         timerCancellable?.cancel()
-        setTimerIfNeeded()
+        startTimer()
     }
     
     func startGame() {
@@ -384,7 +387,7 @@ extension GameViewModel {
         physicsService.setRollingObject(gameService.rollingObject)
         scoreManagerPlayer1.gameStarted(player: player1)
         scoreManagerPlayer2?.gameStarted(player: player2!)
-        setTimerIfNeeded()
+        startTimer()
     }
     
     func updateBallPosition(with offset: CGSize) {

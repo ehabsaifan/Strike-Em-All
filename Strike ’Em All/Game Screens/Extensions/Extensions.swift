@@ -8,6 +8,14 @@
 import SwiftUI
 import UIKit
 
+extension TimeInterval {
+    var formattedTime: String {
+        let mins = Int(self) / 60
+        let secs = Int(self) % 60
+        return String(format: "%02d:%02d", mins, secs)
+    }
+}
+
 extension View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(

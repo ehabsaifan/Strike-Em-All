@@ -34,7 +34,7 @@ struct GameConfiguration {
     var wrapEnabled: Bool = false
     
     var timeMode: TimeMode = .unlimited
-    var timeLimit: TimeInterval = 120
+    var timeLimit: TimeInterval = 0
     
     let maxNumberOfRows = Array(1...6)
     let timeOptions: [TimeInterval] = [30, 60, 90, 120, 180, 240, 300]
@@ -60,6 +60,7 @@ struct GameConfiguration {
     var timerEnabled: Bool = false {
         didSet {
             timeMode = timerEnabled ? .limited: .unlimited
+            timeLimit = timerEnabled ? 120: 0
         }
     }
 }
