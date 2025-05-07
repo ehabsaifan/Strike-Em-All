@@ -9,11 +9,41 @@ import SwiftUI
 import UIKit
 
 extension TimeInterval {
-    var formattedTime: String {
-        let mins = Int(self) / 60
-        let secs = Int(self) % 60
-        return String(format: "%02d:%02d", mins, secs)
+    /// Formats a time interval as `mm:ss` or `hh:mm:ss` depending on `alwaysShowHours`
+    /// - Parameter alwaysShowHours: if true, always output `hh:mm:ss`; if false, only include hours when >= 1 hour
+    /// - Returns: a localized, zero-padded string
+    func formattedTime(alwaysShowHours: Bool = false) -> String {
+        let formatter = DateComponentsFormatter()
+        // positional style gives "01:02:03" rather than "1h 2m 3s"
+        formatter.unitsStyle = .positional
+        // pad to 2 digits each field
+        formatter.zeroFormattingBehavior = .pad
+        
+        // choose which components
+        if alwaysShowHours {
+            formatter.allowedUnits = [.hour, .minute, .second]
+        } else {
+            formatter.allowedUnits = self >= 3600
+                ? [.hour, .minute, .second]
+                : [.minute, .second]
+        }
+        
+        // DateComponentsFormatter automatically localizes separators and order
+        return formatter.string(from: self) ?? "00:00"
     }
+}
+
+extension UIImage: @retroactive Identifiable {
+    
+}
+
+extension UIView {
+    func snapshotImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        return renderer.image { ctx in
+          layer.render(in: ctx.cgContext)
+        }
+      }
 }
 
 extension View {
@@ -22,6 +52,15 @@ extension View {
             #selector(UIResponder.resignFirstResponder),
             to: nil, from: nil, for: nil
         )
+    }
+    
+    @MainActor
+    func snapshot() -> UIImage? {
+        let targetSize = UIScreen.main.bounds
+        let renderer = ImageRenderer(content: self)
+        renderer.scale = UIScreen.main.scale
+        renderer.proposedSize = ProposedViewSize(targetSize.size)
+        return renderer.uiImage
     }
 }
 
