@@ -20,4 +20,15 @@ struct GameAnalytics: Codable {
     var lastGameMissedShots: Int = 0
     var lifetimePerfectGamesCount: Int = 0 
     var lifetimeLongestPerfectGamesStreak: Int = 0
+    
+    var overAllAccuracy: String {
+        let total = lifetimeCorrectShots + lifetimeMissedShots
+        guard total > 0 else { return "0%" }
+        let acc = Double(lifetimeCorrectShots) / Double(total)
+        return String(format: "%.0f%%", acc * 100)
+    }
+    
+    var totalLost: Int {
+        lifetimeGamesPlayed - lifetimeWinnings
+    }
 }

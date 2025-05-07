@@ -35,7 +35,7 @@ struct GameHeaderView: View {
     
     var body: some View {
         ZStack {
-            Text(timeCounter.formattedTime)
+            Text(timeCounter.formattedTime())
                 .padding(.leading, 16)
                 .font(.system(size: 28, weight: .bold, design: .monospaced))
                 .foregroundColor(.accentColor)
