@@ -14,22 +14,9 @@
 		CEF0AFFA2D7789BE0028064F /* Strike ’Em All.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Strike ’Em All.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		CED1244B2DCD9AD30020B4B2 /* Exceptions for "Strike ’Em All" folder in "Strike ’Em All" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"Strike--Em-All-Info.plist",
-			);
-			target = CEF0AFF92D7789BE0028064F /* Strike ’Em All */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		CEF0AFFC2D7789BE0028064F /* Strike ’Em All */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				CED1244B2DCD9AD30020B4B2 /* Exceptions for "Strike ’Em All" folder in "Strike ’Em All" target */,
-			);
 			path = "Strike ’Em All";
 			sourceTree = "<group>";
 		};

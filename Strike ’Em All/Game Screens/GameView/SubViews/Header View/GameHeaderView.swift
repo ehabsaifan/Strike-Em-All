@@ -19,16 +19,7 @@ struct GameHeaderView: View {
     let enableBouncing: Bool
     
     var onAction: (HeaderMenuAction) -> Void
-    
-    private  var player1StartingScore: Int {
-        max(0, player1Score.total - player1Score.lastShotPointsEarned)
-    }
-    
-    private var player2StartingScore: Int {
-        guard let s = player2Score else { return 0 }
-        return max(0, s.total - s.lastShotPointsEarned)
-    }
-    
+
     private var isPlayer1Active: Bool {
         currentPlayer == player1
     }
@@ -37,7 +28,7 @@ struct GameHeaderView: View {
         ZStack {
             Text(timeCounter.formattedTime())
                 .padding(.leading, 16)
-                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                .font(.system(size: 26, weight: .bold, design: .monospaced))
                 .foregroundColor(.accentColor)
                 .scaleEffect(bouncing ? 1.2 : 1)
                 .onChange(of: timeCounter, initial: false) { _, t in
@@ -71,19 +62,32 @@ struct GameHeaderView: View {
                 HStack {
                     HStack(alignment: .center, spacing: 8) {
                         Text("\(player1.name) →")
-                            .font(isPlayer1Active ? .headline.bold(): .headline)
+                            .font(isPlayer1Active ? .headline.bold() : .headline)
                             .foregroundColor(AppTheme.primaryColor)
-                        AnimatedScoreView(startingScore: player1StartingScore,
+                        
+                        // your existing score view
+                        AnimatedScoreView(startingScore: player1Score.previousTotal,
                                           finalScore: player1Score.total)
+                        
+                        // new combo badge
+                        if player1Score.comboMultiplier > 1 {
+                            ComboIndicator(combo: player1Score.comboMultiplier)
+                        }
                     }
                     
                     if let player2 = player2, let player2Score = player2Score {
                         Spacer()
                         HStack(alignment: .center, spacing: 8) {
-                            AnimatedScoreView(startingScore: player2StartingScore,
+                            AnimatedScoreView(startingScore: player2Score.previousTotal,
                                               finalScore: player2Score.total)
+                            
+                            // combo badge for player2
+                            if player2Score.comboMultiplier > 1 {
+                                ComboIndicator(combo: player2Score.comboMultiplier)
+                            }
+                            
                             Text("← \(player2.name)")
-                                .font(!isPlayer1Active ? .headline.bold(): .headline)
+                                .font(!isPlayer1Active ? .headline.bold() : .headline)
                                 .foregroundColor(AppTheme.primaryColor)
                         }
                         .padding(.trailing, 16)
@@ -93,5 +97,23 @@ struct GameHeaderView: View {
             }
         }
         .padding(.bottom)
+    }
+}
+
+struct ComboIndicator: View {
+    let combo: Int
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "flame.fill")
+                .font(.caption2)
+                .foregroundColor(.orange)
+            Text("+ \(combo)")
+                .font(.caption2.bold())
+                .foregroundColor(.primary)
+        }
+        .padding(.horizontal, 6).padding(.vertical, 2)
+        .background(Color.orange.opacity(0.15))
+        .clipShape(Capsule())
     }
 }
