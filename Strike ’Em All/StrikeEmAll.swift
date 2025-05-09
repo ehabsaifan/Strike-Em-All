@@ -36,7 +36,7 @@ struct RollStrikeContainer: DIContainer {
     let authService: AuthenticationServiceProtocol = GameCenterService.shared
     let gameCenter: GameCenterProtocol   = GameCenterService.shared
     let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
-    let achievementService: AchievementServiceProtocol = AchievementService.shared
+    let gcReportService: GameCenterReportServiceProtocol = GameCenterReportService(gcService: GameCenterService.shared)
     
     // **Instead** of a single AnalyticsService, expose a factory:
     let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
@@ -48,7 +48,7 @@ protocol DIContainer {
     var gameCenter: GameCenterProtocol { get }
     var authService: AuthenticationServiceProtocol { get }
     var playerRepo: PlayerRepositoryProtocol { get }
-    var achievementService: AchievementServiceProtocol { get }
+    var gcReportService: GameCenterReportServiceProtocol { get }
     
     /// NEW: factory to create per‐player analytics
     var analyticsFactory: (String) -> AnalyticsServiceProtocol { get }

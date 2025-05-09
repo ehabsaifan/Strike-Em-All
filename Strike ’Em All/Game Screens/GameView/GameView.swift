@@ -227,7 +227,7 @@ private func createGameViewModel() -> GameViewModel {
                                   physicsService: physicsService,
                                   soundService: soundService,
                                   analyticsFactory: di.analyticsFactory,
-                                  achievementService: di.achievementService,
+                                  gcReportService: di.gcReportService,
                                   gameCenterService: di.gameCenter,
                                   gameScene: gameScene)
     return viewModel
@@ -237,7 +237,7 @@ struct PreviewContainer: DIContainer {
     let authService: AuthenticationServiceProtocol = GameCenterService.shared
     let gameCenter: GameCenterProtocol   = GameCenterService.shared
     let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
-    let achievementService: AchievementServiceProtocol = AchievementService.shared
+    let gcReportService: GameCenterReportServiceProtocol = GameCenterReportService(gcService: GameCenterService.shared)
     
     // **Instead** of a single AnalyticsService, expose a factory:
     let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in

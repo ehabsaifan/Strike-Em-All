@@ -144,7 +144,7 @@ struct GameSettingsView: View {
             physicsService: physicsService,
             soundService: soundService,
             analyticsFactory: di.analyticsFactory,
-            achievementService: di.achievementService,
+            gcReportService: di.gcReportService,
             gameCenterService: di.gameCenter,
             gameScene: gameScene
         )

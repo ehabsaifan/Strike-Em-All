@@ -17,6 +17,7 @@ protocol GameCenterProtocol {
     var isAuthenticatedSubject: CurrentValueSubject<Bool, Never> { get }
     
     func report(_ val: Int, board: GameCenterLeaderBoardID)
+    func reportAchievements(_ achievements: [GameCenterAchievment])
     func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double)
     func showLeaderboard()
     func showAchievements()
@@ -72,7 +73,7 @@ extension GameCenterService: GameCenterProtocol {
         }
     }
     
-    func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double) {
+    func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double = 100) {
         let achievement = GKAchievement(identifier: achievment.rawValue)
         achievement.percentComplete = percentComplete
         GKAchievement.report([achievement]) { error in
@@ -80,6 +81,22 @@ extension GameCenterService: GameCenterProtocol {
                 print("Error reporting achievement: \(error.localizedDescription)")
             } else {
                 print("Achievement reported: \(achievment)")
+            }
+        }
+    }
+    
+    func reportAchievements(_ achievements: [GameCenterAchievment]) {
+        let gcAchievements: [GKAchievement] = achievements.map { ach in
+            let gcAchievement = GKAchievement(identifier: ach.rawValue)
+            gcAchievement.percentComplete = 100
+            return gcAchievement
+        }
+        
+        GKAchievement.report(gcAchievements) { error in
+            if let error = error {
+                print("Error reporting achievement: \(error.localizedDescription)")
+            } else {
+                print("Achievement reported: \(achievements)")
             }
         }
     }

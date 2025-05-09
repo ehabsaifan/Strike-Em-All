@@ -85,7 +85,7 @@ final class GameViewModel: ObservableObject {
     private let soundService: SoundServiceProtocol
     private let analyticsFactory: (String) -> AnalyticsServiceProtocol
     
-    private let achievementService: AchievementServiceProtocol?
+    private let gcReportService: GameCenterReportServiceProtocol?
     private let gameCenterService: GameCenterProtocol?
     
     private var cancellables = Set<AnyCancellable>()
@@ -103,7 +103,7 @@ final class GameViewModel: ObservableObject {
         physicsService: PhysicsServiceProtocol,
         soundService: SoundServiceProtocol,
         analyticsFactory: @escaping (String) -> AnalyticsServiceProtocol,
-        achievementService: AchievementServiceProtocol?,
+        gcReportService: GameCenterReportServiceProtocol?,
         gameCenterService: GameCenterProtocol?,
         gameScene: GameScene
     ) {
@@ -113,7 +113,7 @@ final class GameViewModel: ObservableObject {
         self.soundService = soundService
         self.analyticsFactory = analyticsFactory
         self.gameCenterService = gameCenterService
-        self.achievementService = achievementService
+        self.gcReportService = gcReportService
         self.gameScene = gameScene
         
         // Initialize from config
@@ -126,37 +126,31 @@ final class GameViewModel: ObservableObject {
         self.volume = config.volume
         
         // Score managers
-        var achievement1: AchievementServiceProtocol?
-        var gameCenter1: GameCenterProtocol?
+        var achievement1: GameCenterReportServiceProtocol?
         if config.player1.type == .gameCenter &&
             gameCenterService?.isAuthenticatedSubject.value == true {
-            gameCenter1 = gameCenterService
-            achievement1 = achievementService
+            achievement1 = gcReportService
         }
         let analytics1 = analyticsFactory(config.player1.id)
         self.scoreManagerPlayer1 = ScoreService(
             calculator: config.timerEnabled ?
             TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
             analyticsService: analytics1,
-            gameCenterService: gameCenter1,
-            achievementService: achievement1)
+            gcReportService: achievement1)
         
         if config.playerMode != .singlePlayer,
            let secPlayer = config.player2 {
-            var achievement2: AchievementServiceProtocol?
-            var gameCenter2: GameCenterProtocol?
+            var achievement2: GameCenterReportServiceProtocol?
             if config.player2?.type == .gameCenter &&
                 gameCenterService?.isAuthenticatedSubject.value == true {
-                gameCenter2 = gameCenterService
-                achievement2 = achievementService
+                achievement2 = gcReportService
             }
             let analytics2 = analyticsFactory(secPlayer.id)
             self.scoreManagerPlayer2 = ScoreService(
                 calculator:  config.timerEnabled ?
                 TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
                 analyticsService: analytics2,
-                gameCenterService: gameCenter2,
-                achievementService: achievement2)
+                gcReportService: achievement2)
         }
         
         // Launch area view model
@@ -340,6 +334,7 @@ final class GameViewModel: ObservableObject {
     
     private func prepareResultInfo() {
         let analy = scoreManagerPlayer1.analyticsService.analyticsPublisher.value
+        print("@@", analy)
         let player1Info = PlayerResultInfo(player: player1,
                                            score: scorePlayer1,
                                            correctShots: analy.lastGameCorrectShots,

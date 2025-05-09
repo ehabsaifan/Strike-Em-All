@@ -13,6 +13,7 @@ struct SimpleDefaults {
         case numberOfRows
         case savedPlayers
         case rollingObject
+        case achievements(String)
         case gameAnalyticsData(String)
         
         var keyString: String {
@@ -20,6 +21,8 @@ struct SimpleDefaults {
             case .volumePref:
                 return "volumePreference"
             case .gameAnalyticsData(let string):
+                return string
+            case .achievements(let string):
                 return string
             default:
                 return "\(self)"
