@@ -136,8 +136,8 @@ struct GameView: View {
                 }
         )
         .onChange(of: viewModel.scorePlayer1, initial: false) { oldScore, newScore in
-            if newScore.lastShotPointsEarned > 0 {
-                earnedPointsText = "+\(newScore.lastShotPointsEarned)"
+            if newScore.currentShotEarnedpoints > 0 {
+                earnedPointsText = "+\(newScore.currentShotEarnedpoints)"
                 withAnimation(.easeOut(duration: 0.6)) {
                     showEarnedPoints = true
                 }
@@ -149,8 +149,8 @@ struct GameView: View {
             }
         }
         .onChange(of: viewModel.scorePlayer2, initial: false) { oldScore, newScore in
-            if newScore.lastShotPointsEarned > 0 {
-                earnedPointsText = "+\(newScore.lastShotPointsEarned)"
+            if newScore.currentShotEarnedpoints > 0 {
+                earnedPointsText = "+\(newScore.currentShotEarnedpoints)"
                 withAnimation(.easeOut(duration: 0.6)) {
                     showEarnedPoints = true
                 }
