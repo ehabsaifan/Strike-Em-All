@@ -55,7 +55,7 @@ struct LandingDashboardView: View {
                             }
                         )
                     }
-
+                    
                     Button {
                         vm.signInGameCenter()
                     } label: {
@@ -70,9 +70,9 @@ struct LandingDashboardView: View {
                         .cornerRadius(8)
                     }
                     .shadow(color: Color.black.opacity(0.25),
-                                    radius: 4,
-                                    x: 0,
-                                    y: -4)
+                            radius: 4,
+                            x: 0,
+                            y: -4)
                     .padding(.horizontal)
                     .disabled(vm.isSigningIn || vm.isAuthenticated)
                 }
@@ -145,38 +145,36 @@ struct LandingDashboardView: View {
         let onPlay: () -> Void
         
         var body: some View {
-            VStack(spacing: 8) {
+            VStack {
                 HStack {
-                    HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(player.name)
                             .font(.headline)
                             .foregroundColor(AppTheme.primaryColor)
-                        Spacer()
                         Text(player.lastUsed, style: .date)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                }
-                
-                HStack(spacing: 12) {
-                    SmallActionButton(
-                        title: "Stats ▶︎",
-                        icon: nil,
-                        color: AppTheme.primaryColor
-                    ) {
-                        onStats()
-                    }
+                    
+                    Spacer()
                     
                     SmallActionButton(
-                        title: "Play ▶︎",
+                        title: "Play",
                         icon: nil,
-                        color: AppTheme.secondaryColor,
-                        buttonStyle: .borderedProminent
+                        color: AppTheme.secondaryColor
                     ) {
                         onPlay()
                     }
+                    .frame(width: 100)
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                        .padding(.leading)
                 }
+                DashedDivider()
             }
+            .padding(.bottom, 4)
+            .contentShape(Rectangle())       // make entire row tappable
+            .onTapGesture { onStats() }      // except the Play button
         }
     }
 }

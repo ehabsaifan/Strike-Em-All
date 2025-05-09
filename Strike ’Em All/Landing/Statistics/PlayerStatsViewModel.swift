@@ -11,7 +11,7 @@ import Combine
 class PlayerStatsViewModel: ObservableObject {
     @Published var analytics: GameAnalytics = .init()
     
-    private let analyticsService: AnalyticsServiceProtocol
+    let analyticsService: AnalyticsServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     init(player: Player, analyticsFactory: (String) -> AnalyticsServiceProtocol) {

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "Play Time ≥ 5 hrs.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

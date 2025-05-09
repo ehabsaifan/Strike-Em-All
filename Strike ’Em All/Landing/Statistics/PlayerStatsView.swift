@@ -15,6 +15,7 @@ struct PlayerStatsView: View {
     @StateObject private var viewModel: PlayerStatsViewModel
     @State private var isSigningInGC = false
     @State private var shareImage: UIImage?
+    @State private var showAchievements = false
     
     init(player: Player, di: DIContainer, onPlay: @escaping () -> Void) {
         let vm = PlayerStatsViewModel(player: player,
@@ -59,12 +60,12 @@ struct PlayerStatsView: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .padding()
+                        .padding(.horizontal)
                     } else {
                         Button(action: {
                             onPlay()
                         }) {
-                            Text("▶︎ Play Now")
+                            Text("Play Now")
                                 .font(.headline)
                                 .padding()
                                 .frame(maxWidth: .infinity)
@@ -73,8 +74,21 @@ struct PlayerStatsView: View {
                                 .cornerRadius(8)
                         }
                         .buttonStyle(.plain)
-                        .padding()
+                        .padding(.horizontal)                    }
+                    
+                    Button(action: {
+                        showAchievements = true
+                    }) {
+                        Text("Achievements")
+                            .font(.headline)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(AppTheme.tertiaryColor)
+                            .foregroundColor(AppTheme.secondaryColor)
+                            .cornerRadius(8)
                     }
+                    .buttonStyle(.plain)
+                    .padding()
                     
                     Spacer()
                 }
@@ -94,6 +108,9 @@ struct PlayerStatsView: View {
                 }
                 .sheet(item: $shareImage) { image in
                     ShareSheet(activityItems: [image])
+                }
+                .sheet(isPresented: $showAchievements) {
+                    AchievementsView(viewModel: AchievementsViewModel(analyticsService: viewModel.analyticsService))
                 }
             }
         }

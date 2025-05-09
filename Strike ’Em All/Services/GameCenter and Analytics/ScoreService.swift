@@ -29,19 +29,15 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     private var startTime: Date?
     
     private(set) var analyticsService: AnalyticsServiceProtocol
-    private var gameCenterService: GameCenterProtocol?
-    private var achievementService: AchievementServiceProtocol?
-    private var cancellables = Set<AnyCancellable>()
+    private var gcReportService: GameCenterReportServiceProtocol?
     
     init(calculator: ScoreCalculatorProtocol = ScoreCalculator(),
          analyticsService: AnalyticsServiceProtocol,
-         gameCenterService: GameCenterProtocol?,
-         achievementService: AchievementServiceProtocol?) {
+         gcReportService: GameCenterReportServiceProtocol?) {
         self.scoreCalculator = calculator
         self.scorePublisher = calculator.scorePublisher
         self.analyticsService = analyticsService
-        self.gameCenterService = gameCenterService
-        self.achievementService = achievementService
+        self.gcReportService = gcReportService
     }
     
     func gameStarted(player: Player) {
@@ -54,11 +50,13 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     
     func recordScore(atRow row: Int, player: Player) {
         gameCorrectShots += 1
+        print("Correct shot now \(gameCorrectShots)")
         scoreCalculator.recordScore(atRow: row)
     }
     
     func missedShot(player: Player) {
         gameMissedShots += 1
+        print("Missed shot now \(gameMissedShots)")
         scoreCalculator.missedShot()
     }
     
@@ -74,32 +72,8 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
                                          finalScore: finalScore.total,
                                          gameTimePlayed: gameTimePlayed!)
         
-        let analyticsValue = analyticsService.analyticsPublisher.value
-        let totalGames = analyticsValue.lifetimeGamesPlayed
-        let totalWins = analyticsValue.lifetimeWinnings
-        let winningStreak = analyticsValue.currentWinningStreak
-        let playTotalTime   = analyticsValue.lifetimeTotalTimePlayed
-        let perfectGames = analyticsValue.lifetimePerfectGamesCount
-        let perfectStreak = analyticsValue.lifetimeLongestPerfectGamesStreak
-        let accuracy = Double(analyticsValue.lifetimeCorrectShots) /
-        Double(analyticsValue.lifetimeCorrectShots + analyticsValue.lifetimeMissedShots)
-        
-        gameCenterService?.report(finalScore.total, board: .score)
-        gameCenterService?.report(totalWins, board: .totalWins)
-        gameCenterService?.report(winningStreak, board: .longestStreak)
-        gameCenterService?.report(totalGames, board: .gamesPlayed)
-        
-        achievementService?.updateAchievements(
-            totalWins: totalWins,
-            currentStreak: winningStreak,
-            finalScore: finalScore.total,
-            totalGames: totalGames,
-            totaleTime: playTotalTime,
-            perfectGames: perfectGames,
-            perfectStreak: perfectStreak,
-            accuracy: accuracy
-            )
-        cancellables.removeAll()
+        gcReportService?.gameEnded(score: finalScore, analytics: analyticsService.analyticsPublisher.value)
+        print(finalScore)
         completion(finalScore)
     }
 }
