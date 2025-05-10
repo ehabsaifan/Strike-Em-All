@@ -129,9 +129,19 @@ struct ResultStatsView: View {
         Divider()
         
         if let player2Info = result.player2Info {
-            CompStatRow(label: "Score",
+            CompStatRow(label: "Shots total",
+                        value1: "\(result.player1Info.score.previousTotal)",
+                        value2: "\(player2Info.score.previousTotal)")
+            CompStatRow(label: "Winning bonus",
+                        value1: "\(result.player1Info.score.winnerBonus)",
+                        value2: "\(player2Info.score.winnerBonus)")
+            CompStatRow(label: "Time bonus",
+                        value1: "\(result.player1Info.score.timeBonus)",
+                        value2: "\(player2Info.score.timeBonus)")
+            CompStatRow(label: "Total score",
                         value1: "\(result.player1Info.score.total)",
                         value2: "\(player2Info.score.total)")
+            
             CompStatRow(label: "Correct shots",
                         value1: result.player1Info.correctShotsDesc,
                         value2: player2Info.correctShotsDesc)
@@ -142,7 +152,13 @@ struct ResultStatsView: View {
                         value1: player1Accuracy,
                         value2: player2Accuracy!)
         } else {
-            SingleStatRow(label: "Score",
+            SingleStatRow(label: "Shots total",
+                          value: "\(result.player1Info.score.previousTotal)")
+            SingleStatRow(label: "Winning bonus",
+                          value: "\(result.player1Info.score.winnerBonus)")
+            SingleStatRow(label: "Time bonus",
+                          value: "\(result.player1Info.score.timeBonus)")
+            SingleStatRow(label: "Total score",
                           value: "\(result.player1Info.score.total)")
             SingleStatRow(label: "Correct shots",
                           value: result.player1Info.correctShotsDesc)

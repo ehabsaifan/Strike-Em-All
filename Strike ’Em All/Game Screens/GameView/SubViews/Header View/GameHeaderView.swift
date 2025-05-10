@@ -37,6 +37,8 @@ struct GameHeaderView: View {
                             .repeatForever(autoreverses: true)) {
                                 bouncing = true
                             }
+                    } else if enableBouncing, t <= 0 {
+                        bouncing = false
                     }
                 }
             VStack(alignment: .leading) {
