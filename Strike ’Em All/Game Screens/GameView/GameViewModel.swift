@@ -126,31 +126,31 @@ final class GameViewModel: ObservableObject {
         self.volume = config.volume
         
         // Score managers
-        var achievement1: GameCenterReportServiceProtocol?
+        var gcReportService1: GameCenterReportServiceProtocol?
         if config.player1.type == .gameCenter &&
             gameCenterService?.isAuthenticatedSubject.value == true {
-            achievement1 = gcReportService
+            gcReportService1 = gcReportService
         }
         let analytics1 = analyticsFactory(config.player1.id)
         self.scoreManagerPlayer1 = ScoreService(
             calculator: config.timerEnabled ?
             TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
             analyticsService: analytics1,
-            gcReportService: achievement1)
+            gcReportService: gcReportService1)
         
         if config.playerMode != .singlePlayer,
            let secPlayer = config.player2 {
-            var achievement2: GameCenterReportServiceProtocol?
+            var gcReportService2: GameCenterReportServiceProtocol?
             if config.player2?.type == .gameCenter &&
                 gameCenterService?.isAuthenticatedSubject.value == true {
-                achievement2 = gcReportService
+                gcReportService2 = gcReportService
             }
             let analytics2 = analyticsFactory(secPlayer.id)
             self.scoreManagerPlayer2 = ScoreService(
                 calculator:  config.timerEnabled ?
                 TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
                 analyticsService: analytics2,
-                gcReportService: achievement2)
+                gcReportService: gcReportService2)
         }
         
         // Launch area view model
