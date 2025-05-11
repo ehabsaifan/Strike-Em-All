@@ -96,6 +96,7 @@ extension GameCenterAchievment {
         let totalGames = analytics.lifetimeGamesPlayed
         let totalWins = analytics.lifetimeWinnings
         let winningStreak = analytics.currentWinningStreak
+        let perfectWinningStreak = analytics.currentPrefectWinningStreak
         let playTotalTime   = analytics.lifetimeTotalTimePlayed
         let perfectGames = analytics.lifetimePerfectGamesCount
         let perfectStreak = analytics.lifetimeLongestPerfectGamesStreak
@@ -108,7 +109,7 @@ extension GameCenterAchievment {
             totalGames: totalGames,
             totalTime: playTotalTime,
             perfectGames: perfectGames,
-            perfectStreak: perfectStreak,
+            perfectStreak: perfectWinningStreak,
             accuracy: accuracy
         )
     }

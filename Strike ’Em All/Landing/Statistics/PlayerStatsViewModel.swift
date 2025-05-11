@@ -21,7 +21,5 @@ class PlayerStatsViewModel: ObservableObject {
             .sink { [weak self] result in
                 self?.analytics = result
             }.store(in: &cancellables)
-        // subscribe to publisher
-        analyticsService.loadAnalytics { _ in }
     }
 }

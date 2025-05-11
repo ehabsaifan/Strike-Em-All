@@ -199,10 +199,10 @@ struct GameView: View {
 }
 
 #Preview {
-    GameView(viewModel: createGameViewModel())
+    GameView(viewModel: createPreviewGameViewModel())
 }
 
-private func createGameViewModel() -> GameViewModel {
+private func createPreviewGameViewModel() -> GameViewModel {
     let contentProvider = GameContentProvider()
     let gameService = GameService(rollingObject: Ball(),
                                   contentProvider: contentProvider)
@@ -221,7 +221,6 @@ private func createGameViewModel() -> GameViewModel {
                                    rollingObjectType: .beachBall,
                                    rowCount: 5,
                                    volume: 1)
-    
     let viewModel = GameViewModel(config: config,
                                   gameService: gameService,
                                   physicsService: physicsService,
@@ -233,14 +232,36 @@ private func createGameViewModel() -> GameViewModel {
     return viewModel
 }
 
-struct PreviewContainer: DIContainer {
-    let authService: AuthenticationServiceProtocol = GameCenterService.shared
-    let gameCenter: GameCenterProtocol   = GameCenterService.shared
-    let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
-    let gcReportService: GameCenterReportServiceProtocol = GameCenterReportService(gcService: GameCenterService.shared)
+class PreviewContainer: DIContainer {
+    let authService: AuthenticationServiceProtocol
+    let gameCenter: GameCenterProtocol
+    let playerRepo: PlayerRepositoryProtocol
+    let gcReportService: GameCenterReportServiceProtocol
+    let disk: Persistence
+    let cloudCheckingService: CloudAvailabilityChecking
     
-    // **Instead** of a single AnalyticsService, expose a factory:
-    let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
-        AnalyticsService(recordName: recordName)
+    private var analyticsCache: [String: AnalyticsServiceProtocol] = [:]
+    
+    init() {
+        self.authService           = GameCenterService.shared
+        self.gameCenter            = GameCenterService.shared
+        self.playerRepo            = PlayerService.shared
+        self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
+        self.disk                  = FileStorage()
+        self.cloudCheckingService  = CloudAvailabilityService()
+    }
+    
+    /// 3) Factory that reuses existing services
+    lazy var analyticsFactory: (String) -> AnalyticsServiceProtocol = { [unowned self] recordName in
+        if let existing = analyticsCache[recordName] {
+            return existing
+        }
+        let newService = AnalyticsService(
+            disk: disk,
+            cloud: CloudSyncService(recordName: recordName),
+            availability: cloudCheckingService
+        )
+        analyticsCache[recordName] = newService
+        return newService
     }
 }

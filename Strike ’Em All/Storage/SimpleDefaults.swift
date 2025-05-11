@@ -14,6 +14,7 @@ struct SimpleDefaults {
         case savedPlayers
         case rollingObject
         case achievements(String)
+        // To be removed after migration
         case gameAnalyticsData(String)
         
         var keyString: String {
