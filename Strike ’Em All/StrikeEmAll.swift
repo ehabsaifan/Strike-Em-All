@@ -10,8 +10,8 @@ import SwiftUI
 @main
 struct StrikeEmAll: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-  
-    let container = RollStrikeContainer()
+    
+    let container = StrikeEmAllContainer()
     
     var body: some Scene {
         WindowGroup {
@@ -22,7 +22,7 @@ struct StrikeEmAll: App {
 }
 
 private struct DIContainerKey: EnvironmentKey {
-  static let defaultValue: DIContainer = RollStrikeContainer()
+    static let defaultValue: DIContainer = StrikeEmAllContainer()
 }
 
 extension EnvironmentValues {
@@ -32,15 +32,37 @@ extension EnvironmentValues {
     }
 }
 
-struct RollStrikeContainer: DIContainer {
-    let authService: AuthenticationServiceProtocol = GameCenterService.shared
-    let gameCenter: GameCenterProtocol   = GameCenterService.shared
-    let playerRepo: PlayerRepositoryProtocol = PlayerService.shared
-    let gcReportService: GameCenterReportServiceProtocol = GameCenterReportService(gcService: GameCenterService.shared)
+class StrikeEmAllContainer: DIContainer {
+    let authService: AuthenticationServiceProtocol
+    let gameCenter: GameCenterProtocol
+    let playerRepo: PlayerRepositoryProtocol
+    let gcReportService: GameCenterReportServiceProtocol
+    let disk: Persistence
+    let cloudCheckingService: CloudAvailabilityChecking
     
-    // **Instead** of a single AnalyticsService, expose a factory:
-    let analyticsFactory: (String) -> AnalyticsServiceProtocol = { recordName in
-        AnalyticsService(recordName: recordName)
+    private var analyticsCache: [String: AnalyticsServiceProtocol] = [:]
+    
+    init() {
+        self.authService           = GameCenterService.shared
+        self.gameCenter            = GameCenterService.shared
+        self.playerRepo            = PlayerService.shared
+        self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
+        self.disk                  = FileStorage()
+        self.cloudCheckingService  = CloudAvailabilityService()
+    }
+    
+    /// 3) Factory that reuses existing services
+    lazy var analyticsFactory: (String) -> AnalyticsServiceProtocol = { [unowned self] recordName in
+        if let existing = analyticsCache[recordName] {
+            return existing
+        }
+        let newService = AnalyticsService(
+            disk: disk,
+            cloud: CloudSyncService(recordName: recordName),
+            availability: cloudCheckingService
+        )
+        analyticsCache[recordName] = newService
+        return newService
     }
 }
 
@@ -49,7 +71,7 @@ protocol DIContainer {
     var authService: AuthenticationServiceProtocol { get }
     var playerRepo: PlayerRepositoryProtocol { get }
     var gcReportService: GameCenterReportServiceProtocol { get }
-    
-    /// NEW: factory to create per‐player analytics
+    var disk: Persistence { get }
+    var cloudCheckingService: CloudAvailabilityChecking { get }
     var analyticsFactory: (String) -> AnalyticsServiceProtocol { get }
 }

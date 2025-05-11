@@ -10,95 +10,148 @@ import CloudKit
 import Combine
 import SwiftUI
 
-enum AnalyticsError: Error, LocalizedError, CustomStringConvertible {
-    case recordFound
-    case iCloudNotAuthorized
-    
-    var description: String {
-        switch self {
-        case .recordFound:
-            return "No records found"
-        case .iCloudNotAuthorized:
-            return "iCloud not authorized"
-        }
-    }
-}
+
 
 protocol AnalyticsServiceProtocol {
     var analyticsPublisher: CurrentValueSubject<GameAnalytics, Never> { get }
     
     func updateAnalytics(correctShots: Int, missedShots: Int, didWin: Bool, finalScore: Int, gameTimePlayed: Double)
-    func loadAnalytics(completion: @escaping (Result<GameAnalytics, Error>) -> Void)
-    func saveAnalytics(completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 final class AnalyticsService: ObservableObject {
-    private let container: CKContainer
-    private let database: CKDatabase
-    private let recordID: CKRecord.ID
-    private let defaultsKey: SimpleDefaults.Key
-    private let recordType = "GameAnalytics"
-    
+    /// The single, authoritative subject for analytics updates
+    let analyticsPublisher: CurrentValueSubject<GameAnalytics, Never>
     @Published private(set) var analytics: GameAnalytics {
         didSet {
             analyticsPublisher.send(analytics)
         }
     }
     
-    /// The single, authoritative subject for analytics updates
-    let analyticsPublisher: CurrentValueSubject<GameAnalytics, Never>
+    private let disk: Persistence
+    private let cloud: CloudSync
+    private let filename: String
+    private let availability: CloudAvailabilityChecking
     
-    init(recordName: String) {
-        self.recordID    = CKRecord.ID(recordName: recordName)
-        self.defaultsKey = .gameAnalyticsData(recordName)
-        self.container   = CKContainer.default()
-        self.database    = container.privateCloudDatabase
+    // To be removed after migration
+    private let defaultsKey: SimpleDefaults.Key
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    init(disk: Persistence,
+         cloud: CloudSync,
+         availability: CloudAvailabilityChecking = CloudAvailabilityService()) {
+        self.disk = disk
+        self.cloud = cloud
+        self.availability = availability
+        self.filename = "\(cloud.userID)_analytics.json"
         
-        // Seed initial value
-        let initial = Self.loadFromUserDefaults(forKey: defaultsKey)
-        ?? GameAnalytics()
+        // To be removed after migration
+        self.defaultsKey = .gameAnalyticsData(cloud.userID)
         
-        self.analytics          = initial
-        self.analyticsPublisher = CurrentValueSubject(initial)
+        var initail = GameAnalytics()
+        if let stored = try? disk.load(GameAnalytics.self, from: filename) {
+            initail = stored
+        }
         
-        // Load from CloudKit
-        loadAnalytics { [weak self] result in
+        analytics = initail
+        analyticsPublisher = CurrentValueSubject(initail)
+        
+        // To be removed after migration
+        if let old = AnalyticsService.loadFromUserDefaults(forKey: self.defaultsKey) {
+            mergeAnalytics(old, initail)
+            try? disk.save(analytics, to: filename)
+        }
+        
+        availability
+            .iCloudAvailability()
+            .sink { [weak self] available in
+                guard let self = self else { return }
+                if available {
+                    self.loadFromCloudKit()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func saveAnalyticsToCloud() {
+        availability
+            .iCloudAvailability()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] available in
+                guard let self else  { return }
+                if available {
+                    self.cloud.saveAnalyticsRecord(self.analytics) { reslt in
+                        switch reslt {
+                        case .success:
+                            print("Saving analytics success")
+                        case .failure:
+                            print("Saving analytics error")
+                        }
+                    }
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func loadFromCloudKit() {
+        cloud.fetchAnalyticsRecord { [weak self] result in
             guard let self = self else { return }
-            switch result {
-            case .success(let loaded):
-                self.analytics = loaded
-                print("CloudKit load analytics success!\n\n\n\(loaded)\n\n\n")
-                Self.saveToUserDefaults(loaded, forKey: self.defaultsKey)
-                self.saveAchievementsIfNeeded(loaded)
-            case .failure(let error):
-                print("CloudKit load analytics error: \(error.localizedDescription)")
+            if case let .success(cloudAnalytics) = result {
+                self.mergeAnalytics(cloudAnalytics, self.analytics)
+                try? self.disk.save(self.analytics, to: filename)
+                self.saveAnalyticsToCloud()
             }
         }
     }
     
-    func saveAchievementsIfNeeded(_ analytics: GameAnalytics) {
-        var new = analytics
-        let achievements = getAchievements(analytics)
-        print(#function)
-        if new.achievementEarnedIDs != achievements.ids ||
-            new.achievementEarnedDates != achievements.dates {
-            
-            new.achievementEarnedIDs   = achievements.ids
-            new.achievementEarnedDates = achievements.dates
-            
-            Self.saveToUserDefaults(new, forKey: defaultsKey)
-            
-            self.analytics = new
-            
-            saveAnalytics { result in
-                switch result {
-                case .success():
-                    print("Analytics successfully saved to CloudKit.")
-                case .failure(let error):
-                    print("Error saving analytics: \(error.localizedDescription)")
+    private func mergeAnalytics(_ a1: GameAnalytics, _ a2: GameAnalytics) {
+        var merged = GameAnalytics()
+        
+        // 1) For every numeric property, pick the larger value
+        merged.lifetimeTotalScore = max(a1.lifetimeTotalScore, a2.lifetimeTotalScore)
+        merged.lifetimeTotalTimePlayed = max(a1.lifetimeTotalTimePlayed, a2.lifetimeTotalTimePlayed)
+        merged.lifetimeCorrectShots = max(a1.lifetimeCorrectShots, a2.lifetimeCorrectShots)
+        merged.lifetimeMissedShots = max(a1.lifetimeMissedShots, a2.lifetimeMissedShots)
+        merged.lifetimeWinnings = max(a1.lifetimeWinnings, a2.lifetimeWinnings)
+        merged.lifetimeGamesPlayed = max(a1.lifetimeGamesPlayed, a2.lifetimeGamesPlayed)
+        merged.lifetimePerfectGamesCount = max(a1.lifetimePerfectGamesCount, a2.lifetimePerfectGamesCount)
+        
+        merged.lifetimeLongestWinningStreak = max(a1.lifetimeLongestWinningStreak, a2.lifetimeLongestWinningStreak)
+        
+        merged.currentWinningStreak = max(a1.currentWinningStreak, a2.currentWinningStreak)
+        
+        merged.lifetimeLongestPerfectGamesStreak = max(a1.lifetimeLongestPerfectGamesStreak, a2.lifetimeLongestPerfectGamesStreak)
+        
+        merged.lifetimeLongestPerfectGamesStreak = max(merged.currentWinningStreak, merged.lifetimeLongestPerfectGamesStreak)
+        
+        merged.currentPrefectWinningStreak = max(a1.currentPrefectWinningStreak, a2.currentPrefectWinningStreak)
+        
+        // If there is a perfect game then longest would be at least one
+        if merged.lifetimeLongestPerfectGamesStreak == 0,
+            merged.lifetimePerfectGamesCount > 0 {
+            merged.lifetimeLongestPerfectGamesStreak = 1
+        }
+        
+        merged.lastGameCorrectShots = max(a1.lastGameCorrectShots, a2.lastGameCorrectShots)
+        merged.lastGameMissedShots  = max(a1.lastGameMissedShots, a2.lastGameMissedShots)
+        
+        var dateByID: [String: Date] = [:]
+        func collect(_ analytics: GameAnalytics) {
+            for (id, date) in zip(analytics.achievementEarnedIDs, analytics.achievementEarnedDates) {
+                if let existingDate = dateByID[id] {
+                    dateByID[id] = min(existingDate, date)
+                } else {
+                    dateByID[id] = date
                 }
             }
         }
+        collect(a1)
+        collect(a2)
+        let sortedIDs = dateByID.keys.sorted { dateByID[$0]! < dateByID[$1]! }
+        merged.achievementEarnedIDs   = sortedIDs
+        merged.achievementEarnedDates = sortedIDs.map { dateByID[$0]! }
+        
+        analytics = merged
     }
     
     private func getAchievements(_ analytics: GameAnalytics)-> (dates: [Date], ids: [String]) {
@@ -122,90 +175,11 @@ final class AnalyticsService: ObservableObject {
         
         return (dates: combinedDates, ids: combinedIDs)
     }
-    
-    // MARK: - Offline Persistence Helpers
-    
-    private static func loadFromUserDefaults(forKey key: SimpleDefaults.Key) -> GameAnalytics? {
-        print(#function)
-        guard
-            let data: Data = SimpleDefaults.getValue(forKey: key) else {
-            return nil
-        }
-        do {
-            let data = try JSONDecoder().decode(GameAnalytics.self, from: data)
-            print(data)
-            return data
-        } catch {
-            print("loadFromUserDefaults error! \(error)")
-            return nil
-        }
-    }
-    
-    private static func saveToUserDefaults(_ analytics: GameAnalytics, forKey key: SimpleDefaults.Key) {
-        print(#function)
-
-        do {
-            let data = try JSONEncoder().encode(analytics)
-            SimpleDefaults.setValue(data, forKey: key)
-            print("saveToUserDefaults success!")
-        } catch {
-            print("saveToUserDefaults failed! \(error)")
-        }
-    }
-    
-    private func withICloudAvailability(_ block: @escaping (Bool) -> Void) {
-        container.accountStatus { status, _ in
-            DispatchQueue.main.async {
-                block(status == .available)
-            }
-        }
-    }
 }
 
 // MARK: - AnalyticsServiceProtocol
 
 extension AnalyticsService: AnalyticsServiceProtocol {
-    /// Asynchronously load analytics from CloudKit.
-    func loadAnalytics(completion: @escaping (Result<GameAnalytics, Error>) -> Void) {
-        withICloudAvailability { available in
-            guard available else {
-                // iCloud OFF → fall back to local + return
-                completion(.failure(AnalyticsError.iCloudNotAuthorized))
-                return
-            }
-            self.database.fetch(withRecordID: self.recordID) { record, error in
-                let result: Result<GameAnalytics, Error>
-                if let error = error {
-                    result = .failure(error)
-                } else if let record = record {
-                    let loaded = GameAnalytics(
-                        lifetimeTotalScore:                   record["lifetimeTotalScore"]                as? Int    ?? 0,
-                        lifetimeTotalTimePlayed:             record["lifetimeTotalTimePlayed"]          as? Double ?? 0,
-                        lifetimeCorrectShots:                 record["lifetimeCorrectShots"]             as? Int    ?? 0,
-                        lifetimeMissedShots:                  record["lifetimeMissedShots"]              as? Int    ?? 0,
-                        lifetimeWinnings:                     record["lifetimeWinnings"]                 as? Int    ?? 0,
-                        lifetimeGamesPlayed:                  record["lifetimeGamesPlayed"]              as? Int    ?? 0,
-                        lifetimeLongestWinningStreak:         record["lifetimeLongestWinningStreak"]     as? Int    ?? 0,
-                        currentWinningStreak:                 record["currentWinningStreak"]             as? Int    ?? 0,
-                        lastGameCorrectShots:                 record["lastGameCorrectShots"]             as? Int    ?? 0,
-                        lastGameMissedShots:                  record["lastGameMissedShots"]              as? Int    ?? 0,
-                        lifetimePerfectGamesCount:            record["lifetimePerfectGamesCount"]        as? Int    ?? 0,
-                        lifetimeLongestPerfectGamesStreak:    record["lifetimeLongestPerfectGamesStreak"]as? Int    ?? 0,
-                        achievementEarnedIDs:                 record["achievementEarnedIDs"]             as? [String] ?? [],
-                        achievementEarnedDates:               record["achievementEarnedDates"]           as? [Date]  ?? []
-                    )
-                    result = .success(loaded)
-                } else {
-                    result = .failure(AnalyticsError.recordFound)
-                }
-                DispatchQueue.main.async {
-                    print("DB load: \(result)")
-                    completion(result)
-                }
-            }
-        }
-    }
-    
     /// Update analytics on the main queue, then persist.
     func updateAnalytics(correctShots: Int,
                          missedShots: Int,
@@ -223,14 +197,6 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         updated.lifetimeMissedShots      += missedShots
         updated.lifetimeTotalTimePlayed  += gameTimePlayed
                 
-        // Perfect games
-        if missedShots == 0 {
-            updated.lifetimePerfectGamesCount += 1
-            updated.lifetimeLongestPerfectGamesStreak += 1
-        } else {
-            updated.lifetimeLongestPerfectGamesStreak = 0
-        }
-        
         // Win streaks
         if didWin {
             updated.lifetimeWinnings      += 1
@@ -240,6 +206,20 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         }
         updated.lifetimeLongestWinningStreak = max(updated.lifetimeLongestWinningStreak, updated.currentWinningStreak)
         
+        // Perfect games Streak
+        if missedShots == 0 {
+            updated.lifetimePerfectGamesCount += 1
+            updated.currentPrefectWinningStreak += 1
+        } else {
+            updated.currentPrefectWinningStreak = 0
+        }
+        updated.lifetimeLongestPerfectGamesStreak = max(updated.lifetimeLongestPerfectGamesStreak, updated.currentPrefectWinningStreak)
+        
+        if updated.lifetimeLongestPerfectGamesStreak == 0,
+           updated.lifetimePerfectGamesCount > 0 {
+            updated.lifetimeLongestPerfectGamesStreak = 1
+        }
+        
         // Achievements
         let achievements = self.getAchievements(updated)
         updated.achievementEarnedIDs   = achievements.ids
@@ -247,65 +227,26 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         print("updateAnalytics with the new values \(updated)")
         // Persist local + remote
         self.analytics = updated
-        Self.saveToUserDefaults(updated, forKey: self.defaultsKey)
-        self.saveAnalytics { result in
-            switch result {
-            case .success():
-                print("=Analytics successfully saved to CloudKit.")
-            case .failure(let error):
-                print("=Error saving analytics: \(error.localizedDescription)")
-            }
-        }
+        try? disk.save(updated, to: filename)
+        saveAnalyticsToCloud()
     }
-    
-    /// Asynchronously save analytics to CloudKit; call completion on main.
-    func saveAnalytics(completion: @escaping (Result<Void, Error>) -> Void) {
+}
+
+// For Migration puposes to be deleted
+extension AnalyticsService {
+    private static func loadFromUserDefaults(forKey key: SimpleDefaults.Key) -> GameAnalytics? {
         print(#function)
-        withICloudAvailability { available in
-            guard available else {
-                print("available: \(available)")
-                completion(.failure(AnalyticsError.iCloudNotAuthorized))
-                return
-            }
-            let copy = self.analytics
-            self.database.fetch(withRecordID: self.recordID) { [weak self] fetchedRecord, error in
-                guard let self = self else { return }
-                
-                let record: CKRecord
-                if let fetched = fetchedRecord {
-                    record = fetched
-                } else {
-                    record = CKRecord(recordType: self.recordType, recordID: self.recordID)
-                }
-                
-                // Snapshot on background is okay since analytics is immutable here
-                record["lifetimeTotalScore"]                  = copy.lifetimeTotalScore        as CKRecordValue
-                record["lifetimeTotalTimePlayed"]             = copy.lifetimeTotalTimePlayed    as CKRecordValue
-                record["lifetimeCorrectShots"]                = copy.lifetimeCorrectShots       as CKRecordValue
-                record["lifetimeMissedShots"]                 = copy.lifetimeMissedShots        as CKRecordValue
-                record["lifetimeWinnings"]                    = copy.lifetimeWinnings           as CKRecordValue
-                record["lifetimeGamesPlayed"]                 = copy.lifetimeGamesPlayed        as CKRecordValue
-                record["lifetimeLongestWinningStreak"]        = copy.lifetimeLongestWinningStreak as CKRecordValue
-                record["currentWinningStreak"]                = copy.currentWinningStreak        as CKRecordValue
-                record["lastGameCorrectShots"]                = copy.lastGameCorrectShots        as CKRecordValue
-                record["lastGameMissedShots"]                 = copy.lastGameMissedShots         as CKRecordValue
-                record["lifetimePerfectGamesCount"]           = copy.lifetimePerfectGamesCount   as CKRecordValue
-                record["lifetimeLongestPerfectGamesStreak"]   = copy.lifetimeLongestPerfectGamesStreak as CKRecordValue
-                record["achievementEarnedIDs"]                = copy.achievementEarnedIDs        as CKRecordValue
-                record["achievementEarnedDates"]              = copy.achievementEarnedDates      as CKRecordValue
-                
-                self.database.save(record) { _, saveError in
-                    DispatchQueue.main.async {
-                        if let err = saveError {
-                            print("DB Saving error: \(err)")
-                            completion(.failure(err))
-                        } else {
-                            print("DB Saving success")
-                            completion(.success(()))
-                        }
-                    }
-                }
-            }
+        guard
+            let data: Data = SimpleDefaults.getValue(forKey: key) else {
+            return nil
+        }
+        do {
+            let data = try JSONDecoder().decode(GameAnalytics.self, from: data)
+            print(data)
+            return data
+        } catch {
+            print("loadFromUserDefaults error! \(error)")
+            return nil
         }
     }
 }

@@ -16,6 +16,7 @@ struct GameAnalytics: Codable {
     var lifetimeGamesPlayed: Int = 0
     var lifetimeLongestWinningStreak: Int = 0
     var currentWinningStreak: Int = 0
+    var currentPrefectWinningStreak: Int = 0
     var lastGameCorrectShots: Int = 0
     var lastGameMissedShots: Int = 0
     var lifetimePerfectGamesCount: Int = 0 
