@@ -137,27 +137,27 @@ struct StatsContentView: View {
             }
             Divider()
             Group {
-                SingleStatRow(label: "Games Played",
+                SingleStatRow(label: "Games played",
                               value: "\(analytics.lifetimeGamesPlayed)")
-                SingleStatRow(label: "Total Wins",
+                SingleStatRow(label: "Total wins",
                               value: "\(analytics.lifetimeWinnings)")
-                SingleStatRow(label: "Total Lost",
+                SingleStatRow(label: "Total lost",
                               value: "\(analytics.totalLost)")
-                SingleStatRow(label: "Best Winning Streak",
+                SingleStatRow(label: "Best winning streak",
                               value: "\(analytics.lifetimeLongestWinningStreak)")
-                SingleStatRow(label: "Total Score",
+                SingleStatRow(label: "Total score",
                               value: "\(analytics.lifetimeTotalScore)")
                 
-                SingleStatRow(label: "Perfect Games",
+                SingleStatRow(label: "Perfect games",
                               value: "\(analytics.lifetimePerfectGamesCount)")
-                SingleStatRow(label: "Longest Perfect-Game Streak",
+                SingleStatRow(label: "Longest perfect-game streak",
                               value: "\(analytics.lifetimeLongestPerfectGamesStreak)")
                 
-                SingleStatRow(label: "Correct Shots",
+                SingleStatRow(label: "Correct shots",
                               value: "\(analytics.lifetimeCorrectShots)")
-                SingleStatRow(label: "Missed Shots",
+                SingleStatRow(label: "Missed shots",
                               value: "\(analytics.lifetimeMissedShots)")
-                SingleStatRow(label: "Overall Accuracy",
+                SingleStatRow(label: "Overall accuracy",
                               value: "\(analytics.overAllAccuracy)")
             }
         }

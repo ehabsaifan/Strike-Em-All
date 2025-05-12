@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct CompStatRow: View {
-    let label: String, value1: String, value2: String
+    let label: String, value1: String, value2: String, emphasize: Bool
     var body: some View {
         HStack {
-            Text(value1).bold()
+            Text(value1)
+                .bold(emphasize)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .foregroundStyle(AppTheme.secondaryColor)
                 .padding(.leading)
@@ -19,11 +20,13 @@ struct CompStatRow: View {
             Spacer()
             Text(label)
                 .font(.caption)
+                .bold(emphasize)
                 .foregroundStyle(AppTheme.accentColor)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .multilineTextAlignment(.center)
             Spacer()
-            Text(value2).bold()
+            Text(value2)
+                .bold(emphasize)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundStyle(AppTheme.secondaryColor)
                 .padding(.trailing)
