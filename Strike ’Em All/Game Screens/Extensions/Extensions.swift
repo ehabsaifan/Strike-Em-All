@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import CryptoKit
 
 extension TimeInterval {
     /// Formats a time interval as `mm:ss` or `hh:mm:ss` depending on `alwaysShowHours`
@@ -105,4 +106,19 @@ extension ClassNameRepresentable {
     var className: String {
         return String(describing: Self.self)
     }
+}
+
+extension String {
+  /// Base64‐URL encode (no “=”, “+”, “/” → “-” “_”)
+    var ckRecordNameSafe: String {
+        // 1️⃣ hash
+        let digest = Insecure.MD5.hash(data: Data(self.utf8))
+        let bytes  = Data(digest)             // 16 bytes
+
+        // 2️⃣ Base64‐URL encode and trim “=”
+        return bytes.base64EncodedString()
+          .replacingOccurrences(of: "+", with: "-")
+          .replacingOccurrences(of: "/", with: "_")
+          .trimmingCharacters(in: CharacterSet(charactersIn: "="))
+      }
 }

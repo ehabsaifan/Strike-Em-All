@@ -35,33 +35,38 @@ extension EnvironmentValues {
 class StrikeEmAllContainer: DIContainer {
     let authService: AuthenticationServiceProtocol
     let gameCenter: GameCenterProtocol
+    let cloud: CloudSyncServiceProtocol
     let playerRepo: PlayerRepositoryProtocol
     let gcReportService: GameCenterReportServiceProtocol
     let disk: Persistence
     let cloudCheckingService: CloudAvailabilityChecking
     
-    private var analyticsCache: [String: AnalyticsServiceProtocol] = [:]
+    private var analyticsCache: [Player: AnalyticsServiceProtocol] = [:]
     
     init() {
+        let cloud = CloudSyncService()
+        let disk = FileStorage()
         self.authService           = GameCenterService.shared
         self.gameCenter            = GameCenterService.shared
-        self.playerRepo            = PlayerService.shared
+        self.disk                  = disk
+        self.cloud                 = cloud
+        self.playerRepo            = PlayerService(disk: disk, cloudSyncService: cloud)
         self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
-        self.disk                  = FileStorage()
         self.cloudCheckingService  = CloudAvailabilityService()
     }
     
     /// 3) Factory that reuses existing services
-    lazy var analyticsFactory: (String) -> AnalyticsServiceProtocol = { [unowned self] recordName in
-        if let existing = analyticsCache[recordName] {
+    lazy var analyticsFactory: (Player) -> AnalyticsServiceProtocol = { [unowned self] player in
+        if let existing = analyticsCache[player] {
             return existing
         }
         let newService = AnalyticsService(
             disk: disk,
-            cloud: CloudSyncService(recordName: recordName),
+            player: player,
+            cloud: cloud,
             availability: cloudCheckingService
         )
-        analyticsCache[recordName] = newService
+        analyticsCache[player] = newService
         return newService
     }
 }
@@ -72,6 +77,7 @@ protocol DIContainer {
     var playerRepo: PlayerRepositoryProtocol { get }
     var gcReportService: GameCenterReportServiceProtocol { get }
     var disk: Persistence { get }
+    var cloud: CloudSyncServiceProtocol { get }
     var cloudCheckingService: CloudAvailabilityChecking { get }
-    var analyticsFactory: (String) -> AnalyticsServiceProtocol { get }
+    var analyticsFactory: (Player) -> AnalyticsServiceProtocol { get }
 }

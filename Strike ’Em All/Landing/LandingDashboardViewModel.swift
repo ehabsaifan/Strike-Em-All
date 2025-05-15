@@ -54,7 +54,8 @@ final class LandingDashboardViewModel: ObservableObject {
     
     private func saveCurrentGCPlayer() {
         let lp = GKLocalPlayer.local
-        let p = Player(id: lp.gamePlayerID,
+        let p = Player(gcPlayerID: lp.gamePlayerID,
+                       id: lp.gamePlayerID.ckRecordNameSafe,
                        name: lp.alias,
                        type: .gameCenter,
                        lastUsed: .init())

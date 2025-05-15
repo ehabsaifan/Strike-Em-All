@@ -83,7 +83,7 @@ final class GameViewModel: ObservableObject {
     private let gameService: GameServiceProtocol
     private let physicsService: PhysicsServiceProtocol
     private let soundService: SoundServiceProtocol
-    private let analyticsFactory: (String) -> AnalyticsServiceProtocol
+    private let analyticsFactory: (Player) -> AnalyticsServiceProtocol
     
     private let gcReportService: GameCenterReportServiceProtocol?
     private let gameCenterService: GameCenterProtocol?
@@ -102,7 +102,7 @@ final class GameViewModel: ObservableObject {
         gameService: GameServiceProtocol,
         physicsService: PhysicsServiceProtocol,
         soundService: SoundServiceProtocol,
-        analyticsFactory: @escaping (String) -> AnalyticsServiceProtocol,
+        analyticsFactory: @escaping (Player) -> AnalyticsServiceProtocol,
         gcReportService: GameCenterReportServiceProtocol?,
         gameCenterService: GameCenterProtocol?,
         gameScene: GameScene
@@ -131,7 +131,7 @@ final class GameViewModel: ObservableObject {
             gameCenterService?.isAuthenticatedSubject.value == true {
             gcReportService1 = gcReportService
         }
-        let analytics1 = analyticsFactory(config.player1.id)
+        let analytics1 = analyticsFactory(config.player1)
         self.scoreManagerPlayer1 = ScoreService(
             calculator: config.timerEnabled ?
             TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
@@ -145,7 +145,7 @@ final class GameViewModel: ObservableObject {
                 gameCenterService?.isAuthenticatedSubject.value == true {
                 gcReportService2 = gcReportService
             }
-            let analytics2 = analyticsFactory(secPlayer.id)
+            let analytics2 = analyticsFactory(secPlayer)
             self.scoreManagerPlayer2 = ScoreService(
                 calculator:  config.timerEnabled ?
                 TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
