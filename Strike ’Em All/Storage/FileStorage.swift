@@ -35,6 +35,7 @@ class FileStorage: Persistence {
         do {
             let data = try JSONEncoder().encode(object)
             try data.write(to: url, options: [.atomic])
+            print("FileStorage.save(\"\(filename)\") success")
         } catch {
             print("FileStorage.save(\"\(filename)\") error: \(error)")
             throw error
@@ -54,6 +55,7 @@ class FileStorage: Persistence {
         do {
             let data = try Data(contentsOf: url)
             let object = try JSONDecoder().decode(type, from: data)
+            print("FileStorage.load(\"\(filename)\") success")
             return object
         } catch {
             print("FileStorage.load(\"\(filename)\") error: \(error)")

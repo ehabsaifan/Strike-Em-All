@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import CloudKit
 
 protocol PlayerRepositoryProtocol {
     var playersSubject: CurrentValueSubject<[Player], Never> { get }
@@ -18,89 +19,122 @@ protocol PlayerRepositoryProtocol {
 }
 
 final class PlayerService: ObservableObject, ClassNameRepresentable {
-    static let shared = PlayerService()
     let playersSubject = CurrentValueSubject<[Player], Never>([])
-    private let playersKey = "SavedPlayers"
-    private let kvStore = NSUbiquitousKeyValueStore.default
+    private let cloud: CloudSyncServiceProtocol
+    private let filename: String
+    private let disk: Persistence
     
-    private init() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(ubiquitousKeysDidChange),
-            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
-            object: kvStore
-        )
-        loadPlayers()
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    private func savePlayers(_ list: [Player]) {
-        let snapshot = list
-        DispatchQueue.global(qos: .background).async {
-            do {
-                let data = try JSONEncoder().encode(snapshot)
-                UserDefaults.standard.set(data, forKey: self.playersKey)
-                self.kvStore.set(data, forKey: self.playersKey)
-                self.kvStore.synchronize()
-            } catch {
-                print(error)
-            }
-        }
-    }
-    
-    private func loadPlayers() {
-        DispatchQueue.global(qos: .background).async {
-            let data = self.kvStore.data(forKey: self.playersKey)
-            ?? UserDefaults.standard.data(forKey: self.playersKey)
-            
-            let list: [Player]
-            if let data {
-                do {
-                    let decoded = try JSONDecoder().decode([Player].self, from: data)
-                    list = decoded.sorted { $0.lastUsed > $1.lastUsed }
-                } catch {
-                    print(error)
-                    list = []
+    init(disk: Persistence,
+         cloudSyncService: CloudSyncServiceProtocol) {
+        self.disk = disk
+        self.cloud = cloudSyncService
+        self.filename = "players.json"
+        
+        loadLocalPlayers { [weak self] in
+            guard let self = self else { return }
+            self.cloud.fetchAll(ofType: Player.self) { [weak self] result in
+                guard let self = self else { return }
+                switch result {
+                case .failure(let err):
+                    print("⚠️ couldn’t fetch players from CloudKit: \(err)")
+                case .success(let cloudPlayers):
+                    self.merge(cloudPlayers: cloudPlayers)
+                    try? self.disk.save(self.playersSubject.value, to: self.filename)
+                    self.saveToCloud()
                 }
-            } else {
-                list = []
             }
+            
+        }
+    }
+    
+    private func loadLocalPlayers(completion: (() -> Void)? = nil) {
+        DispatchQueue.global(qos: .background).async {
+            var diskPlayers = (try? self.disk.load([Player].self, from: self.filename)) ?? []
+            diskPlayers.sort { $0.lastUsed > $1.lastUsed }
+            
             DispatchQueue.main.async {
-                self.playersSubject.send(list)
+                self.playersSubject.send(diskPlayers)
+                completion?()
             }
         }
     }
     
-    @objc private func ubiquitousKeysDidChange(_ note: Notification) {
-        loadPlayers()
+    private func saveToCloud(completion: (() -> Void)? = nil) {
+        let list = playersSubject.value.map { p in
+            let id = CKRecord.ID(recordName: p.id)
+            return (obj: p, recordID: id)
+        }
+        
+        cloud.saveRecords(list) { _ in
+            completion?()
+        }
+    }
+    
+    private func merge(cloudPlayers: [Player]) {
+        var byID = Dictionary(uniqueKeysWithValues: playersSubject.value.map { ($0.id,$0) })
+        for p in cloudPlayers { byID[p.id] = p }
+        let merged = Array(byID.values).sorted { $0.lastUsed > $1.lastUsed }
+        DispatchQueue.main.async {
+            self.playersSubject.send(merged)
+        }
+    }
+    
+    private func savePlayersToDisk(_ list: [Player]) {
+       try? self.disk.save(list, to: self.filename)
+    }
+    
+    private func savePlayerToCloud(_ player: Player) {
+        // And push just this one up to CloudKit
+        let recordID = CKRecord.ID(recordName: player.id)
+        cloud.saveRecord(player, recordID: recordID) { result in
+            switch result {
+            case .success:
+                print("✓ pushed player \(player.name) to CloudKit")
+            case .failure(let err):
+                print("⚠️ failed to push \(player.name) to CloudKit:", err)
+            }
+        }
+    }
+    
+    private func deletePlayerFromCloud(_ player: Player) {
+        let rid = CKRecord.ID(recordName: player.id)
+        cloud.deleteRecord(recordID: rid) { result in
+            switch result {
+            case .success:
+                print("✓ deleted \(player.name) from CloudKit")
+            case .failure(let err):
+                print("⚠️ could not delete from CloudKit:", err)
+            }
+        }
     }
 }
 
 // MARK: - PlayerRepositoryProtocol
 extension PlayerService: PlayerRepositoryProtocol {
-    func reload() { loadPlayers() }
+    func reload() { loadLocalPlayers() }
     
     func getLastUsed() -> Player? { playersSubject.value.first }
     
     func save(_ player: Player) {
-        var current = playersSubject.value
-        if let idx = current.firstIndex(where: { $0.id == player.id }) {
-            current[idx].name = player.name
-            current[idx].lastUsed = Date()
+        print("save: \(player.name)")
+        var list = playersSubject.value
+        if let idx = list.firstIndex(where: { $0.id == player.id }) {
+            list[idx].name     = player.name
+            list[idx].lastUsed = Date()
         } else {
-            current.append(player)
+            list.append(player)
         }
-        let updated = current.sorted { $0.lastUsed > $1.lastUsed }
-        playersSubject.send(updated)
-        savePlayers(updated)
+        list.sort { $0.lastUsed > $1.lastUsed }
+        playersSubject.send(list)
+        savePlayersToDisk(list)
+        savePlayerToCloud(player)
     }
     
     func delete(_ player: Player) {
+        print("delete: \(player.name)")
         let updated = playersSubject.value.filter { $0.id != player.id }
         playersSubject.send(updated)
-        savePlayers(updated)
+        savePlayersToDisk(updated)
+        deletePlayerFromCloud(player)
     }
 }

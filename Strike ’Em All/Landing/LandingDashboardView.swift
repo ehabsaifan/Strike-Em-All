@@ -155,7 +155,6 @@ struct LandingDashboardView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
                     Spacer()
                     
                     SmallActionButton(

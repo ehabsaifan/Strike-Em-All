@@ -27,40 +27,41 @@ final class AnalyticsService: ObservableObject {
         }
     }
     
-    private let disk: Persistence
-    private let cloud: CloudSync
+    private let player: Player
     private let filename: String
+    private let disk: Persistence
+    private let cloud: CloudSyncServiceProtocol
     private let availability: CloudAvailabilityChecking
-    
-    // To be removed after migration
-    private let defaultsKey: SimpleDefaults.Key
     
     private var cancellables = Set<AnyCancellable>()
     
+    private var recordID: CKRecord.ID {
+        CKRecord.ID(recordName: recordName)
+    }
+    
+    private var recordName: String {
+        "\(player.id)_analytics"
+    }
+    
     init(disk: Persistence,
-         cloud: CloudSync,
+         player: Player,
+         cloud: CloudSyncServiceProtocol,
          availability: CloudAvailabilityChecking = CloudAvailabilityService()) {
+        self.player = player
         self.disk = disk
         self.cloud = cloud
         self.availability = availability
-        self.filename = "\(cloud.userID)_analytics.json"
-        
-        // To be removed after migration
-        self.defaultsKey = .gameAnalyticsData(cloud.userID)
-        
+        self.filename = "\(player.id)_analytics.json"
+       
         var initail = GameAnalytics()
+        print("Initial analytics \(initail)")
         if let stored = try? disk.load(GameAnalytics.self, from: filename) {
             initail = stored
+            print("From file analytics \(initail)")
         }
         
         analytics = initail
         analyticsPublisher = CurrentValueSubject(initail)
-        
-        // To be removed after migration
-        if let old = AnalyticsService.loadFromUserDefaults(forKey: self.defaultsKey) {
-            mergeAnalytics(old, initail)
-            try? disk.save(analytics, to: filename)
-        }
         
         availability
             .iCloudAvailability()
@@ -73,33 +74,23 @@ final class AnalyticsService: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func saveAnalyticsToCloud() {
-        availability
-            .iCloudAvailability()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] available in
-                guard let self else  { return }
-                if available {
-                    self.cloud.saveAnalyticsRecord(self.analytics) { reslt in
-                        switch reslt {
-                        case .success:
-                            print("Saving analytics success")
-                        case .failure:
-                            print("Saving analytics error")
-                        }
-                    }
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
     private func loadFromCloudKit() {
-        cloud.fetchAnalyticsRecord { [weak self] result in
+        cloud.fetchRecord(recordID: recordID) { [weak self] (result: Result<GameAnalytics, Error>) in
             guard let self = self else { return }
-            if case let .success(cloudAnalytics) = result {
+            switch result {
+            case let .success(cloudAnalytics):
+                print("Load analytics success")
                 self.mergeAnalytics(cloudAnalytics, self.analytics)
                 try? self.disk.save(self.analytics, to: filename)
                 self.saveAnalyticsToCloud()
+            case .failure(let error as CKError) where error.code == .unknownItem:
+                // no record exists yet—upload our initial analytics
+                print("No cloud record yet; uploading initial analytics…")
+                self.saveAnalyticsToCloud()
+                
+            case .failure(let error):
+                // some other error
+                print("Load analytics error \(recordName): \(error)")
             }
         }
     }
@@ -152,6 +143,7 @@ final class AnalyticsService: ObservableObject {
         merged.achievementEarnedDates = sortedIDs.map { dateByID[$0]! }
         
         analytics = merged
+        print("Merged complete \(analytics)")
     }
     
     private func getAchievements(_ analytics: GameAnalytics)-> (dates: [Date], ids: [String]) {
@@ -174,6 +166,27 @@ final class AnalyticsService: ObservableObject {
         + Array(repeating: Date(), count: newIDs.count)
         
         return (dates: combinedDates, ids: combinedIDs)
+    }
+    
+    private func saveAnalyticsToCloud() {
+        availability
+            .iCloudAvailability()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] available in
+                guard let self else  { return }
+                if available {
+                    print("Trying to save \(self.analytics)")
+                    self.cloud.saveRecord(self.analytics, recordID: recordID) { reslt in
+                        switch reslt {
+                        case .success:
+                            print("Saving analytics success")
+                        case .failure:
+                            print("Saving analytics error")
+                        }
+                    }
+                }
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -224,29 +237,10 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         let achievements = self.getAchievements(updated)
         updated.achievementEarnedIDs   = achievements.ids
         updated.achievementEarnedDates = achievements.dates
-        print("updateAnalytics with the new values \(updated)")
-        // Persist local + remote
+        
         self.analytics = updated
+        print("Update complete! \(analytics)")
         try? disk.save(updated, to: filename)
         saveAnalyticsToCloud()
-    }
-}
-
-// For Migration puposes to be deleted
-extension AnalyticsService {
-    private static func loadFromUserDefaults(forKey key: SimpleDefaults.Key) -> GameAnalytics? {
-        print(#function)
-        guard
-            let data: Data = SimpleDefaults.getValue(forKey: key) else {
-            return nil
-        }
-        do {
-            let data = try JSONDecoder().decode(GameAnalytics.self, from: data)
-            print(data)
-            return data
-        } catch {
-            print("loadFromUserDefaults error! \(error)")
-            return nil
-        }
     }
 }

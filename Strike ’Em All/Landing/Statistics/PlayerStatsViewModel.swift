@@ -14,8 +14,8 @@ class PlayerStatsViewModel: ObservableObject {
     let analyticsService: AnalyticsServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(player: Player, analyticsFactory: (String) -> AnalyticsServiceProtocol) {
-        self.analyticsService = analyticsFactory(player.id)
+    init(player: Player, analyticsFactory: (Player) -> AnalyticsServiceProtocol) {
+        self.analyticsService = analyticsFactory(player)
         analyticsService.analyticsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] result in

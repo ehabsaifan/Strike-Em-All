@@ -29,7 +29,7 @@ struct PlayerResultInfo: Codable {
 }
 
 struct GameResultInfo: Codable, Identifiable {
-    var id = UUID()
+    var id = UUID().uuidString
     let endState: GameViewModel.EndState
     let timePlayed: TimeInterval
     let player1Info: PlayerResultInfo
