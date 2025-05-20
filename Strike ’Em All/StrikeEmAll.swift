@@ -13,6 +13,15 @@ struct StrikeEmAll: App {
     
     let container = StrikeEmAllContainer()
     
+    init() {
+        SimpleDefaults.setEnum(LogLevel.info, forKey: .loggingLevel)
+        SimpleDefaults.setValue(true, forKey: .loggingEnabled)
+        FileLogger.shared.start(
+            minLevel: SimpleDefaults.getEnum(forKey: .loggingLevel) ?? .debug,
+            enabled: SimpleDefaults.getValue(forKey: .loggingEnabled) ?? false,
+            metadata: LogFileHeader())
+    }
+    
     var body: some Scene {
         WindowGroup {
             LandingDashboardView(container: container)

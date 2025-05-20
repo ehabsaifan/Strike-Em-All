@@ -60,14 +60,14 @@ class CloudSyncService: CloudSyncServiceProtocol {
         database.fetch(withRecordID: recordID) { record, error in
             let result: Result<T, Error>
             if let error = error {
-                print("DB load error. \(error)")
+                FileLogger.shared.log("DB load error \(recordID.recordName). \(error)", level: .error)
                 result = .failure(error)
             } else if let record = record,
                       let loaded = T(record: record) {
-                print("DB load success: \(loaded)")
+                FileLogger.shared.log("DB load success. \(recordID.recordName)", level: .debug)
                 result = .success(loaded)
             } else {
-                print("DB load error. Record not found")
+                FileLogger.shared.log("DB load error. Record not found", level: .error)
                 result = .failure(CloudSyncError.recordFound)
             }
             DispatchQueue.main.async {
@@ -78,8 +78,7 @@ class CloudSyncService: CloudSyncServiceProtocol {
     
     func fetchAll<T: CKRecordConvertible>(
         ofType type: T.Type,
-        completion: @escaping (Result<[T],Error>) -> Void
-    ) {
+        completion: @escaping (Result<[T],Error>) -> Void) {
         var accumulator = [T]()
         
         let query = CKQuery(
@@ -97,19 +96,19 @@ class CloudSyncService: CloudSyncServiceProtocol {
                           >) -> Void = { pageResult in
                 switch pageResult {
                 case .failure(let err):
-                    print("Fetch all record error. \(err)")
+                    FileLogger.shared.log("Fetch all record error \(query.recordType). \(err)", level: .error)
                     DispatchQueue.main.async { completion(.failure(err)) }
                 case .success(let (matches, nextCursor)):
                     for (_, recordRes) in matches {
                         if case let .success(rec) = recordRes {
                             if let obj = T(record: rec) {
-                                print("Fetch all record success \(obj)")
                                 accumulator.append(obj)
+                                FileLogger.shared.log("Fetch record success. \(obj)", level: .debug)
                             } else {
-                                print("Could not be converted")
+                                FileLogger.shared.log("Fetch record failed to be converted of type \(type)", level: .error)
                             }
                         } else {
-                            print("Fetch all record failed \(recordRes)")
+                            FileLogger.shared.log("Fetch record failed \(recordRes)", level: .error)
                         }
                     }
                     if let next = nextCursor {
@@ -142,10 +141,10 @@ class CloudSyncService: CloudSyncServiceProtocol {
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    print("Saving record success \(object)")
+                    FileLogger.shared.log("Saving record success \(object)", level: .debug)
                     completion(.success(()))
                 case .failure(let error):
-                    print("Saving record error \(object). \(error)")
+                    FileLogger.shared.log("Saving record error \(object)", level: .error)
                     completion(.failure(error))
                 }
             }
@@ -167,10 +166,10 @@ class CloudSyncService: CloudSyncServiceProtocol {
                 DispatchQueue.main.async {
                     switch result {
                     case .success:
-                        print("saveRecords success")
+                        FileLogger.shared.log("Saving records success \(objects)", level: .debug)
                         completion(.success(()))
                     case .failure(let err):
-                        print("saveRecords faild", err)
+                        FileLogger.shared.log("Saving records error \(err)", level: .error)
                         completion(.failure(err))
                     }
                 }
@@ -186,10 +185,10 @@ class CloudSyncService: CloudSyncServiceProtocol {
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    print("Deleted record \(recordID)")
+                    FileLogger.shared.log("Deleted record \(recordID) success", level: .debug)
                     completion(.success(()))
                 case .failure(let err):
-                    print("Failed to delete \(recordID):", err)
+                    FileLogger.shared.log("Failed to delete \(recordID). \(err)", level: .debug)
                     completion(.failure(err))
                 }
             }
