@@ -38,11 +38,15 @@ extension GameCenterService: AuthenticationServiceProtocol {
     func authenticate(completion: @escaping (Bool, Error?) -> Void) {
         GKLocalPlayer.local.authenticateHandler = { viewController, error in
             DispatchQueue.main.async {
+                if let error {
+                    FileLogger.shared.log("Authentication error. \(error)", level: .error)
+                }
                 if let vc = viewController {
                     UIApplication.shared.rootVC?.present(vc, animated: true) {
                         completion(false, nil)
                     }
                 } else if GKLocalPlayer.local.isAuthenticated {
+                    FileLogger.shared.log("Authentication success", level: .debug)
                     self.isAuthenticatedSubject.send(true)
                     completion(true, nil)
                 } else {
@@ -57,6 +61,7 @@ extension GameCenterService: AuthenticationServiceProtocol {
 // MARK: - GameCenterProtocol
 extension GameCenterService: GameCenterProtocol {
     func report(_ val: Int, board: GameCenterLeaderBoardID) {
+        
         let scoreReporter = GKLeaderboardScore()
         scoreReporter.leaderboardID = board.rawValue
         scoreReporter.value = val
@@ -66,21 +71,22 @@ extension GameCenterService: GameCenterProtocol {
                                   leaderboardIDs: [board.rawValue]) { error in
             
             if let error = error {
-                print("Error reporting \(val) to \(board.rawValue): \(error.localizedDescription)")
+                FileLogger.shared.log("Error reporting \(val) to \(board.rawValue): \(error.localizedDescription)", level: .error)
             } else {
-                print("Reported: \(val) to \(board.rawValue)")
+                FileLogger.shared.log("Report board \(board) with val \(val)", level: .debug)
             }
         }
     }
     
     func reportAchievement(achievment: GameCenterAchievment, percentComplete: Double = 100) {
+        
         let achievement = GKAchievement(identifier: achievment.rawValue)
         achievement.percentComplete = percentComplete
         GKAchievement.report([achievement]) { error in
             if let error = error {
-                print("Error reporting achievement: \(error.localizedDescription)")
+                FileLogger.shared.log("Error reporting achievement: \(error.localizedDescription)", level: .error)
             } else {
-                print("Achievement reported: \(achievment)")
+                FileLogger.shared.log("Report achievement \(achievment) with percentComplete \(percentComplete)", level: .debug)
             }
         }
     }
@@ -94,9 +100,9 @@ extension GameCenterService: GameCenterProtocol {
         
         GKAchievement.report(gcAchievements) { error in
             if let error = error {
-                print("Error reporting achievement: \(error.localizedDescription)")
+                FileLogger.shared.log("Error reporting achievements: \(error.localizedDescription)", level: .error)
             } else {
-                print("Achievement reported: \(achievements)")
+                FileLogger.shared.log("Report achievements \(gcAchievements) ", level: .debug)
             }
         }
     }

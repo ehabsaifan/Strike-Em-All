@@ -24,7 +24,7 @@ class FileStorage: Persistence {
             self.folder = url
         } else {
             self.folder = fm.temporaryDirectory
-            print("⚠️ Couldn’t create documents folder, using temp:", folder)
+            FileLogger.shared.log("⚠️ Couldn’t create documents folder, using temp: \(folder)", level: .error)
         }
     }
     
@@ -35,9 +35,8 @@ class FileStorage: Persistence {
         do {
             let data = try JSONEncoder().encode(object)
             try data.write(to: url, options: [.atomic])
-            print("FileStorage.save(\"\(filename)\") success")
         } catch {
-            print("FileStorage.save(\"\(filename)\") error: \(error)")
+            FileLogger.shared.log("Save \(filename) error. \(error)", object: object, level: .error)
             throw error
         }
     }
@@ -48,17 +47,16 @@ class FileStorage: Persistence {
         let url = folder.appendingPathComponent(filename, isDirectory: false)
         
         guard FileManager.default.fileExists(atPath: url.path) else {
-            print("FileStorage.load(\"\(filename)\"): no file at path: \(url.path)")
+            FileLogger.shared.log("Filepath doesnt exist at \(url.path)", level: .error)
             return nil
         }
         
         do {
             let data = try Data(contentsOf: url)
             let object = try JSONDecoder().decode(type, from: data)
-            print("FileStorage.load(\"\(filename)\") success")
             return object
         } catch {
-            print("FileStorage.load(\"\(filename)\") error: \(error)")
+            FileLogger.shared.log("Load \(type) from \(filename) error. \(error)", level: .error)
             throw error
         }
     }

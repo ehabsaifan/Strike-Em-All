@@ -80,17 +80,17 @@ final class AnalyticsService: ObservableObject {
             switch result {
             case let .success(cloudAnalytics):
                 print("Load analytics success")
+                FileLogger.shared.log("Load analytics success", level: .debug)
                 self.mergeAnalytics(cloudAnalytics, self.analytics)
                 try? self.disk.save(self.analytics, to: filename)
                 self.saveAnalyticsToCloud()
             case .failure(let error as CKError) where error.code == .unknownItem:
                 // no record exists yet—upload our initial analytics
-                print("No cloud record yet; uploading initial analytics…")
+                FileLogger.shared.log("No cloud record yet; uploading initial analytics…", level: .error)
                 self.saveAnalyticsToCloud()
                 
             case .failure(let error):
-                // some other error
-                print("Load analytics error \(recordName): \(error)")
+                FileLogger.shared.log("Load analytics error \(recordName): \(error)", level: .error)
             }
         }
     }
@@ -143,7 +143,7 @@ final class AnalyticsService: ObservableObject {
         merged.achievementEarnedDates = sortedIDs.map { dateByID[$0]! }
         
         analytics = merged
-        print("Merged complete \(analytics)")
+        FileLogger.shared.log("Merged complete!", object: analytics, level: .debug)
     }
     
     private func getAchievements(_ analytics: GameAnalytics)-> (dates: [Date], ids: [String]) {
@@ -175,14 +175,8 @@ final class AnalyticsService: ObservableObject {
             .sink { [weak self] available in
                 guard let self else  { return }
                 if available {
-                    print("Trying to save \(self.analytics)")
-                    self.cloud.saveRecord(self.analytics, recordID: recordID) { reslt in
-                        switch reslt {
-                        case .success:
-                            print("Saving analytics success")
-                        case .failure:
-                            print("Saving analytics error")
-                        }
+                    self.cloud.saveRecord(self.analytics, recordID: recordID) { _ in
+                        // No info
                     }
                 }
             }
@@ -200,7 +194,6 @@ extension AnalyticsService: AnalyticsServiceProtocol {
                          finalScore: Int,
                          gameTimePlayed: Double) {
         var updated = self.analytics
-        print("correctShots \(correctShots) | missedShots \(missedShots)")
         // Update lifetime metrics
         updated.lifetimeTotalScore       += finalScore
         updated.lifetimeGamesPlayed      += 1
@@ -239,7 +232,7 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         updated.achievementEarnedDates = achievements.dates
         
         self.analytics = updated
-        print("Update complete! \(analytics)")
+        FileLogger.shared.log("Update complete!", object: analytics, level: .debug)
         try? disk.save(updated, to: filename)
         saveAnalyticsToCloud()
     }

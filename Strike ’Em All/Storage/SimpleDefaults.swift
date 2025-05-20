@@ -14,6 +14,8 @@ struct SimpleDefaults {
         case savedPlayers
         case rollingObject
         case achievements(String)
+        case loggingEnabled
+        case loggingLevel
         
         var keyString: String {
             switch self {

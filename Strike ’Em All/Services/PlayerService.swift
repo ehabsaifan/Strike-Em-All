@@ -35,8 +35,8 @@ final class PlayerService: ObservableObject, ClassNameRepresentable {
             self.cloud.fetchAll(ofType: Player.self) { [weak self] result in
                 guard let self = self else { return }
                 switch result {
-                case .failure(let err):
-                    print("⚠️ couldn’t fetch players from CloudKit: \(err)")
+                case .failure:
+                    break
                 case .success(let cloudPlayers):
                     self.merge(cloudPlayers: cloudPlayers)
                     try? self.disk.save(self.playersSubject.value, to: self.filename)
@@ -86,25 +86,15 @@ final class PlayerService: ObservableObject, ClassNameRepresentable {
     private func savePlayerToCloud(_ player: Player) {
         // And push just this one up to CloudKit
         let recordID = CKRecord.ID(recordName: player.id)
-        cloud.saveRecord(player, recordID: recordID) { result in
-            switch result {
-            case .success:
-                print("✓ pushed player \(player.name) to CloudKit")
-            case .failure(let err):
-                print("⚠️ failed to push \(player.name) to CloudKit:", err)
-            }
+        cloud.saveRecord(player, recordID: recordID) { _ in
+            // Nothing
         }
     }
     
     private func deletePlayerFromCloud(_ player: Player) {
         let rid = CKRecord.ID(recordName: player.id)
-        cloud.deleteRecord(recordID: rid) { result in
-            switch result {
-            case .success:
-                print("✓ deleted \(player.name) from CloudKit")
-            case .failure(let err):
-                print("⚠️ could not delete from CloudKit:", err)
-            }
+        cloud.deleteRecord(recordID: rid) { _ in
+           // Nothing
         }
     }
 }
@@ -116,7 +106,6 @@ extension PlayerService: PlayerRepositoryProtocol {
     func getLastUsed() -> Player? { playersSubject.value.first }
     
     func save(_ player: Player) {
-        print("save: \(player.name)")
         var list = playersSubject.value
         if let idx = list.firstIndex(where: { $0.id == player.id }) {
             list[idx].name     = player.name
@@ -131,7 +120,6 @@ extension PlayerService: PlayerRepositoryProtocol {
     }
     
     func delete(_ player: Player) {
-        print("delete: \(player.name)")
         let updated = playersSubject.value.filter { $0.id != player.id }
         playersSubject.send(updated)
         savePlayersToDisk(updated)
