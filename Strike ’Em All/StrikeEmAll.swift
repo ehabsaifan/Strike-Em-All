@@ -14,7 +14,7 @@ struct StrikeEmAll: App {
     let container = StrikeEmAllContainer()
     
     init() {
-        SimpleDefaults.setEnum(LogLevel.info, forKey: .loggingLevel)
+        SimpleDefaults.setEnum(LogLevel.verbose, forKey: .loggingLevel)
         SimpleDefaults.setValue(true, forKey: .loggingEnabled)
         FileLogger.shared.start(
             minLevel: SimpleDefaults.getEnum(forKey: .loggingLevel) ?? .debug,
@@ -47,19 +47,20 @@ class StrikeEmAllContainer: DIContainer {
     let cloud: CloudSyncServiceProtocol
     let playerRepo: PlayerRepositoryProtocol
     let gcReportService: GameCenterReportServiceProtocol
-    let disk: Persistence
+    let analyticsDisk: Persistence
     let cloudCheckingService: CloudAvailabilityChecking
     
     private var analyticsCache: [Player: AnalyticsServiceProtocol] = [:]
     
     init() {
         let cloud = CloudSyncService()
-        let disk = FileStorage()
+        let analyticsDisk = FileStorage(subfolder: "Analytics")
+        let playersDisk   = FileStorage(subfolder: "Players")
         self.authService           = GameCenterService.shared
         self.gameCenter            = GameCenterService.shared
-        self.disk                  = disk
+        self.analyticsDisk         = analyticsDisk
         self.cloud                 = cloud
-        self.playerRepo            = PlayerService(disk: disk, cloudSyncService: cloud)
+        self.playerRepo            = PlayerService(disk: playersDisk, cloudSyncService: cloud)
         self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
         self.cloudCheckingService  = CloudAvailabilityService()
     }
@@ -70,7 +71,7 @@ class StrikeEmAllContainer: DIContainer {
             return existing
         }
         let newService = AnalyticsService(
-            disk: disk,
+            disk: analyticsDisk,
             player: player,
             cloud: cloud,
             availability: cloudCheckingService
@@ -85,7 +86,7 @@ protocol DIContainer {
     var authService: AuthenticationServiceProtocol { get }
     var playerRepo: PlayerRepositoryProtocol { get }
     var gcReportService: GameCenterReportServiceProtocol { get }
-    var disk: Persistence { get }
+    var analyticsDisk: Persistence { get }
     var cloud: CloudSyncServiceProtocol { get }
     var cloudCheckingService: CloudAvailabilityChecking { get }
     var analyticsFactory: (Player) -> AnalyticsServiceProtocol { get }

@@ -48,7 +48,7 @@ class SoundService: SoundServiceProtocol, ClassNameRepresentable {
                         audioPlayers[event] = [player]
                     }
                 } catch {
-                    FileLogger.shared.log("Error loading sound for \(event)", level: .error)
+                    FileLogger.shared.log("Error loading sound for \(event). \(error)", level: .error)
                 }
             } else {
                 FileLogger.shared.log("Cant find a resource at the path \(fileName)", level: .error)

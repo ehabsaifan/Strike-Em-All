@@ -238,17 +238,17 @@ class PreviewContainer: DIContainer {
     let cloud: CloudSyncServiceProtocol
     let playerRepo: PlayerRepositoryProtocol
     let gcReportService: GameCenterReportServiceProtocol
-    let disk: Persistence
+    let analyticsDisk: Persistence
     let cloudCheckingService: CloudAvailabilityChecking
     
     private var analyticsCache: [Player: AnalyticsServiceProtocol] = [:]
     
     init() {
         let cloud = CloudSyncService()
-        let disk = FileStorage()
+        let disk = FileStorage(subfolder: "Preview")
         self.authService           = GameCenterService.shared
         self.gameCenter            = GameCenterService.shared
-        self.disk                  = FileStorage()
+        self.analyticsDisk         = FileStorage()
         self.cloud                 = cloud
         self.playerRepo            = PlayerService(disk: disk, cloudSyncService: cloud)
         self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
@@ -261,7 +261,7 @@ class PreviewContainer: DIContainer {
             return existing
         }
         let newService = AnalyticsService(
-            disk: disk,
+            disk: analyticsDisk,
             player: player,
             cloud: cloud,
             availability: cloudCheckingService

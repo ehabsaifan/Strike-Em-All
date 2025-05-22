@@ -28,7 +28,6 @@ class LaunchAreaViewModel: ObservableObject {
     /// For a human pull, the UI updates `dragOffset` and on release sets `launchImpulse`.
     /// For computer simulation, we generate a random drag offset and compute an impulse.
     func simulateComputerPull(completion: @escaping () -> Void) {
-        print("simulateComputerPull")
         // Generate a random drag offset simulating a pull.
         // Adjust ranges to taste.
         let randomWidth = CGFloat.random(in: -50...50)

@@ -50,13 +50,11 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
     
     func recordScore(atRow row: Int, player: Player) {
         gameCorrectShots += 1
-        print("Correct shot now \(gameCorrectShots)")
         scoreCalculator.recordScore(atRow: row)
     }
     
     func missedShot(player: Player) {
         gameMissedShots += 1
-        print("Missed shot now \(gameMissedShots)")
         scoreCalculator.missedShot()
     }
     
@@ -73,7 +71,6 @@ class ScoreService: ScoreServiceProtocol, ObservableObject {
                                          gameTimePlayed: gameTimePlayed!)
         
         gcReportService?.gameEnded(score: finalScore, analytics: analyticsService.analyticsPublisher.value)
-        print(finalScore)
         completion(finalScore)
     }
 }

@@ -71,7 +71,7 @@ extension UIApplication {
             .connectedScenes
             .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
               let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
-            print("⚠️ Unable to find rootViewController to present Game Center")
+            FileLogger.shared.log("Unable to find rootViewController", level: .error)
             return nil
         }
         return rootVC
@@ -121,4 +121,24 @@ extension String {
           .replacingOccurrences(of: "/", with: "_")
           .trimmingCharacters(in: CharacterSet(charactersIn: "="))
       }
+}
+
+extension FileManager {
+  static var analyticsDir: URL {
+    let docs = FileManager.default
+      .urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let dir  = docs.appendingPathComponent("Analytics", isDirectory: true)
+    try? FileManager.default.createDirectory(at: dir,
+                                            withIntermediateDirectories: true)
+    return dir
+  }
+    
+  static var playersDir: URL {
+    let docs = FileManager.default
+      .urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let dir  = docs.appendingPathComponent("Players", isDirectory: true)
+    try? FileManager.default.createDirectory(at: dir,
+                                            withIntermediateDirectories: true)
+    return dir
+  }
 }

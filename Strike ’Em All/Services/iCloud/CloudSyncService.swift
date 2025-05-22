@@ -100,15 +100,16 @@ class CloudSyncService: CloudSyncServiceProtocol {
                     DispatchQueue.main.async { completion(.failure(err)) }
                 case .success(let (matches, nextCursor)):
                     for (_, recordRes) in matches {
-                        if case let .success(rec) = recordRes {
+                        switch recordRes {
+                        case .success(let rec):
                             if let obj = T(record: rec) {
                                 accumulator.append(obj)
                                 FileLogger.shared.log("Fetch record success. \(obj)", level: .debug)
                             } else {
                                 FileLogger.shared.log("Fetch record failed to be converted of type \(type)", level: .error)
                             }
-                        } else {
-                            FileLogger.shared.log("Fetch record failed \(recordRes)", level: .error)
+                        case .failure(let error):
+                            FileLogger.shared.log("Fetch record failed. \(error)!", level: .error)
                         }
                     }
                     if let next = nextCursor {
@@ -144,7 +145,7 @@ class CloudSyncService: CloudSyncServiceProtocol {
                     FileLogger.shared.log("Saving record success \(object)", level: .debug)
                     completion(.success(()))
                 case .failure(let error):
-                    FileLogger.shared.log("Saving record error \(object)", level: .error)
+                    FileLogger.shared.log("Saving record error \(object). \(error)", level: .error)
                     completion(.failure(error))
                 }
             }
@@ -264,7 +265,7 @@ extension Player: CKRecordConvertible {
     /// Initialize a Player from a fetched CKRecord
     init?(record: CKRecord) {
         guard record.recordType == Self.recordType else {
-            print("Wrong conversion")
+            FileLogger.shared.log("Error converting \(record.recordType) to \(Self.recordType)", level: .error)
             return nil
         }
         guard
