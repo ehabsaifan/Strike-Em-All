@@ -54,10 +54,8 @@ final class AnalyticsService: ObservableObject {
         self.filename = "\(player.id)_analytics.json"
        
         var initail = GameAnalytics()
-        print("Initial analytics \(initail)")
-        if let stored = try? disk.load(GameAnalytics.self, from: filename) {
+        if player != computer, let stored = try? disk.load(GameAnalytics.self, from: filename) {
             initail = stored
-            print("From file analytics \(initail)")
         }
         
         analytics = initail
@@ -75,11 +73,13 @@ final class AnalyticsService: ObservableObject {
     }
     
     private func loadFromCloudKit() {
+        guard player != computer else {
+            return
+        }
         cloud.fetchRecord(recordID: recordID) { [weak self] (result: Result<GameAnalytics, Error>) in
             guard let self = self else { return }
             switch result {
             case let .success(cloudAnalytics):
-                print("Load analytics success")
                 FileLogger.shared.log("Load analytics success", level: .debug)
                 self.mergeAnalytics(cloudAnalytics, self.analytics)
                 try? self.disk.save(self.analytics, to: filename)
@@ -169,6 +169,9 @@ final class AnalyticsService: ObservableObject {
     }
     
     private func saveAnalyticsToCloud() {
+        guard player != computer else {
+            return
+        }
         availability
             .iCloudAvailability()
             .receive(on: DispatchQueue.main)
@@ -233,7 +236,9 @@ extension AnalyticsService: AnalyticsServiceProtocol {
         
         self.analytics = updated
         FileLogger.shared.log("Update complete!", object: analytics, level: .debug)
-        try? disk.save(updated, to: filename)
+        if player != computer {
+            try? disk.save(updated, to: filename)
+        }
         saveAnalyticsToCloud()
     }
 }

@@ -25,6 +25,8 @@ final class FileLogger {
     private let logQueue = DispatchQueue(label: "com.StrikeEmAll.FileLogger")
 
     private var handle: FileHandle!                       // current open handle
+    private var lastHeaderData: Data?
+
     private var docsDir: URL {                           // logs folder
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let dir = docs.appendingPathComponent("Logs", isDirectory: true)
@@ -71,18 +73,21 @@ final class FileLogger {
             handle = try? FileHandle(forUpdating: currentFile)
             handle.seekToEndOfFile()
             if fileSize(at: currentFile) == 0 {
-                writeHeader()
+                writeHeaderIfNeeded()
             }
         }
     }
     
-    private func writeHeader() {
-      let encoder = JSONEncoder()
-      encoder.dateEncodingStrategy = .iso8601
-      if let data = try? encoder.encode(self.header) {
-        handle.write(data + "\n".data(using: .utf8)!)
+    private func writeHeaderIfNeeded() {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(header) else { return }
+        // only write if this header != last one
+        if data != lastHeaderData {
+          lastHeaderData = data
+          handle.write(data + "\n".data(using: .utf8)!)
+        }
       }
-    }
 
     private func rotateIfNeeded() {
         guard fileSize(at: currentFile) >= maxSize else { return }
@@ -107,7 +112,7 @@ final class FileLogger {
         FileManager.default.createFile(atPath: currentFile.path, contents: nil)
         handle = try? FileHandle(forUpdating: currentFile)
         handle.seekToEndOfFile()
-        writeHeader()
+        writeHeaderIfNeeded()
         syncToICloud(currentFile)
     }
 
@@ -188,6 +193,7 @@ extension FileLogger {
     func log(_ message: String, level: LogLevel = .info) {
         guard isEnabled && level >= minLevel else { return }
         let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)\n"
+        print("\(line)\n")
         writeLine(line)
     }
 
@@ -196,13 +202,18 @@ extension FileLogger {
         guard isEnabled && level >= minLevel else { return }
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        guard let json = try? encoder.encode(object),
-              let body = String(data: json, encoding: .utf8) else {
-            log("Failed to JSON-encode object of type \(T.self)", level: .error)
-            return
+        do {
+            let data = try encoder.encode(object)
+            if let body = String(data: data, encoding: .utf8) {
+                let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(body)\n"
+                print("\(line)\n")
+                writeLine(line)
+            } else {
+                log("Failed to convert data of \(T.self) to string", level: .error)
+            }
+        } catch {
+            log("Failed to JSON-encode object of type \(T.self). \(error)", level: .error)
         }
-        let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(body)\n"
-        writeLine(line)
     }
  
     /// Log a  text message and Codable object
@@ -213,13 +224,18 @@ extension FileLogger {
 
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        guard let json = try? encoder.encode(object),
-           let body = String(data: json, encoding: .utf8) else {
-            log("\(message)! Failed to JSON-encode object of type \(T.self)", level: .error)
-            return
+        do {
+            let data = try encoder.encode(object)
+            if let body = String(data: data, encoding: .utf8) {
+                let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)! \(body)\n"
+                print("\(line)\n")
+                writeLine(line)
+            } else {
+                log("[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)! Failed to convert data of \(T.self) to string\n", level: .error)
+            }
+        } catch {
+            log("\(message)! Failed to JSON-encode object of type \(T.self). \(error)", level: .error)
         }
-        let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)! \(body)\n"
-        writeLine(line)
     }
     
     func start(minLevel: LogLevel,
@@ -229,6 +245,5 @@ extension FileLogger {
         self.header = metadata
         self.minLevel = minLevel
         self.isEnabled = enabled
-        writeHeader()
     }
 }

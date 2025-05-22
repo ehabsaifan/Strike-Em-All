@@ -38,9 +38,11 @@ final class PlayerService: ObservableObject, ClassNameRepresentable {
                 case .failure:
                     break
                 case .success(let cloudPlayers):
-                    self.merge(cloudPlayers: cloudPlayers)
-                    try? self.disk.save(self.playersSubject.value, to: self.filename)
-                    self.saveToCloud()
+                    DispatchQueue.main.async {
+                        self.merge(cloudPlayers: cloudPlayers)
+                        try? self.disk.save(self.playersSubject.value, to: self.filename)
+                        self.saveToCloud()
+                    }
                 }
             }
             
@@ -74,9 +76,7 @@ final class PlayerService: ObservableObject, ClassNameRepresentable {
         var byID = Dictionary(uniqueKeysWithValues: playersSubject.value.map { ($0.id,$0) })
         for p in cloudPlayers { byID[p.id] = p }
         let merged = Array(byID.values).sorted { $0.lastUsed > $1.lastUsed }
-        DispatchQueue.main.async {
-            self.playersSubject.send(merged)
-        }
+        playersSubject.send(merged)
     }
     
     private func savePlayersToDisk(_ list: [Player]) {

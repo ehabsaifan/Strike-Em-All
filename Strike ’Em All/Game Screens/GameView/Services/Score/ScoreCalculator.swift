@@ -66,7 +66,6 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
                              comboMultiplier: comboMultiplier,
                              timeStamp: Date())
         scorePublisher.send(newScore)
-        print("Score updated: \(newScore), combo: \(comboMultiplier)")
     }
     
     func missedShot() {
@@ -101,7 +100,6 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
                                previousTotal: previousTotal,
                                timeStamp: Date())
         scorePublisher.send(finalScore)
-        print("Game ended: final score: \(finalScore))")
         return finalScore
     }
 }

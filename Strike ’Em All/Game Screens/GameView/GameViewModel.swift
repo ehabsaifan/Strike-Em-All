@@ -241,24 +241,20 @@ final class GameViewModel: ObservableObject {
             if scorePlayer1.total != scorePlayer2.total {
                 winner = scorePlayer1.total > scorePlayer2.total ? player1: player2
                 endState = .winner(winner!)
-                print("Winner by score should be \(winner!.name)")
             } else {
                 let player1Rows = gameService.getRowsStatus(for: .player1)
                 let player2Rows = gameService.getRowsStatus(for: .player2)
                 if player1Rows.correctShots != player2Rows.correctShots {
                     winner = player1Rows.correctShots > player2Rows.correctShots ? player1: player2
                     endState = .winner(winner!)
-                    print("Winner correct shots should be \(winner!.name)")
                 } else if player1Rows.completedRows != player2Rows.completedRows {
                     winner = player1Rows.completedRows > player2Rows.completedRows ? player1: player2
                     endState = .winner(winner!)
-                    print("Winner completed rows should be \(winner!.name)")
                 }
             }
         }
         if endState == nil {
             endState = .tie
-            print("Tie \(scorePlayer1.total) | \(scorePlayer2.total)")
         }
         reportSores(winner: winner)
     }
@@ -334,7 +330,6 @@ final class GameViewModel: ObservableObject {
     
     private func prepareResultInfo() {
         let analy = scoreManagerPlayer1.analyticsService.analyticsPublisher.value
-        print("@@", analy)
         let player1Info = PlayerResultInfo(player: player1,
                                            score: scorePlayer1,
                                            correctShots: analy.lastGameCorrectShots,
