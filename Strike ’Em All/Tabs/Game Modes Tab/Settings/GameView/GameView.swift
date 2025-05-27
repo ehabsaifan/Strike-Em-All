@@ -51,21 +51,35 @@ struct GameView: View {
                         let row = viewModel.rows[index]
                         Divider()
                         ZStack {
-                            HStack(spacing: 0) {
-                                GameCellView(marking: row.leftMarking, content: row.displayContent)
-                                    .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
-                                    .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
-                                    .padding(.leading, 5)
-                                    .background(AppTheme.tertiaryColor)
-                                
-                                Divider()
-                                
-                                Rectangle()
-                                    .foregroundStyle(AppTheme.tertiaryColor)
-                                    .frame(height: viewModel.rowHeight)
-                                    .frame(maxWidth: .infinity)
-                                
-                                if viewModel.playerMode != .singlePlayer {
+                            if viewModel.playerMode == .singlePlayer {
+                                ZStack {
+                                    Rectangle()
+                                        .foregroundStyle(AppTheme.tertiaryColor)
+                                        .frame(height: viewModel.rowHeight)
+                                        .frame(maxWidth: .infinity)
+                                    HStack {
+                                        Spacer()
+                                        GameCellView(marking: row.leftMarking, content: row.displayContent)
+                                            .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                            .background(AppTheme.tertiaryColor)
+                                        Spacer()
+                                    }
+                                }
+                            } else {
+                                HStack(spacing: 0) {
+                                    GameCellView(marking: row.leftMarking, content: row.displayContent)
+                                        .animation(.easeInOut(duration: 0.3), value: row.leftMarking)
+                                        .frame(width: viewModel.rowHeight, height: viewModel.rowHeight)
+                                        .padding(.leading, 5)
+                                        .background(AppTheme.tertiaryColor)
+                                    
+                                    Divider()
+                                    
+                                    Rectangle()
+                                        .foregroundStyle(AppTheme.tertiaryColor)
+                                        .frame(height: viewModel.rowHeight)
+                                        .frame(maxWidth: .infinity)
+                                    
                                     Divider()
                                     GameCellView(marking: row.rightMarking, content: row.displayContent)
                                         .animation(.easeInOut(duration: 0.3), value: row.rightMarking)
