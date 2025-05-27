@@ -244,7 +244,8 @@ struct ModeSpecificSettingsView: View {
         SectionBlock(title: config.mode.title) {
             VStack(spacing: 12) {
                 switch config.mode {
-                case .classic:
+                case .classic,
+                        .persisting:
                     Stepper("Rows: \(config.rowCount)",
                             value: $config.rowCount,
                             in: 1...config.maxNumberOfRows.count)
@@ -252,10 +253,6 @@ struct ModeSpecificSettingsView: View {
                     Stepper("Rings: \(config.ringCount)",
                             value: $config.ringCount,
                             in: 1...8)
-                case .persisting:
-                    Stepper("Balls/Player: \(config.ballsPerPlayer)",
-                            value: $config.ballsPerPlayer,
-                            in: 1...5)
                 case .multiCircle:
                     Stepper("Rings: \(config.ringCount)",
                             value: $config.ringCount,

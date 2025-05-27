@@ -31,7 +31,10 @@ struct GameConfiguration {
 
     /// Classic/rows
     var rowCount: Int = SimpleDefaults.getValue(forKey: .numberOfRows) ?? 5 {
-        didSet { SimpleDefaults.setValue(rowCount, forKey: .numberOfRows) }
+        didSet {
+            SimpleDefaults.setValue(rowCount, forKey: .numberOfRows)
+            ballsPerPlayer = mode == .persisting ? (rowCount * 2): 1
+        }
     }
 
     /// Dartboard / multiCircle
