@@ -10,25 +10,54 @@ import SwiftUI
 @main
 struct StrikeEmAll: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var appState = AppState()
     
     let container = StrikeEmAllContainer()
     
     init() {
-        SimpleDefaults.setEnum(LogLevel.verbose, forKey: .loggingLevel)
-        SimpleDefaults.setValue(true, forKey: .loggingEnabled)
         FileLogger.shared.start(
             minLevel: SimpleDefaults.getEnum(forKey: .loggingLevel) ?? .debug,
             enabled: SimpleDefaults.getValue(forKey: .loggingEnabled) ?? false,
-            metadata: LogFileHeader())
+            metadata: container.appMetaData)
     }
     
     var body: some Scene {
         WindowGroup {
-            LandingDashboardView(container: container)
+            ContentView()
+                .environmentObject(appState)
+                .environment(\.di, container)
         }
-        .environment(\.di, container)
     }
 }
+
+struct ContentView: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.di)      var di
+    
+    var body: some View {
+        TabView(selection: $appState.selectedTab) {
+            
+            // — Players Tab —
+            LandingDashboardView(container: di)
+                .tabItem { Label("Players", systemImage: "person.3") }
+                .tag(AppState.Tab.players)
+                .environmentObject(appState)
+            
+            // — Modes Tab —
+            ModesEntryView()
+                .tabItem { Label("Modes", systemImage: "gamecontroller") }
+                .tag(AppState.Tab.modes)
+                .environmentObject(appState)
+            
+            // — Settings Tab —
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gear") }
+                .tag(AppState.Tab.settings)
+                .environmentObject(appState)
+        }
+    }
+}
+
 
 private struct DIContainerKey: EnvironmentKey {
     static let defaultValue: DIContainer = StrikeEmAllContainer()
@@ -49,6 +78,7 @@ class StrikeEmAllContainer: DIContainer {
     let gcReportService: GameCenterReportServiceProtocol
     let analyticsDisk: Persistence
     let cloudCheckingService: CloudAvailabilityChecking
+    let appMetaData: AppMetadata
     
     private var analyticsCache: [Player: AnalyticsServiceProtocol] = [:]
     
@@ -63,6 +93,7 @@ class StrikeEmAllContainer: DIContainer {
         self.playerRepo            = PlayerService(disk: playersDisk, cloudSyncService: cloud)
         self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
         self.cloudCheckingService  = CloudAvailabilityService()
+        self.appMetaData = AppMetadata()
     }
     
     /// 3) Factory that reuses existing services
@@ -90,4 +121,5 @@ protocol DIContainer {
     var cloud: CloudSyncServiceProtocol { get }
     var cloudCheckingService: CloudAvailabilityChecking { get }
     var analyticsFactory: (Player) -> AnalyticsServiceProtocol { get }
+    var appMetaData: AppMetadata { get }
 }

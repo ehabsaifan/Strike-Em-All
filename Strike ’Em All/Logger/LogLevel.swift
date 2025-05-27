@@ -7,16 +7,16 @@
 
 import Foundation
 
-enum LogLevel: Int, Comparable, Codable, CustomStringConvertible {
+enum LogLevel: Int, Comparable, Codable, CustomStringConvertible, CaseIterable {
     case verbose = 0, debug, info, warning, error
 
     var label: String {
         switch self {
-        case .verbose: return "🟣VERBOSE"
-        case .debug:   return "🟢DEBUG"
-        case .info:    return "🟡INFO"
-        case .warning: return "🟠WARN"
-        case .error:   return "🔴ERROR"
+        case .verbose: return "🟣 VERBOSE"
+        case .debug:   return "🟢 DEBUG"
+        case .info:    return "🟡 INFO"
+        case .warning: return "🟠 WARN"
+        case .error:   return "🔴 ERROR"
         }
     }
     

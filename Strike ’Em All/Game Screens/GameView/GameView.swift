@@ -9,6 +9,7 @@ import SwiftUI
 import SpriteKit
 
 struct GameView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject var viewModel: GameViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showEarnedPoints = false
@@ -31,7 +32,7 @@ struct GameView: View {
                     player1Score: viewModel.scorePlayer1,
                     player2Score: viewModel.scorePlayer2,
                     timeCounter: viewModel.timeCounter,
-                    enableBouncing: viewModel.timerEnabled,
+                    enableBouncing: viewModel.isTimed,
                     onAction: { action in
                         switch action {
                         case .changeBall:
@@ -213,14 +214,7 @@ private func createPreviewGameViewModel() -> GameViewModel {
     let physicsService = SpriteKitPhysicsService(scene: gameScene)
     
     let di = PreviewContainer()
-    let config = GameConfiguration(playerMode: .twoPlayers,
-                                   player1: Player(name: "Ehab", type: .guest),
-                                   player2: computer,
-                                   soundCategory: .street,
-                                   wrapEnabled: false,
-                                   rollingObjectType: .beachBall,
-                                   rowCount: 5,
-                                   volume: 1)
+    let config = GameConfiguration(player1: Player(name: "Ehab", type: .guest))
     let viewModel = GameViewModel(config: config,
                                   gameService: gameService,
                                   physicsService: physicsService,
@@ -240,6 +234,7 @@ class PreviewContainer: DIContainer {
     let gcReportService: GameCenterReportServiceProtocol
     let analyticsDisk: Persistence
     let cloudCheckingService: CloudAvailabilityChecking
+    let appMetaData: AppMetadata
     
     private var analyticsCache: [Player: AnalyticsServiceProtocol] = [:]
     
@@ -253,6 +248,7 @@ class PreviewContainer: DIContainer {
         self.playerRepo            = PlayerService(disk: disk, cloudSyncService: cloud)
         self.gcReportService       = GameCenterReportService(gcService: GameCenterService.shared)
         self.cloudCheckingService  = CloudAvailabilityService()
+        self.appMetaData = AppMetadata()
     }
     
     /// 3) Factory that reuses existing services
