@@ -63,6 +63,20 @@ extension View {
         renderer.proposedSize = ProposedViewSize(targetSize.size)
         return renderer.uiImage
     }
+    
+    func mailSheet<Content: View>(
+        isPresented: Binding<Bool>,
+        onCannotSend: @escaping ()->Void,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        self
+            .sheet(isPresented: isPresented, content: content)
+            .onChange(of: isPresented.wrappedValue) { _, _ in
+                if isPresented.wrappedValue && !ComposeMailView.canSendMail() {
+                    onCannotSend()
+                }
+            }
+    }
 }
 
 extension UIApplication {

@@ -4,17 +4,26 @@
 //  Refactored: private internals in class, public API in extension
 
 import UIKit
+import Combine
 
 final class FileLogger {
     static let shared = FileLogger()
 
+    let filesChanged = PassthroughSubject<Void, Never>()
+    
     // MARK: Configurable
     var minLevel: LogLevel = .debug
-    var header = LogFileHeader()
+    var header = AppMetadata()
     
     var isEnabled = true {
         didSet {
-            if !isEnabled { clearAllLogs() }
+            if !isEnabled {
+                clearAllLogs()
+            } else {
+                // Re-open the file (and force header to be rewritten)
+                lastHeaderData = nil
+                openLogFile()
+            }
         }
     }
 
@@ -28,7 +37,8 @@ final class FileLogger {
     private var lastHeaderData: Data?
 
     private var docsDir: URL {                           // logs folder
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)[0]
         let dir = docs.appendingPathComponent("Logs", isDirectory: true)
         ensureDirectory(at: dir)
         return dir
@@ -52,6 +62,7 @@ final class FileLogger {
         hookCrashes()
         openLogFile()
         rotateIfNeeded()
+        DispatchQueue.main.async { self.filesChanged.send() }
     }
 
     // MARK: - Private Helpers
@@ -65,29 +76,35 @@ final class FileLogger {
         (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
     }
 
-    private func openLogFile() {
-        logQueue.sync {
-            if !FileManager.default.fileExists(atPath: currentFile.path) {
-                FileManager.default.createFile(atPath: currentFile.path, contents: nil)
-            }
-            handle = try? FileHandle(forUpdating: currentFile)
-            handle.seekToEndOfFile()
-            if fileSize(at: currentFile) == 0 {
-                writeHeaderIfNeeded()
-            }
+    /// Sets up the current log file and writes the header if empty.
+    private func openLogFileInternal() {
+        if !FileManager.default.fileExists(atPath: currentFile.path) {
+            FileManager.default.createFile(atPath: currentFile.path, contents: nil)
+        }
+        handle = try? FileHandle(forUpdating: currentFile)
+        handle.seekToEndOfFile()
+        if fileSize(at: currentFile) == 0 {
+            writeHeaderIfNeeded()
         }
     }
-    
+
+    /// Public wrapper to serialize `openLogFileInternal()` on our queue.
+    private func openLogFile() {
+        logQueue.sync {
+            openLogFileInternal()
+        }
+    }
+
     private func writeHeaderIfNeeded() {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         guard let data = try? encoder.encode(header) else { return }
-        // only write if this header != last one
         if data != lastHeaderData {
-          lastHeaderData = data
-          handle.write(data + "\n".data(using: .utf8)!)
+            lastHeaderData = data
+            handle.write(data + "\n".data(using: .utf8)!)
+            DispatchQueue.main.async { self.filesChanged.send() }
         }
-      }
+    }
 
     private func rotateIfNeeded() {
         guard fileSize(at: currentFile) >= maxSize else { return }
@@ -108,12 +125,11 @@ final class FileLogger {
         syncToICloud(firstRotated)
         try? FileManager.default.moveItem(at: currentFile, to: firstRotated)
 
-        // create fresh current
-        FileManager.default.createFile(atPath: currentFile.path, contents: nil)
-        handle = try? FileHandle(forUpdating: currentFile)
-        handle.seekToEndOfFile()
-        writeHeaderIfNeeded()
+        // reopen (now empty) current file & header
+        openLogFileInternal()
         syncToICloud(currentFile)
+        // broadcast file list change
+        DispatchQueue.main.async { self.filesChanged.send() }
     }
 
     private func rotatedFileURL(index: Int) -> URL {
@@ -129,16 +145,7 @@ final class FileLogger {
             try? FileManager.default.removeItem(at: dest)
             try FileManager.default.copyItem(at: file, to: dest)
         } catch {
-            print("📤 iCloud sync failed:", error)
-        }
-    }
-
-    private func clearAllLogs() {
-        logQueue.sync {
-            try? FileManager.default.removeItem(at: docsDir)
-            ensureDirectory(at: docsDir)
-            handle.closeFile()
-            openLogFile()
+            FileLogger.shared.log("📤 iCloud sync failed. \(error)", level: .error)
         }
     }
 
@@ -166,6 +173,7 @@ final class FileLogger {
         logQueue.async {
             self.handle.write(data)
             self.rotateIfNeeded()
+            DispatchQueue.main.async { self.filesChanged.send() }
         }
     }
 }
@@ -216,12 +224,11 @@ extension FileLogger {
         }
     }
  
-    /// Log a  text message and Codable object
+    /// Log a text message and Codable object
     func log<T: Encodable>(_ message: String,
-                         object: T,
-                         level: LogLevel = .info) {
-      guard isEnabled && level >= minLevel else { return }
-
+                            object: T,
+                            level: LogLevel = .info) {
+        guard isEnabled && level >= minLevel else { return }
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         do {
@@ -231,19 +238,36 @@ extension FileLogger {
                 print("\(line)\n")
                 writeLine(line)
             } else {
-                log("[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)! Failed to convert data of \(T.self) to string\n", level: .error)
+                log("Failed to convert data of \(T.self) to string", level: .error)
             }
         } catch {
             log("\(message)! Failed to JSON-encode object of type \(T.self). \(error)", level: .error)
         }
     }
     
+    /// Bootstraps logging at launch
     func start(minLevel: LogLevel,
                enabled: Bool,
-               metadata: LogFileHeader) {
-        print(isEnabled, minLevel)
-        self.header = metadata
+               metadata: AppMetadata) {
+        header = metadata
         self.minLevel = minLevel
         self.isEnabled = enabled
+        // broadcast in case header changed
+        DispatchQueue.main.async { self.filesChanged.send() }
+    }
+    
+    /// Wipes all logs and creates a new current file
+    func clearAllLogs() {
+        logQueue.sync {
+            try? FileManager.default.removeItem(at: self.docsDir)
+            self.ensureDirectory(at: self.docsDir)
+            self.handle.closeFile()
+            self.lastHeaderData = nil
+            self.openLogFileInternal()
+            
+            DispatchQueue.main.async {
+                self.filesChanged.send()
+            }
+        }
     }
 }

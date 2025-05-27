@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LandingDashboardView: View {
     @Environment(\.di) private var di
+    @EnvironmentObject private var appState: AppState
     @StateObject private var vm: LandingDashboardViewModel
     
     @State private var showStatsFor: Player?
@@ -25,7 +26,7 @@ struct LandingDashboardView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 VStack(spacing: 16) {
                     ScrollView {
@@ -65,7 +66,7 @@ struct LandingDashboardView: View {
                         }
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(AppTheme.primaryColor.opacity(vm.isAuthenticated ? 0.6: 1))
+                        .background(AppTheme.secondaryColor.opacity(vm.isAuthenticated ? 0.6: 1))
                         .foregroundColor(.white)
                         .cornerRadius(8)
                     }
@@ -74,17 +75,25 @@ struct LandingDashboardView: View {
                             x: 0,
                             y: -4)
                     .padding(.horizontal)
+                    .padding(.bottom)
                     .disabled(vm.isSigningIn || vm.isAuthenticated)
                 }
                 // 2) GLOBAL spinner overlay
                 if vm.isSigningIn {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    ProgressView("Signing in…")
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .padding(20)
-                        .background(Color.black.opacity(0.8))
-                        .cornerRadius(10)
+                    ZStack {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.3)
+                            
+                            Text("Signing in…")
+                                .foregroundColor(.white)
+                                .font(.body)
+                        }
+                        .padding(24)
+                        .background(Color.black.opacity(0.7))
+                        .cornerRadius(12)
+                    }
                 }
             }
             .navigationTitle("Strike ’Em All")
@@ -130,11 +139,12 @@ struct LandingDashboardView: View {
                     vm.addGuest(player)
                 }
             }
-            // Full-screen game flow
-            .fullScreenCover(isPresented: $vm.navigateToGame) {
-                MainMenuFlowView(loggedInPlayer: vm.currentPlayer!)
-                    .environment(\.di, di)
-            }
+            .onChange(of: vm.navigateToGame) { _, go in
+               guard go, let player = vm.currentPlayer else { return }
+               appState.selectPlayingMode(for: player)
+               // reset the flag so we don’t fire again
+               vm.navigateToGame = false
+             }
         }
     }
     

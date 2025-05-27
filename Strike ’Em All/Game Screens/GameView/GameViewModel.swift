@@ -71,8 +71,8 @@ final class GameViewModel: ObservableObject {
         }
     }
     
-    var timerEnabled: Bool {
-        config.timerEnabled
+    var isTimed: Bool {
+        config.isTimed
     }
     
     let launchAreaVM: LaunchAreaViewModel
@@ -133,7 +133,7 @@ final class GameViewModel: ObservableObject {
         }
         let analytics1 = analyticsFactory(config.player1)
         self.scoreManagerPlayer1 = ScoreService(
-            calculator: config.timerEnabled ?
+            calculator: config.isTimed ?
             TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
             analyticsService: analytics1,
             gcReportService: gcReportService1)
@@ -147,7 +147,7 @@ final class GameViewModel: ObservableObject {
             }
             let analytics2 = analyticsFactory(secPlayer)
             self.scoreManagerPlayer2 = ScoreService(
-                calculator:  config.timerEnabled ?
+                calculator:  config.isTimed ?
                 TimedScoreCalculator(totalTime: config.timeLimit) : ScoreCalculator(),
                 analyticsService: analytics2,
                 gcReportService: gcReportService2)
