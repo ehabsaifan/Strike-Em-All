@@ -27,18 +27,31 @@ struct GameConfiguration {
 
     /// Players
     var player1: Player
-    var player2: Player?       // nil for single‐player
+    var player2: Player?   {
+        didSet {
+            if playerMode == .againstComputer {
+                player2 = computer
+            }
+        }
+    }    // nil for single‐player
 
     /// Classic/rows
     var rowCount: Int = SimpleDefaults.getValue(forKey: .numberOfRows) ?? 5 {
-        didSet { SimpleDefaults.setValue(rowCount, forKey: .numberOfRows) }
+        didSet {
+            SimpleDefaults.setValue(rowCount, forKey: .numberOfRows)
+            ballsPerPlayer = mode == .persisting ? (rowCount * 2): 2
+        }
     }
 
     /// Dartboard / multiCircle
     var ringCount: Int = 4
 
     /// Persisting & multiCircle
-    var ballsPerPlayer: Int = 1
+    var ballsPerPlayer: Int = SimpleDefaults.getValue(forKey: .numberOfBalls) ?? 10 {
+        didSet {
+            SimpleDefaults.setValue(ballsPerPlayer, forKey: .numberOfBalls)
+        }
+    }
 
     /// Timed mode
     var isTimed: Bool = false {

@@ -1,5 +1,5 @@
 //
-//  ScoreCalculator.swift
+//  ClassicScoreCalculator.swift
 //  Strike ’Em All
 //
 //  Created by Ehab Saifan on 4/8/25.
@@ -17,10 +17,11 @@ protocol ScoreCalculatorProtocol {
     func startGame()
     func recordScore(atRow row: Int)
     func missedShot()
+    func updateScpore(scoreDict: [Int: Int])
     func finishGame(isWinner: Bool) -> Score
 }
 
-class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
+class ClassicScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
     let baseScore: Int = 1
     let winnerBonus = 25
     private(set) var comboMultiplier: Int = 1
@@ -81,6 +82,10 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
                                   timeStamp: Date()))
     }
     
+    func updateScpore(scoreDict: [Int: Int]) {
+        // Unused in Classic
+    }
+
     func finishGame(isWinner: Bool) -> Score {
         guard let start = startTime else { return scorePublisher.value }
         let elapsedSeconds = Date().timeIntervalSince(start)
@@ -104,7 +109,95 @@ class ScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
     }
 }
 
-class TimedScoreCalculator: ScoreCalculator {
+class PersistingClassicScoreCalculator: ScoreCalculatorProtocol, ObservableObject {
+    let baseScore: Int = 1
+    let winnerBonus = 25
+    private(set) var comboMultiplier: Int = 1
+    
+    // Use a CurrentValueSubject so that changes propagate.
+    var scorePublisher = CurrentValueSubject<Score, Never>(Score())
+    
+    private var streakRows: Set<Int> = []
+    private var streakCompleteRows: Set<Int> = []
+    private(set) var startTime: Date?
+    
+    private func reset() {
+        scorePublisher.send(Score())
+        resetRowsandCombo()
+        startTime = nil
+    }
+    
+    private func resetRowsandCombo() {
+        comboMultiplier = 1
+        streakRows = []
+        streakCompleteRows = []
+    }
+    
+    func startGame() {
+        reset()
+        startTime = Date()
+    }
+    
+    func recordScore(atRow row: Int) {
+        // Unused in persisting
+    }
+    
+    func missedShot() {
+        // Unused in persisting
+    }
+    
+    func updateScpore(scoreDict: [Int: Int]) {
+        resetRowsandCombo()
+        let currentScore: Score
+       
+        var shotMultiplier = 2
+        for row in scoreDict.keys {
+            if streakRows.contains(row) {
+                shotMultiplier = 4
+                streakCompleteRows.insert(row)
+            } else if comboMultiplier == 1 && !streakRows.isEmpty {
+                streakRows.insert(row)
+                shotMultiplier = 3
+            } else {
+                streakRows.insert(row)
+                shotMultiplier = 2
+            }
+            comboMultiplier += shotMultiplier
+        }
+        var pointsEarned = baseScore * comboMultiplier
+        //let previousScore = scorePublisher.value.total
+        print("shotMultiplier: \(shotMultiplier), pointsEarned: \(pointsEarned). previousScore: \(0)")
+        currentScore = Score(currentShotEarnedpoints: pointsEarned,
+                             previousTotal: 0,
+                             comboMultiplier: comboMultiplier,
+                             timeStamp: Date())
+        scorePublisher.send(currentScore)
+    }
+
+    func finishGame(isWinner: Bool) -> Score {
+        guard let start = startTime else { return scorePublisher.value }
+        let elapsedSeconds = Date().timeIntervalSince(start)
+        let timeBonus: Int
+        if elapsedSeconds < 60 {
+            timeBonus = 10
+        } else if elapsedSeconds < 120 {
+            timeBonus = 5
+        } else {
+            timeBonus = 0
+        }
+        let winnerPoints = isWinner ? winnerBonus : 0
+        let previousTotal = scorePublisher.value.total
+        let finalScore = Score(currentShotEarnedpoints: 0,
+                               winnerBonus: winnerPoints,
+                               timeBonus: timeBonus,
+                               previousTotal: previousTotal,
+                               timeStamp: Date())
+        scorePublisher.send(finalScore)
+        return finalScore
+    }
+}
+
+class TimedClassicScoreCalculator: ClassicScoreCalculator {
     private let totalTime: TimeInterval
     
     init(totalTime: TimeInterval) {

@@ -11,6 +11,7 @@ struct SimpleDefaults {
     enum Key {
         case volumePref
         case numberOfRows
+        case numberOfBalls
         case savedPlayers
         case rollingObject
         case achievements(String)
