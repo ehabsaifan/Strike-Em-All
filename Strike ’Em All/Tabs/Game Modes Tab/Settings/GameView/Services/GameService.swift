@@ -18,6 +18,8 @@ protocol GameServiceProtocol {
     func setRollingObject(_ newObject: RollingObject)
     func reset()
     
+    func getStatus(for player: GameService.PlayerType, at index: Int) -> MarkingState
+    func updateStatus(for player: GameService.PlayerType, at index: Int, with correctShotsCount: Int)
     func getRowsStatus(for player: GameService.PlayerType) -> (completedRows: Int, correctShots: Int)
 }
 
@@ -66,6 +68,42 @@ class GameService: GameServiceProtocol {
         new[rowIndex] = row
         rows = new
         return newMarking != prevMarking
+    }
+    
+    func getStatus(for player: PlayerType, at index: Int) -> MarkingState {
+        guard index <= rows.count else {
+            fatalError()
+        }
+        let row = rows[index]
+        switch player {
+        case .player1:
+            return  row.leftMarking
+        case .player2:
+            return  row.rightMarking
+        }
+    }
+    
+    func updateStatus(for player: PlayerType, at index: Int, with correctShotsCount: Int) {
+        guard index <= rows.count else {
+            fatalError()
+        }
+        var state: MarkingState = .none
+        if correctShotsCount == 1 {
+            state = .half
+        } else if correctShotsCount > 1 {
+            state = .complete
+        }
+        
+        var row = rows[index]
+        switch player {
+        case .player1:
+            return  row.setLeftMarkingState(state)
+        case .player2:
+            return  row.setRightMarkingState(state)
+        }
+        var new = rows
+        new[index] = row
+        rows = new
     }
     
     func getRowsStatus(for player: PlayerType) -> (completedRows: Int, correctShots: Int) {

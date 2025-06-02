@@ -8,9 +8,9 @@
 import SwiftUI
 import SpriteKit
 
-struct GameView: View {
+struct GameView<VM: GameViewModelProtocol>: View {
     @EnvironmentObject var appState: AppState
-    @StateObject var viewModel: GameViewModel
+    @StateObject var viewModel: VM
     @Environment(\.presentationMode) var presentationMode
     @State private var showEarnedPoints = false
     @State private var earnedPointsText: String = ""
@@ -20,6 +20,11 @@ struct GameView: View {
         case none
         case ballSelection
         case volumeControl
+    }
+    
+    init(viewModel: VM) {
+        // 2) Initialize the @StateObject backing store
+        _viewModel = StateObject(wrappedValue: viewModel)
     }
     
     var body: some View {
@@ -106,7 +111,7 @@ struct GameView: View {
                 Spacer()
                 
                 LaunchAreaView(viewModel: viewModel.launchAreaVM)
-                    .frame(height: GameViewModel.launchAreaHeight)
+                    .frame(height: GameViewConstants.launchAreaHeight)
             }
             .sheet(item: $viewModel.result) { result in
                 GameResultView(
@@ -114,7 +119,7 @@ struct GameView: View {
                     onAction: { action in
                         switch action {
                         case .restart:
-                            viewModel.reset()
+                            viewModel.restartGame()
                         case .quit:
                             presentationMode.wrappedValue.dismiss()
                         }
@@ -217,19 +222,19 @@ struct GameView: View {
     GameView(viewModel: createPreviewGameViewModel())
 }
 
-private func createPreviewGameViewModel() -> GameViewModel {
+private func createPreviewGameViewModel() -> ClassicGameViewModel {
     let contentProvider = GameContentProvider()
-    let gameService = GameService(rollingObject: Ball(),
+    let gameService = GameService(rollingObject: BeachBall(),
                                   contentProvider: contentProvider)
     let soundService = SoundService(category: .street)
     
-    let gameScene = GameScene(size: UIScreen.main.bounds.size)
+    let gameScene = ClassicGameScene(size: UIScreen.main.bounds.size)
     gameScene.scaleMode = .resizeFill
-    let physicsService = SpriteKitPhysicsService(scene: gameScene)
+    let physicsService = ClassicPhysicsService(scene: gameScene)
     
     let di = PreviewContainer()
     let config = GameConfiguration(player1: Player(name: "Ehab", type: .guest))
-    let viewModel = GameViewModel(config: config,
+    let viewModel = ClassicGameViewModel(config: config,
                                   gameService: gameService,
                                   physicsService: physicsService,
                                   soundService: soundService,

@@ -29,7 +29,7 @@ extension RollingObjectType {
     var rollingObject: RollingObject {
         switch self {
         case .beachBall:
-            return Ball()
+            return BeachBall()
         case .crumpledPaper:
             return CrumpledPaper()
         case .ironBall:

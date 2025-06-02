@@ -17,7 +17,7 @@ class LaunchAreaViewModel: ObservableObject {
     let ballDiameter: CGFloat
     
     var screenWidth: CGFloat {
-         GameViewModel.screenWidth
+        GameViewConstants.screenWidth
     }
     
     init(launchAreaHeight: CGFloat, ballDiameter: CGFloat) {

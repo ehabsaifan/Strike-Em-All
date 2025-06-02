@@ -13,8 +13,8 @@ protocol RollingObject {
     var speed: Double { get }
 }
 
-class Ball: RollingObject {
-    var name = "Ball"
+class BeachBall: RollingObject {
+    var name = "Beach Ball"
     var speed = 1.0
     let type = RollingObjectType.beachBall
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SpriteKit
 
 struct GameSettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -19,7 +20,11 @@ struct GameSettingsView: View {
     @State private var showingSignInAlert = false
     @State private var isSigningIn = false
     @State private var showGame = false
-    @StateObject private var vmHolder = GameViewModelHolder()
+    
+    private var startIsBlocked: Bool {
+        appState.currentPlayer == nil ||
+        config.playerMode == .twoPlayers && config.player2 == nil
+    }
     
     var body: some View {
         NavigationStack {
@@ -77,9 +82,6 @@ struct GameSettingsView: View {
                 VStack {
                     Spacer()
                     Button {
-                        let vm = makeGameViewModel()
-                        vmHolder.viewModel = vm
-                        vm.startGame()
                         showGame = true
                     } label: {
                         Text("Start")
@@ -95,7 +97,7 @@ struct GameSettingsView: View {
                             y: -4)
                     .padding(.horizontal)
                     .padding(.bottom)
-                    .disabled(appState.currentPlayer == nil)
+                    .disabled(startIsBlocked)
                 }
             }
             .navigationTitle("Settings")
@@ -150,26 +152,32 @@ struct GameSettingsView: View {
                 Text("Please sign in to Game Center to report your score and achievements.")
             }
             .fullScreenCover(isPresented: $showGame) {
-                if let vm = vmHolder.viewModel {
-                    GameView(viewModel: vm)
-                }
-            }
-            .overlay {
-                if isSigningIn {
-                    ZStack {
-                        VStack(spacing: 12) {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.3)
-                            
-                            Text("Signing in…")
-                                .foregroundColor(.white)
-                                .font(.body)
+                if config.mode == .persisting {
+                          PersistingGameView(viewModel: makePersistingGameViewModel())
+                            .environmentObject(appState)
+                            .environment(\.di, di)
+                        } else {
+                          ClassicGameView(viewModel: makeClassicGameViewModel())
+                            .environmentObject(appState)
+                            .environment(\.di, di)
                         }
-                        .padding(24)
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(12)
+            }
+        }
+        .overlay {
+            if isSigningIn {
+                ZStack {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.3)
+                        
+                        Text("Signing in…")
+                            .foregroundColor(.white)
+                            .font(.body)
                     }
+                    .padding(24)
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(12)
                 }
             }
         }
@@ -186,33 +194,62 @@ struct GameSettingsView: View {
         showingPlayerPicker = slot
     }
     
-    private func makeGameViewModel() -> GameViewModel {
+    private func makeClassicGameViewModel() -> ClassicGameViewModel {
         let cp = GameContentProvider(maxItems: config.rowCount)
         let gs = GameService(rollingObject: config.rollingObjectType.rollingObject,
                              contentProvider: cp)
         let ss = SoundService(category: config.soundCategory)
         ss.setVolume(config.volume)
         
-        let scene = GameScene(size: UIScreen.main.bounds.size)
+        let scene = makeClassicScene()
+        let phys = ClassicPhysicsService(scene: scene)
+        
+        return ClassicGameViewModel(config: config,
+                                    gameService: gs,
+                                    physicsService: phys,
+                                    soundService: ss,
+                                    analyticsFactory: di.analyticsFactory,
+                                    gcReportService: di.gcReportService,
+                                    gameCenterService: di.gameCenter,
+                                    gameScene: scene)
+    }
+    
+    private func makePersistingGameViewModel() -> PersistingGameViewModel {
+        let cp = GameContentProvider(maxItems: config.rowCount)
+        let gs = GameService(rollingObject: config.rollingObjectType.rollingObject,
+                             contentProvider: cp)
+        let ss = SoundService(category: config.soundCategory)
+        ss.setVolume(config.volume)
+        
+        let scene = makePersistingScene()
+        let phys = PersistingPhysicsService(scene: scene)
+        
+        return PersistingGameViewModel(
+            config:           config,
+            gameService:    gs ,
+            physicsService:   phys,
+            soundService:     ss,
+            analyticsFactory: di.analyticsFactory,
+            gcReportService:  di.gcReportService,
+            gameCenterService: di.gameCenter,
+            gameScene:        scene
+        )
+    }
+    
+    private func makeClassicScene() -> ClassicGameScene {
+        let scene = ClassicGameScene(size: UIScreen.main.bounds.size)
         scene.scaleMode = .resizeFill
         scene.wrapAroundEnabled = config.wrapEnabled
-        let phys = SpriteKitPhysicsService(scene: scene)
-        
-        return GameViewModel(config: config,
-                             gameService: gs,
-                             physicsService: phys,
-                             soundService: ss,
-                             analyticsFactory: di.analyticsFactory,
-                             gcReportService: di.gcReportService,
-                             gameCenterService: di.gameCenter,
-                             gameScene: scene)
+        return scene
+    }
+    
+    private func makePersistingScene() -> PersistingGameScene {
+        let scene = PersistingGameScene(size: UIScreen.main.bounds.size)
+        scene.scaleMode = .resizeFill
+        scene.wrapAroundEnabled = config.wrapEnabled
+        return scene
     }
 }
-
-private class GameViewModelHolder: ObservableObject {
-    @Published var viewModel: GameViewModel?
-}
-
 
 // MARK: — PlayerModePickerView
 
@@ -317,5 +354,36 @@ struct SoundSettingsView: View {
         SectionBlock(title: "Sound") {
             VolumeControlView(volume: $config.volume)
         }
+    }
+}
+
+struct ClassicGameView: View {
+    @StateObject var viewModel: ClassicGameViewModel
+    @EnvironmentObject var appState: AppState
+    @Environment(\.di) private var di
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        GameView( viewModel: viewModel ) // reuse your existing generic-<VM> GameView
+            .environmentObject(appState)
+            .environment(\.di, di)
+            .onAppear { viewModel.startGame() }
+            .onDisappear { viewModel.restartGame() }
+    }
+}
+
+// PersistingGameView.swift
+struct PersistingGameView: View {
+    @StateObject var viewModel: PersistingGameViewModel
+    @EnvironmentObject var appState: AppState
+    @Environment(\.di) private var di
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        GameView( viewModel: viewModel ) // same GameView but generic over VM
+            .environmentObject(appState)
+            .environment(\.di, di)
+            .onAppear { viewModel.startGame() }
+            .onDisappear { viewModel.restartGame() }
     }
 }

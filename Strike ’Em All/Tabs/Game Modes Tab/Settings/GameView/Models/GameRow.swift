@@ -36,6 +36,14 @@ struct GameRow: GameRowProtocol {
         }
     }
 
+    mutating func setRightMarkingState(_ state: MarkingState) {
+        rightMarking = state
+    }
+    
+    mutating func setLeftMarkingState(_ state: MarkingState) {
+        leftMarking = state
+    }
+    
     mutating func reset() {
         leftMarking = .none
         rightMarking = .none

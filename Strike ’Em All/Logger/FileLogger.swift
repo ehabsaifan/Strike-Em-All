@@ -30,7 +30,7 @@ final class FileLogger {
     // MARK: Private storage
     private let maxFiles = 5
     private let maxSize = 500 * 1024  // 500KB per file
-    private let baseFilename = "appStrikeEmAll.log"
+    private let baseFilename = "appStrikeEmAll"
     private let logQueue = DispatchQueue(label: "com.StrikeEmAll.FileLogger")
 
     private var handle: FileHandle!                       // current open handle
@@ -43,7 +43,7 @@ final class FileLogger {
         ensureDirectory(at: dir)
         return dir
     }
-    private var currentFile: URL { docsDir.appendingPathComponent(baseFilename) }
+    private var currentFile: URL { docsDir.appendingPathComponent("\(baseFilename).log") }
     private lazy var ubiqURL: URL? = {                   // iCloud sync folder
         FileManager.default.url(forUbiquityContainerIdentifier: nil)?
             .appendingPathComponent("Documents/Logs", isDirectory: true)
@@ -133,7 +133,7 @@ final class FileLogger {
     }
 
     private func rotatedFileURL(index: Int) -> URL {
-        let name = index == 0 ? baseFilename : "\(baseFilename).\(index)"
+        let name = index == 0 ? baseFilename : "\(baseFilename)-\(index).log"
         return docsDir.appendingPathComponent(name)
     }
 
@@ -201,7 +201,7 @@ extension FileLogger {
     func log(_ message: String, level: LogLevel = .info) {
         guard isEnabled && level >= minLevel else { return }
         let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)\n"
-        print("\(line)\n")
+        //print("\(line)\n")
         writeLine(line)
     }
 
@@ -214,7 +214,7 @@ extension FileLogger {
             let data = try encoder.encode(object)
             if let body = String(data: data, encoding: .utf8) {
                 let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(body)\n"
-                print("\(line)\n")
+                //print("\(line)\n")
                 writeLine(line)
             } else {
                 log("Failed to convert data of \(T.self) to string", level: .error)
@@ -235,7 +235,7 @@ extension FileLogger {
             let data = try encoder.encode(object)
             if let body = String(data: data, encoding: .utf8) {
                 let line = "[\(dateFmt.string(from: Date()))] [\(level.label)] \(message)! \(body)\n"
-                print("\(line)\n")
+                //print("\(line)\n")
                 writeLine(line)
             } else {
                 log("Failed to convert data of \(T.self) to string", level: .error)
