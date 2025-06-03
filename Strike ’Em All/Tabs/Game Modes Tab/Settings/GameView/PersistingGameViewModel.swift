@@ -25,6 +25,7 @@ final class PersistingGameViewModel: ObservableObject, GameViewModelProtocol {
 
     let launchAreaVM: LaunchAreaViewModel
     let gameScene: SKScene
+    @Published var ballsLeft: [Player:Int]
     @Published var selectedBallType: RollingObjectType = .beachBall {
         didSet {
             updateRollingObject()
@@ -67,7 +68,15 @@ final class PersistingGameViewModel: ObservableObject, GameViewModelProtocol {
     private var player2BallsPositionDict = [Ball: CGPoint]()
     
     private(set) var endState: GameViewConstants.EndState? = nil
-    private var ballsLeft: [Player:Int]
+    
+    var player1BallsLeft: Int {
+        ballsLeft[player1] ?? 0
+    }
+
+    var player2BallsLeft: Int {
+        guard let p2 = player2 else { return 0 }
+        return ballsLeft[p2] ?? 0
+    }
 
     init(
         config: GameConfiguration,
@@ -387,26 +396,25 @@ final class PersistingGameViewModel: ObservableObject, GameViewModelProtocol {
     }
 
     func restartGame() {
+        player1BallsSet = []
+        player2BallsSet = []
+        player1BallsPositionDict = [:]
+        player2BallsPositionDict = [:]
         ballsLeft = [player1: config.ballsPerPlayer]
         if let p2 = player2 { ballsLeft[p2] = config.ballsPerPlayer }
         gameService.reset()
         currentPlayer = player1
         endState = nil
-        
         rows = gameService.rows
-        physicsService.setRollingObject(gameService.rollingObject)
-        physicsService.restart()
         isBallMoving = false
-        scoreManagerPlayer1.gameStarted()
-        scoreManagerPlayer2?.gameStarted()
         result = nil
         timerCancellable?.cancel()
+        
+        scoreManagerPlayer1.gameStarted()
+        scoreManagerPlayer2?.gameStarted()
+        physicsService.setRollingObject(gameService.rollingObject)
+        physicsService.restart()
         startTimer()
-    
-        player1BallsSet = []
-        player2BallsSet = []
-        player1BallsPositionDict = [:]
-        player2BallsPositionDict = [:]
     }
 
     func startGame() {
@@ -450,7 +458,8 @@ extension PersistingGameViewModel: PhysicsServiceDelegate {
     }
     
     func created(_ ball: Ball) {
-        FileLogger.shared.log("Created ball", object: ball, level: .debug)
+        FileLogger.shared.log("\(ball.name) was created! for \(currentPlayer.id)",
+                              object: ball, level: .debug)
         if currentPlayer == player1 {
             player1BallsSet.insert(ball)
         } else {
@@ -461,8 +470,10 @@ extension PersistingGameViewModel: PhysicsServiceDelegate {
     func ballStoppedMoving(_ ball: Ball, at position: CGPoint) {
         if player1BallsSet.contains(ball) {
             player1BallsPositionDict[ball] = position
-        } else {
+        } else if player2BallsSet.contains(ball) {
             player2BallsPositionDict[ball] = position
+        } else {
+            FileLogger.shared.log("Ball is not assigned to a player", level: .error)
         }
         FileLogger.shared.log("Ball stopped at \(position)", object: ball, level: .verbose)
     }
