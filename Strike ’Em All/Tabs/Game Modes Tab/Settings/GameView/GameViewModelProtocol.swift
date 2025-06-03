@@ -43,6 +43,10 @@ protocol GameViewModelProtocol: ObservableObject {
     var volume: Float { get set }
     
     // Others
+    /// How many balls player 1 has left (default = 0 for a non‐persisting game).
+    var player1BallsLeft: Int { get }
+    /// How many balls player 2 has left (0 in single‐player or in Classic).
+    var player2BallsLeft: Int { get }
     var isBallMoving: Bool { get }
     var launchImpulse: CGVector? { get }
     var isWrapAroundEdgesEnabled: Bool { get }
@@ -63,6 +67,9 @@ protocol GameViewModelProtocol: ObservableObject {
 }
 
 extension GameViewModelProtocol {
+    var player1BallsLeft: Int { 0 }
+    var player2BallsLeft: Int { 0 }
+    
     var launchAreaVM: LaunchAreaViewModel {
         LaunchAreaViewModel(
             launchAreaHeight: GameViewConstants.launchAreaHeight,

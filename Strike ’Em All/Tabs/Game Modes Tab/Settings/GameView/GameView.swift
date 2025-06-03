@@ -134,6 +134,17 @@ struct GameView<VM: GameViewModelProtocol>: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
             
+            VStack {
+                Spacer()
+                HStack {
+                    BallsRemainingOverlay(
+                        p1Count: viewModel.player1BallsLeft,
+                        p2Count: viewModel.player2 == nil ? 0 : viewModel.player2BallsLeft
+                    )
+                }
+            }
+            .ignoresSafeArea(edges: .bottom)
+            
             if showEarnedPoints {
                 EarnedPointsView(
                     text: earnedPointsText,
@@ -283,5 +294,50 @@ class PreviewContainer: DIContainer {
         )
         analyticsCache[player] = newService
         return newService
+    }
+}
+
+struct BallsRemainingOverlay: View {
+    let p1Count: Int
+    let p2Count: Int
+    
+    // Use whatever colors you assigned as your “player 1” and “player 2” border tints:
+    private let p1Color = Color.red.opacity(0.8)
+    private let p2Color = Color.blue.opacity(0.8)
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Player 1’s indicator
+            HStack(spacing: 4) {
+                // Mini ball icon (you can replace with Image("beachBall-icon") if you have one)
+                Circle()
+                    .strokeBorder(p1Color, lineWidth: 2)
+                    .background(Circle().fill(Color.white.opacity(0.9)))
+                    .frame(width: 20, height: 20)
+                Text("× \(p1Count)")
+                    .font(.footnote).bold()
+                    .foregroundColor(p1Color)
+            }
+            
+            // Player 2’s indicator (only show if there is a second player)
+            if p2Count > 0 {
+                HStack(spacing: 4) {
+                    Circle()
+                        .strokeBorder(p2Color, lineWidth: 2)
+                        .background(Circle().fill(Color.white.opacity(0.9)))
+                        .frame(width: 20, height: 20)
+                    Text("× \(p2Count)")
+                        .font(.footnote).bold()
+                        .foregroundColor(p2Color)
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.black.opacity(0.4))
+        )
+        .padding(.bottom, 20)
     }
 }
